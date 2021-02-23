@@ -17,7 +17,7 @@ valkyrie:
 	$(LD) $(LDFLAGS) -o $(BUILD)/$(OS_NAME).img $(OBJECTS)
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel $(BUILD)/$(OS_NAME).img -display none -d in_asm
+	qemu-system-aarch64 -M raspi3 -kernel $(BUILD)/$(OS_NAME).img -serial null -serial stdio
 
 clean:
 	find . -type f -iname "*.o" | xargs rm
