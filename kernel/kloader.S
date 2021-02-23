@@ -1,10 +1,12 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 
 .section ".text"
+.global __kernel_loader
 
-_start:
-  // Initialize stack pointer
-  ldr x0, = _stack_top
+__kernel_loader:
+  // Initialize the stack pointer to the address of __kernel_loader,
+  // allowing it to grow toward lower address.
+  ldr x0, = __kernel_loader
   mov sp, x0
 
 1:
@@ -13,6 +15,6 @@ _start:
   ldr w1, = _bss_end
   bl kmain
 
-end_kernel:
+__kernel_end:
   wfe
-  b end_kernel
+  b __kernel_end

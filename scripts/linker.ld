@@ -1,24 +1,23 @@
-ENTRY(_start);
+ENTRY(__kernel_loader)
 
 SECTIONS
 {
-    . = 0x80000;
+  . = 0x80000;
 
-    .text :
-    {
-      _stack_top = .;
-      *(.text)
-    }
+  .text :
+  {
+    *(.text)
+  }
 
-    .data :
-    {
-      *(.data)
-    }
+  .data :
+  {
+    *(.data)
+  }
 
-    .bss  :
-    {
-      _bss_start = .;
-      *(.bss)
-      _bss_end = .;
-    }
+  .bss  :
+  {
+    _bss_start = .;
+    *(.bss)
+    _bss_end = .;
+  }
 }
