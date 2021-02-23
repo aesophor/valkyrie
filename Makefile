@@ -1,24 +1,32 @@
-CXX = aarch64-none-elf-gcc
-LD = aarch64-none-elf-ld
+CXX = aarch64-linux-gnu-g++
+CXXFLAGS = -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles
+LD = aarch64-linux-gnu-ld
 LDFLAGS = -T scripts/linker.ld
+OBJCOPY = aarch64-linux-gnu-objcopy
+OBJCOPYFLAGS = -O binary
 
 BUILD = build
 OS_NAME = valkyrie
-SRC_CPP = $(wildcard **/*.cc) $(wildcard **/*.S)
+SRC = $(wildcard **/*.S) $(wildcard **/*.cc)
 OBJECTS = $(wildcard **/*.o) $(wildcard *.o)
 
 
 all:
 	mkdir -p $(BUILD)
-	$(CXX) $(CXXFLAGS) -c $(SRC_CPP)
+	$(CXX) $(CXXFLAGS) -c $(SRC)
 	make valkyrie
 
 valkyrie:
-	$(LD) $(LDFLAGS) -o $(BUILD)/$(OS_NAME).img $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $(BUILD)/$(OS_NAME).elf kloader.o kmain.o
+	$(OBJCOPY) $(OBJCOPYFLAGS) $(BUILD)/$(OS_NAME).elf $(BUILD)/$(OS_NAME).img
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel $(BUILD)/$(OS_NAME).img -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3\
+		-kernel $(BUILD)/$(OS_NAME).img\
+		-display none\
+		-S -s
 
 clean:
 	find . -type f -iname "*.o" | xargs rm
 	rm -rf $(BUILD)
+
