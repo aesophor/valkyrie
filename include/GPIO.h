@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_GPIO_H_
 #define VALKYRIE_GPIO_H_
 
-#include <type.h>
+#include <Types.h>
 
 #define MMIO_BASE 0x3f000000
 

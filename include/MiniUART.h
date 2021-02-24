@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_MINI_UART_H_
 #define VALKYRIE_MINI_UART_H_
 
-#include <gpio.h>
-#include <type.h>
+#include <GPIO.h>
+#include <Types.h>
 
 // Quoting from BCM2837-ARM-Peripherals.pdf (pg. 6)
 // ------------------------------------------------
@@ -24,32 +24,24 @@
 #define AUX_MU_STAT_REG (MMIO_BASE + 0x215064)
 #define AUX_MU_BAUD_REG (MMIO_BASE + 0x215068)
 
-#define ALT0 0b100
-#define ALT1 0b101
-#define ALT2 0b110
-#define ALT3 0b111
-#define ALT4 0b011
-#define ALT5 0b010
-
-#define WRITE32(reg, val)    *reinterpret_cast<uint32_t*>(reg) = val
-#define READ32(reg)          *reinterpret_cast<uint32_t*>(reg)
-#define DELAY(cycles)        \
-  do {                       \
-    uint32_t __cycles = 150; \
-    while (__cycles--) {     \
-      asm volatile("nop");   \
-    }                        \
-  } while (0)
+#define GPFSEL_INPUT  0b000
+#define GPFSEL_OUTPUT 0b001
+#define GPFSEL_ALT0   0b100
+#define GPFSEL_ALT1   0b101
+#define GPFSEL_ALT2   0b110
+#define GPFSEL_ALT3   0b111
+#define GPFSEL_ALT4   0b011
+#define GPFSEL_ALT5   0b010
 
 namespace valkyrie {
 
-class mini_uart {
+class MiniUART {
  public:
-  mini_uart();
-  ~mini_uart() = default;
+  MiniUART();
+  ~MiniUART() = default;
 
-  char read();
-  void write(const char c);
+  char read_byte();
+  void write_byte(const char c);
 };
 
 }  // namespace valkyrie
