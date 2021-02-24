@@ -4,30 +4,22 @@
 
 using namespace valkyrie::kernel;
 
-namespace {
-
-// Initialize .bss section to 0
-void init_bss(char* begin, char* end) {
-  while (begin <= end) {
-    *begin++ = 0x00;
-  }
-}
-
-}  // namespace
-
-
 extern "C" void kmain(char* bss_start, char* bss_end) {
-  ::init_bss(bss_start, bss_end);
+  // Initialize bss segment to 0
+  memset(bss_start, 0, bss_end - bss_start);
 
   MiniUART uart;
-
   uart.puts("Valkyrie Operating System");
   uart.puts("=========================");
 
-  char c = uart.getchar();
-  uart.putchar(c);
+  char buf[256];
+
+  while (true) {
+    memset(buf, 0, sizeof(buf));
+    uart.gets(buf);
+    uart.puts(buf);
+  }
 
   uart.puts("bye...");
-
   while (1);
 }
