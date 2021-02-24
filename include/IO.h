@@ -17,7 +17,7 @@ void write(const size_t dest_addr, const T data) {
 }
 
 
-void delay(size_t cycles) {
+inline void delay(size_t cycles) {
   while (cycles--) {
     asm volatile("nop");
   }

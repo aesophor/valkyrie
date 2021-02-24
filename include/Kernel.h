@@ -12,10 +12,14 @@ class Kernel {
   ~Kernel() = default;
 
   void run();
+  void reboot();
 
  private:
   void gets(char* s);
   void puts(const char* s);
+
+  void reset(int tick);
+  void cancel_reset();
 
   MiniUART _mini_uart;
 };

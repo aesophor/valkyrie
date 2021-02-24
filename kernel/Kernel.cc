@@ -1,7 +1,12 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <Kernel.h>
 
+#include <IO.h>
 #include <String.h>
+
+#define PM_PASSWORD 0x5a000000
+#define PM_RSTC 0x3F10001c
+#define PM_WDOG 0x3F100024
 
 namespace valkyrie::kernel {
 
@@ -32,6 +37,7 @@ void Kernel::run() {
       puts("Hello World!");
     } else if (!strcmp(buf, "reboot")) {
       puts("Rebooting...");
+      reboot();
     } else {
       puts("command not found");
     }
@@ -42,6 +48,10 @@ void Kernel::run() {
   while (1);
 }
 
+void Kernel::reboot() {
+  reset(100);
+}
+
 
 void Kernel::gets(char* s) {
   _mini_uart.gets(s);
@@ -49,6 +59,17 @@ void Kernel::gets(char* s) {
 
 void Kernel::puts(const char* s) {
   _mini_uart.puts(s);
+}
+
+
+void Kernel::reset(int tick) {  // reboot after watchdog timer expire
+  io::write(PM_RSTC, PM_PASSWORD | 0x20);  // full reset
+  io::write(PM_WDOG, PM_PASSWORD | tick);  // number of watchdog tick
+}
+
+void Kernel::cancel_reset() {
+  io::write(PM_RSTC, PM_PASSWORD | 0);  // full reset
+  io::write(PM_WDOG, PM_PASSWORD | 0);  // number of watchdog tick
 }
 
 
