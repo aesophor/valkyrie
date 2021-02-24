@@ -17,6 +17,7 @@ class Kernel {
  private:
   void gets(char* s);
   void puts(const char* s);
+  void putchar(const char c);
 
   void reset(int tick);
   void cancel_reset();

@@ -45,6 +45,10 @@ class MiniUART {
 
   void gets(char* s);
   void puts(const char* s);
+
+ private:
+  uint8_t recv();
+  void send(const uint8_t byte);
 };
 
 }  // namespace valkyrie::kernel

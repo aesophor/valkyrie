@@ -23,8 +23,8 @@ void Kernel::run() {
 
   while (true) {
     memset(buf, 0, sizeof(buf));
-    _mini_uart.putchar('$');
-    _mini_uart.putchar(' ');
+    putchar('$');
+    putchar(' ');
     gets(buf);
     puts(buf);
 
@@ -44,7 +44,6 @@ void Kernel::run() {
   }
 
   puts("bye...");
-
   while (1);
 }
 
@@ -59,6 +58,10 @@ void Kernel::gets(char* s) {
 
 void Kernel::puts(const char* s) {
   _mini_uart.puts(s);
+}
+
+void Kernel::putchar(const char c) {
+  _mini_uart.putchar(c);
 }
 
 

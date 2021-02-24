@@ -81,17 +81,31 @@ MiniUART::MiniUART() {
 }
 
 
-char MiniUART::getchar() {
+uint8_t MiniUART::recv() {
   while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 1));
-  char c = io::read<uint8_t>(AUX_MU_IO_REG);
+  return io::read<uint8_t>(AUX_MU_IO_REG);
+}
+
+void MiniUART::send(const uint8_t byte) {
+  while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 0x20));
+  io::write(AUX_MU_IO_REG, byte);
+}
+
+
+char MiniUART::getchar() {
+  char c = recv();
   c = (c == '\r') ? '\n' : c;
   putchar(c);
   return c;
 }
 
 void MiniUART::putchar(const char c) {
-  while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 0x20));
-  io::write(AUX_MU_IO_REG, c);
+  if (c == '\n') {
+    send('\r');
+    send('\n');
+  } else {
+    send(c);
+  }
 }
 
 
