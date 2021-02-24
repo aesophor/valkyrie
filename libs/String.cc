@@ -8,13 +8,16 @@ void* memcpy(void* dest, const void* src, size_t n) {
 }
 
 void* memset(void* dest, uint8_t val, size_t n) {
-
+  for (size_t i = 0; i < n; i++) {
+    reinterpret_cast<uint8_t*>(dest)[i] = val;
+  }
+  return dest;
 }
 
 
 size_t strlen(const char* s) {
-  size_t len = 0;
-  while (*s++ != 0x00) ++len;
+  size_t len;
+  for (len = 0; *s; s++) ++len;
   return len;
 }
 
