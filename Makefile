@@ -30,6 +30,8 @@ run:
 	qemu-system-aarch64 -M raspi3\
 		-kernel $(BUILD_DIR)/$(IMG)\
 		-display none\
+		-serial null\
+		-serial stdio\
 		-S -s
 
 debug:
