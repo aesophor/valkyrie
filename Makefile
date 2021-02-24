@@ -26,13 +26,20 @@ valkyrie:
 	$(LD) $(LDFLAGS) -o $(BUILD_DIR)/$(ELF) $(OBJ)
 	$(OBJCOPY) $(OBJCOPYFLAGS) $(BUILD_DIR)/$(ELF) $(BUILD_DIR)/$(IMG)
 
-run:
+run-debug:
 	qemu-system-aarch64 -M raspi3\
 		-kernel $(BUILD_DIR)/$(IMG)\
 		-display none\
 		-serial null\
 		-serial stdio\
 		-S -s
+
+run:
+	qemu-system-aarch64 -M raspi3\
+		-kernel $(BUILD_DIR)/$(IMG)\
+		-display none\
+		-serial null\
+		-serial stdio
 
 gdb:
 	$(GDB) $(GDBFLAGS)
