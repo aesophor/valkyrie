@@ -14,6 +14,9 @@ class Kernel {
   void run();
 
  private:
+  void gets(char* s);
+  void puts(const char* s);
+
   MiniUART _mini_uart;
 };
 

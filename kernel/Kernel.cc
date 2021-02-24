@@ -9,19 +9,29 @@ Kernel::Kernel() : _mini_uart() {}
 
 
 void Kernel::run() {
-  _mini_uart.puts("Valkyrie Operating System");
-  _mini_uart.puts("=========================");
+  puts("Valkyrie Operating System");
+  puts("=========================");
 
   char buf[256];
 
   while (true) {
     memset(buf, 0, sizeof(buf));
-    _mini_uart.gets(buf);
-    _mini_uart.puts(buf);
+    gets(buf);
+    puts(buf);
   }
 
-  _mini_uart.puts("bye...");
+  puts("bye...");
+
   while (1);
+}
+
+
+void Kernel::gets(char* s) {
+  _mini_uart.gets(s);
+}
+
+void Kernel::puts(const char* s) {
+  _mini_uart.puts(s);
 }
 
 
