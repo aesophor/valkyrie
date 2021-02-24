@@ -11,10 +11,10 @@ GDB = aarch64-linux-gnu-gdb
 GDBFLAGS = -x ./debug.gdb
 
 BUILD_DIR = build
-OS_NAME = valkyrie
+ELF = valkyrie.elf
+IMG = kernel8.img
 SRC = $(wildcard **/*.S) $(wildcard **/*.cc)
-OBJ = $(wildcard *.o)
-OBJ := kloader.o $(filter-out kloader.o, $(OBJ))
+OBJ = boot.o $(filter-out boot.o, $(wildcard *.o))
 
 
 all:
@@ -23,12 +23,12 @@ all:
 	make valkyrie
 
 valkyrie:
-	$(LD) $(LDFLAGS) -o $(BUILD_DIR)/$(OS_NAME).elf $(OBJ)
-	$(OBJCOPY) $(OBJCOPYFLAGS) $(BUILD_DIR)/$(OS_NAME).elf $(BUILD_DIR)/$(OS_NAME).img
+	$(LD) $(LDFLAGS) -o $(BUILD_DIR)/$(ELF) $(OBJ)
+	$(OBJCOPY) $(OBJCOPYFLAGS) $(BUILD_DIR)/$(ELF) $(BUILD_DIR)/$(IMG)
 
 run:
 	qemu-system-aarch64 -M raspi3\
-		-kernel $(BUILD_DIR)/$(OS_NAME).img\
+		-kernel $(BUILD_DIR)/$(IMG)\
 		-display none\
 		-S -s
 

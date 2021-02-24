@@ -1,8 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 
 .section ".text"
-.global __kernel_loader
 
+.global __kernel_loader
 __kernel_loader:
   // Initialize the stack pointer to the address of __kernel_loader,
   // allowing it to grow toward lower address.
