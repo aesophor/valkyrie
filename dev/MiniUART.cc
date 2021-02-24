@@ -83,8 +83,10 @@ MiniUART::MiniUART() {
 
 char MiniUART::getchar() {
   while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 1));
-  char r = io::read<uint8_t>(AUX_MU_IO_REG);
-  return (r == '\r') ? '\n' : r;
+  char c = io::read<uint8_t>(AUX_MU_IO_REG);
+  c = (c == '\r') ? '\n' : c;
+  putchar(c);
+  return c;
 }
 
 void MiniUART::putchar(const char c) {

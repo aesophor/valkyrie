@@ -12,12 +12,29 @@ void Kernel::run() {
   puts("Valkyrie Operating System");
   puts("=========================");
 
+
+  // Lab1 SimpleShell
   char buf[256];
 
   while (true) {
     memset(buf, 0, sizeof(buf));
+    _mini_uart.putchar('$');
+    _mini_uart.putchar(' ');
     gets(buf);
     puts(buf);
+
+    if (!strcmp(buf, "help")) {
+      puts("usage:");
+      puts("help   - Print all available commands");
+      puts("hello  - Print Hello World!");
+      puts("reboot - Reboot machine");
+    } else if (!strcmp(buf, "hello")) {
+      puts("Hello World!");
+    } else if (!strcmp(buf, "reboot")) {
+      puts("Rebooting...");
+    } else {
+      puts("command not found");
+    }
   }
 
   puts("bye...");
