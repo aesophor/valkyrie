@@ -48,8 +48,9 @@
 #include <MiniUART.h>
 
 #include <IO.h>
+#include <String.h>
 
-namespace valkyrie {
+namespace valkyrie::kernel {
 
 MiniUART::MiniUART() {
   // Configure GPFSEL1 register to set both gpio14 and gpio15 to use ALT5.
@@ -80,14 +81,30 @@ MiniUART::MiniUART() {
 }
 
 
-char MiniUART::read_byte() {
+char MiniUART::getchar() {
   while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 1));
-  return io::read<uint32_t>(AUX_MU_IO_REG & 0xff);
+  return io::read<uint8_t>(AUX_MU_IO_REG & 0xff);
 }
 
-void MiniUART::write_byte(const char c) {
-  while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 0b100000));
+void MiniUART::putchar(const char c) {
+  while (!(io::read<uint32_t>(AUX_MU_LSR_REG) & 0x20));
   io::write(AUX_MU_IO_REG, c);
 }
 
-}  // namespace valkyrie
+
+void MiniUART::gets(char* s) {
+  char c = 0x00;
+  while ((c=getchar()) != '\n') {
+    *s++ = c;
+  }
+  *--s = '\n';
+}
+
+void MiniUART::puts(const char* s) {
+  for (size_t i = 0; i < strlen(s); i++) {
+    putchar(s[i]);
+  }
+  putchar('\n');
+}
+
+}  // namespace valkyrie::kernel

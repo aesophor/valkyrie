@@ -4,7 +4,7 @@
 
 #include <Types.h>
 
-namespace valkyrie::io {
+namespace valkyrie::kernel::io {
 
 template <typename T>
 T read(const size_t src_addr) {
@@ -23,6 +23,6 @@ void delay(size_t cycles) {
   }
 }
 
-}  // namespace valkyrie::io
+}  // namespace valkyrie::kernel::io
 
 #endif  // VALKYRIE_MINI_UART_H_

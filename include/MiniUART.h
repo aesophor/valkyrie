@@ -33,17 +33,20 @@
 #define GPFSEL_ALT4   0b011
 #define GPFSEL_ALT5   0b010
 
-namespace valkyrie {
+namespace valkyrie::kernel {
 
 class MiniUART {
  public:
   MiniUART();
   ~MiniUART() = default;
 
-  char read_byte();
-  void write_byte(const char c);
+  char getchar();
+  void putchar(const char c);
+
+  void gets(char* s);
+  void puts(const char* s);
 };
 
-}  // namespace valkyrie
+}  // namespace valkyrie::kernel
 
 #endif  // VALKYRIE_MINI_UART_H_

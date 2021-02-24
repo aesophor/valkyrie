@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_TYPE_H_
 #define VALKYRIE_TYPE_H_
 
-namespace valkyrie {
+namespace valkyrie::kernel {
 
 using uint64_t = unsigned long long;
 using int64_t = long long;
@@ -18,6 +18,6 @@ using int8_t = char;
 
 using size_t = uint64_t;
 
-}  // namespace valkyrie
+}  // namespace valkyrie::kernel
 
 #endif  // VALKYRIE_TYPE_H_
