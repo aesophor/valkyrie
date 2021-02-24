@@ -34,7 +34,7 @@ run:
 		-serial stdio\
 		-S -s
 
-debug:
+gdb:
 	$(GDB) $(GDBFLAGS)
 
 clean:
