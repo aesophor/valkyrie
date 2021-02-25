@@ -1,5 +1,5 @@
 CXX = aarch64-linux-gnu-g++
-CXXFLAGS = -Iinclude -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles
+CXXFLAGS = -Iinclude -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -fno-threadsafe-statics
 
 LD = aarch64-linux-gnu-ld
 LDFLAGS = -T scripts/linker.ld
