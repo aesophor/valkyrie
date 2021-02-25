@@ -33,7 +33,7 @@ class Mailbox final {
 
   // Because only upper 28 bits of message address could be passed,
   // the message array should be correctly aligned.
-  struct Message {
+  [[gnu::packed, gnu::aligned(16)]] struct Message {
     uint32_t buf_size;                   // buffer size (in bytes)
     uint32_t buf_req_resp_code;          // request/response code
     uint32_t tag_identifier;             // tag identifier
@@ -41,7 +41,7 @@ class Mailbox final {
     uint32_t tag_req_resp_code;                
     uint32_t value_buf[VALUE_BUF_SIZE];  // value buffer
     uint32_t tag_end;
-  } __attribute__((packed, aligned(16))) _msg;
+  } _msg;
 };
 
 
