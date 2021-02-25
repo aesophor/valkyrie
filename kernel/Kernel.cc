@@ -32,17 +32,19 @@ void Kernel::run() {
   // Lab1 SimpleShell
   KShell shell;
   shell.run();
-
-  puts("bye...");
-  while (1);
-}
-
-
-extern "C" void kmain(char* bss_start, char* bss_end) {
-  // Initialize bss segment to 0
-  valkyrie::kernel::memset(bss_start, 0, bss_end - bss_start);
-  // Run the kernel
-  valkyrie::kernel::Kernel::get_instance()->run();
 }
 
 }  // namespace valkyrie::kernel
+
+
+extern "C"
+[[noreturn]] void kmain(char* bss_start, char* bss_end) {
+  // Initialize bss segment to 0
+  valkyrie::kernel::memset(bss_start, 0, bss_end - bss_start);
+
+  // Run the kernel
+  valkyrie::kernel::Kernel::get_instance()->run();
+
+  while (1);
+}
+
