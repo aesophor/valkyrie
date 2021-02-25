@@ -38,13 +38,8 @@ void Kernel::run() {
 
 
 extern "C"
-[[noreturn]] void kmain(char* bss_start, char* bss_end) {
-  // Initialize bss segment to 0
-  valkyrie::kernel::memset(bss_start, 0, bss_end - bss_start);
-
+[[noreturn]] void kmain(void) {
   // Run the kernel
   valkyrie::kernel::Kernel::get_instance()->run();
-
   while (1);
 }
-

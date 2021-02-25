@@ -15,7 +15,6 @@ void KShell::run() {
     putchar('$');
     putchar(' ');
     gets(_buf);
-    puts(_buf);
 
     if (!strcmp(_buf, "help")) {
       puts("usage:");
