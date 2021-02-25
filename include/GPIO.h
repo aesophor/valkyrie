@@ -2,9 +2,7 @@
 #ifndef VALKYRIE_GPIO_H_
 #define VALKYRIE_GPIO_H_
 
-#include <Types.h>
-
-#define MMIO_BASE 0x3f000000
+#include <IO.h>
 
 // Defined according to BCM2837-ARM-Peripherals.pdf (pg. 90 ~ 91)
 // 刻到手軟 Zzzzz

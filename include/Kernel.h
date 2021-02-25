@@ -2,26 +2,25 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
+#include <Mailbox.h>
 #include <MiniUART.h>
 
 namespace valkyrie::kernel {
 
 class Kernel {
  public:
-  Kernel();
+  static Kernel* get_instance();
   ~Kernel() = default;
 
   void run();
-  void reboot();
 
  private:
-  void gets(char* s);
-  void puts(const char* s);
-  void putchar(const char c);
+  Kernel();
 
   void reset(int tick);
   void cancel_reset();
 
+  Mailbox _mailbox;
   MiniUART _mini_uart;
 };
 
