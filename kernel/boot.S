@@ -5,7 +5,7 @@
 .extern memset
 
 _start:
-  // Initialize the stack pointer to the address of __kernel_loader,
+  // Initialize the stack pointer to the address of _start,
   // allowing it to grow toward lower address.
   ldr x0, = _start
   mov sp, x0
