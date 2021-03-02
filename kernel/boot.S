@@ -2,7 +2,7 @@
 
 .section ".text"
 
-.extern _ZN8valkyrie6kernel6memsetEPvhy
+.extern memset
 
 .global __kernel_loader
 __kernel_loader:
@@ -11,14 +11,14 @@ __kernel_loader:
   ldr x0, = __kernel_loader
   mov sp, x0
 
-__initialize_bss:
-1:
+  // Initialize .bss by calling memset()
   ldr x0, = _bss_start
   mov x1, 0
   ldr x2, = _bss_end
   sub x2, x2, x0
-  bl _ZN8valkyrie6kernel6memsetEPvhy
+  bl memset
 
+  // Transfer control to kmain()
   bl kmain
 
 __kernel_end:
