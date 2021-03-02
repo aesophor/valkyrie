@@ -4,7 +4,7 @@
 
 #include <Types.h>
 
-namespace valkyrie::kernel {
+extern "C" {
 
 void* memcpy(void* dest, const void* src, size_t n);
 void* memset(void* dest, uint8_t val, size_t n);
@@ -17,6 +17,6 @@ char* strncpy(char* dest, const char* src, size_t n);
 char* strcat(char* dest, const char* src);
 char* strstr(const char* haystack, const char* needle);
 
-}  // namespace valkyrie::kernel
+}
 
 #endif  // VALKYRIE_STRING_H_
