@@ -1,8 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <String.h>
 
-namespace valkyrie::kernel {
-
 void* memcpy(void* dest, const void* src, size_t n) {
   const uint8_t* src_p = reinterpret_cast<const uint8_t*>(src);
   uint8_t* dest_p = reinterpret_cast<uint8_t*>(dest);
@@ -63,5 +61,3 @@ char* strcat(char* dest, const char* src) {
 char* strstr(const char* haystack, const char* needle) {
 
 }
-
-}  // namespace valkyrie::kernel
