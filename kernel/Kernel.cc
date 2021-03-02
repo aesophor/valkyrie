@@ -13,12 +13,14 @@ Kernel* Kernel::get_instance() {
   return &instance;
 }
 
-Kernel::Kernel() : _mailbox(), _mini_uart() {}
+Kernel::Kernel()
+    : _mailbox(),
+      _mini_uart() {
+  console_init(&_mini_uart);
+}
 
 
 void Kernel::run() {
-  console_init(&_mini_uart);
-
   puts("valkyrie v0.1 by @aesophor\n");
   puts("[*] board revision: ", false);
   print_hex(_mailbox.get_board_revision());
