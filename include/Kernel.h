@@ -13,7 +13,6 @@ class Kernel {
   ~Kernel() = default;
 
   void run();
-  MiniUART* get_mini_uart() { return &_mini_uart; }
 
  private:
   Kernel();
