@@ -1,8 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_TYPE_H_
-#define VALKYRIE_TYPE_H_
-
-namespace valkyrie::kernel {
+#ifndef VALKYRIE_TYPES_H_
+#define VALKYRIE_TYPES_H_
 
 using uint64_t = unsigned long long;
 using int64_t = long long;
@@ -18,6 +16,4 @@ using int8_t = char;
 
 using size_t = uint64_t;
 
-}  // namespace valkyrie::kernel
-
-#endif  // VALKYRIE_TYPE_H_
+#endif  // VALKYRIE_TYPES_H_
