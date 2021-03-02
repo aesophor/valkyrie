@@ -1,14 +1,10 @@
-SECTIONS
-{
+SECTIONS {
   . = 0x80000;
 
-  .text :
-  {
-    *(.text)
-  }
+  .text : { *(.text) }
+  .rodata ALIGN(8) : { *(.rodata) }
 
-  .data :
-  {
+  .data ALIGN(8) : {
     start_ctors = .;
     KEEP(*( .init_array ));
     KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
@@ -16,8 +12,7 @@ SECTIONS
     *(.data)
   }
 
-  .bss  :
-  {
+  .bss : {
     _bss_start = .;
     *(.bss)
     _bss_end = .;
