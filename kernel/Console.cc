@@ -1,22 +1,33 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <Console.h>
 
+namespace {
+
+valkyrie::kernel::MiniUART* mini_uart;
+
+}  // namespace
+
+
 namespace valkyrie::kernel {
 
 void console_init(MiniUART* mini_uart) {
   ::mini_uart = mini_uart;
 }
 
-void gets(char* s) {
-  ::mini_uart->gets(s);
-}
-
-void puts(const char* s) {
-  ::mini_uart->puts(s);
+char getchar() {
+  return ::mini_uart->getchar();
 }
 
 void putchar(const char c) {
   ::mini_uart->putchar(c);
+}
+
+void gets(char* s) {
+  ::mini_uart->gets(s);
+}
+
+void puts(const char* s, bool newline) {
+  ::mini_uart->puts(s, newline);
 }
 
 void print_hex(const uint32_t value) {

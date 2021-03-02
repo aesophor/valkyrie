@@ -19,14 +19,14 @@ Kernel::Kernel() : _mailbox(), _mini_uart() {}
 void Kernel::run() {
   console_init(&_mini_uart);
 
-  puts("Valkyrie Operating System");
-  puts("=========================");
-  puts("board revision:");
+  puts("valkyrie v0.1 by @aesophor\n");
+  puts("[*] board revision: ", false);
   print_hex(_mailbox.get_board_revision());
 
   auto vc_memory_info = _mailbox.get_vc_memory();
-  puts("vc core base address / size:");
+  puts("[*] vc core base address: ", false);
   print_hex(vc_memory_info.first);
+  puts("[*] vc core size: ", false);
   print_hex(vc_memory_info.second);
 
   // Lab1 SimpleShell
@@ -35,11 +35,3 @@ void Kernel::run() {
 }
 
 }  // namespace valkyrie::kernel
-
-
-extern "C"
-[[noreturn]] void kmain(void) {
-  // Run the kernel
-  valkyrie::kernel::Kernel::get_instance()->run();
-  while (1);
-}

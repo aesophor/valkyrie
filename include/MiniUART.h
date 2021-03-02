@@ -44,7 +44,7 @@ class MiniUART {
   void putchar(const char c);
 
   void gets(char* s);
-  void puts(const char* s);
+  void puts(const char* s, bool newline = true);
 
  private:
   uint8_t recv();

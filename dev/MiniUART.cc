@@ -115,11 +115,13 @@ void MiniUART::gets(char* s) {
   *s = 0;
 }
 
-void MiniUART::puts(const char* s) {
+void MiniUART::puts(const char* s, bool newline) {
   for (size_t i = 0; i < strlen(s); i++) {
     putchar(s[i]);
   }
-  putchar('\n');
+  if (newline) {
+    putchar('\n');
+  }
 }
 
 }  // namespace valkyrie::kernel
