@@ -16,6 +16,6 @@ inline void reset(int tick) {
   io::write(PM_WDOG, PM_PASSWORD | tick);  // number of watchdog tick
 }
 
-}  // namespace valkyrie::kernel::io
+}  // namespace valkyrie::kernel
 
 #endif  // VALKYRIE_MINI_UART_H_
