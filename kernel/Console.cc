@@ -8,11 +8,14 @@ valkyrie::kernel::MiniUART* mini_uart;
 }  // namespace
 
 
-namespace valkyrie::kernel {
+namespace valkyrie::kernel::console {
 
-void console_init(MiniUART* mini_uart) {
+void initialize(MiniUART* mini_uart) {
   ::mini_uart = mini_uart;
 }
+
+}  // namespace valkyrie::kernel::console
+
 
 char getchar() {
   return ::mini_uart->getchar();
@@ -41,5 +44,3 @@ void print_hex(const uint32_t value) {
 
   puts(addr);
 }
-
-}  // namespace valkyrie::kernel
