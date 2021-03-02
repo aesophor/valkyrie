@@ -4,11 +4,10 @@
 
 .extern memset
 
-.global __kernel_loader
-__kernel_loader:
+_start:
   // Initialize the stack pointer to the address of __kernel_loader,
   // allowing it to grow toward lower address.
-  ldr x0, = __kernel_loader
+  ldr x0, = _start
   mov sp, x0
 
   // Initialize .bss by calling memset()
@@ -21,6 +20,6 @@ __kernel_loader:
   // Transfer control to kmain()
   bl kmain
 
-__kernel_end:
+_halt:
   wfe
-  b __kernel_end
+  b _halt
