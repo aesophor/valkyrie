@@ -1,32 +1,35 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <iostream>
-int test_strncmp(const char* s1, const char* s2, size_t n){
-   if(n == 0)
-       return 0;
+char* test_strcpy(char* dest, const char* src){
+    if(dest == NULL)
+        return NULL;
 
-    while(n--){
-        if(*s1 != *s2)
-            return *s1 - *s2;
-        else{
-            s1 ++;
-            s2 ++;
-        }
+    char *ret = dest;
+
+    while(*src != '\0'){
+        *dest++ = *src++;
     }
-    return 0;
+    *dest = '\0';
+
+    return ret;
 }
 int main(){
+    //char *s1 = (char*)malloc(100);
+    //char *s2 = (char*)malloc(100);
     char s1[100];
     char s2[100];
     int n;
     while(true){
-        scanf("%s %s %d", s1, s2, &n);
-        int a =  strncmp(s1, s2, n);
-        int b =  test_strncmp(s1, s2, n);
-        if(a != b){
-            std::cout << a << " " << b << "false" << std::endl;
+        //scanf("%s %s %d", s1, s2, &n);
+        scanf("%s", s1);
+        char* rec =  test_strcpy(s2, s1);
+        int a =  strcmp(s1, rec);
+        if(a){
+            std::cout << s1 << " " << s2 << " " << "false" << std::endl;
         }else{
-            std::cout << a << " " << b << "true" << std::endl;
+            std::cout << s1 << " " << s2 << " " << "true" << std::endl;
         }
 
     }
