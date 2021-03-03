@@ -58,7 +58,17 @@ int strncmp(const char* s1, const char* s2, size_t n) {
 }
 
 char* strcpy(char* dest, const char* src) {
+    if(dest == NULL)
+        return NULL;
 
+    char *ret = dest;
+
+    while(*src != '\0'){
+        *dest++ = *src++;
+    }
+    *dest = '\0';
+
+    return ret;
 }
 
 char* strncpy(char* dest, const char* src, size_t n) {
