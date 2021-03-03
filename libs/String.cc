@@ -58,8 +58,8 @@ int strncmp(const char* s1, const char* s2, size_t n) {
 }
 
 char* strcpy(char* dest, const char* src) {
-    if(dest == NULL)
-        return NULL;
+    if(dest == nullptr)
+        return nullptr;
 
     char *ret = dest;
 
@@ -72,8 +72,8 @@ char* strcpy(char* dest, const char* src) {
 }
 
 char* strncpy(char* dest, const char* src, size_t n) {
-    if(dest == NULL)
-        return NULL;
+    if(dest == nullptr)
+        return nullptr;
 
     char *ret = dest;
 
@@ -99,6 +99,20 @@ char* strcat(char* dest, const char* src) {
     return dest;
 }
 
-char* strstr(const char* haystack, const char* needle) {
-
+int compare(const char* x, const char* y){
+    while(*x && *y){
+        if(*x != *y)
+            return 0;
+        x++;
+        y++;
+    }
+    return (*y == '\0');
+}
+char* strstr(const char* haystack, const char* needle){
+    while(*haystack != '\0'){
+        if(*haystack == *needle && compare(haystack, needle))
+            return ((char*)haystack);
+        haystack ++;
+    }
+    return nullptr;
 }

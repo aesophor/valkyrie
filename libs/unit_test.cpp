@@ -2,17 +2,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-char* test_strcat(char* dest, const char* src){
-    
-    char *cur = dest + strlen(dest);
 
-    while(*src != '\0'){
-        *cur++ = *src++;
+int compare(const char* x, const char* y){
+    while(*x && *y){
+        if(*x != *y)
+            return 0;
+        x++;
+        y++;
     }
-
-    *cur = '\0';
-
-    return dest;
+    return (*y == '\0');
+}
+char* test_strstr(const char* haystack, const char* needle){
+    while(*haystack != '\0'){
+        if(*haystack == *needle && compare(haystack, needle))
+            return ((char*)haystack);
+        haystack ++;
+    }
+    return NULL;
 }
 int main(){
     //char *s1 = (char*)malloc(100);
@@ -24,16 +30,17 @@ int main(){
         //scanf("%s %s %d", s1, s2, &n);
         scanf("%s %s", s1, s2);
         std::cout << s1 << " " << s2 << std::endl;
-        char* rec =  strcat(s2, s1);
-        std::cout << rec << std::endl;
-        //char* sol = strcat(s2, s1);
-        //int a =  strcmp(rec, sol);
-        //if(a){
-            //std::cout << rec << " " << sol << " " << "false" << std::endl;
-        //}else{
-            //std::cout << rec << " " << sol << " " << "true" << std::endl;
-        //}
+        char* rec = test_strstr(s1, s2);
+        if(rec)
+            std::cout << rec << std::endl;
+        char* sol = strstr(s1,s2);
+        std:: cout << sol << std::endl;
+        int a =  strcmp(rec, sol);
+        if(a){
+            std::cout << rec << " " << sol << " " << "false" << std::endl;
+        }else{
+            std::cout << rec << " " << sol << " " << "true" << std::endl;
+        }
 
     }
-
 }
