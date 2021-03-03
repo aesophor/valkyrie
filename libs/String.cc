@@ -88,7 +88,15 @@ char* strncpy(char* dest, const char* src, size_t n) {
 }
 
 char* strcat(char* dest, const char* src) {
+    char *cur = dest + strlen(dest);
 
+    while(*src != '\0'){
+        *cur++ = *src++;
+    }
+
+    *cur = '\0';
+
+    return dest;
 }
 
 char* strstr(const char* haystack, const char* needle) {
