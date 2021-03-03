@@ -48,5 +48,5 @@
 handle_exception:
 	save_cpu_context
 	bl _ZN8valkyrie6kernel16InterruptManager10handle_irqEv
-  restore_cpu_context
-  eret
+	restore_cpu_context
+	eret
