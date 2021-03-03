@@ -72,6 +72,18 @@ char* strcpy(char* dest, const char* src) {
 }
 
 char* strncpy(char* dest, const char* src, size_t n) {
+    if(dest == NULL)
+        return NULL;
+
+    char *ret = dest;
+
+    while(*src != '\0' && n --){
+        *dest++ = *src++;
+    }
+
+    *dest = '\0';
+
+    return ret;
 
 }
 
