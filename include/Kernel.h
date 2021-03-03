@@ -4,6 +4,7 @@
 
 #include <Mailbox.h>
 #include <MiniUART.h>
+#include <InterruptManager.h>
 
 namespace valkyrie::kernel {
 
@@ -22,6 +23,7 @@ class Kernel {
 
   Mailbox _mailbox;
   MiniUART _mini_uart;
+  InterruptManager _interruptManager;
 };
 
 }  // namespace valkyrie::kernel

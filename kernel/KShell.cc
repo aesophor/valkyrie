@@ -5,6 +5,8 @@
 #include <Power.h>
 #include <String.h>
 
+extern "C" void omg(void);
+
 namespace valkyrie::kernel {
 
 KShell::KShell() : _buf() {}
@@ -29,6 +31,8 @@ void KShell::run() {
     } else if (!strcmp(_buf, "loadimg")) {
       puts("Start loading kernel image...");
       //loadimg();
+    } else if (!strcmp(_buf, "exc")) {
+      omg();
     } else {
       puts("command not found");
     }
