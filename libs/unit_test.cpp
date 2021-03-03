@@ -2,19 +2,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
-char* test_strncpy(char* dest, const char* src, size_t n){
-    if(dest == NULL)
-        return NULL;
+char* test_strcat(char* dest, const char* src){
+    
+    char *cur = dest + strlen(dest);
 
-    char *ret = dest;
-
-    while(*src != '\0' && n --){
-        *dest++ = *src++;
+    while(*src != '\0'){
+        *cur++ = *src++;
     }
 
-    *dest = '\0';
+    *cur = '\0';
 
-    return ret;
+    return dest;
 }
 int main(){
     //char *s1 = (char*)malloc(100);
@@ -24,14 +22,17 @@ int main(){
     int n;
     while(true){
         //scanf("%s %s %d", s1, s2, &n);
-        scanf("%s %d", s1, &n);
-        char* rec =  test_strncpy(s2, s1, n);
-        int a =  strncmp(s1, rec, n);
-        if(a){
-            std::cout << s1 << " " << s2 << " " << "false" << std::endl;
-        }else{
-            std::cout << s1 << " " << s2 << " " << "true" << std::endl;
-        }
+        scanf("%s %s", s1, s2);
+        std::cout << s1 << " " << s2 << std::endl;
+        char* rec =  strcat(s2, s1);
+        std::cout << rec << std::endl;
+        //char* sol = strcat(s2, s1);
+        //int a =  strcmp(rec, sol);
+        //if(a){
+            //std::cout << rec << " " << sol << " " << "false" << std::endl;
+        //}else{
+            //std::cout << rec << " " << sol << " " << "true" << std::endl;
+        //}
 
     }
 
