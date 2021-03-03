@@ -15,7 +15,8 @@ Kernel* Kernel::get_instance() {
 
 Kernel::Kernel()
     : _mailbox(),
-      _mini_uart() {
+      _mini_uart(),
+      _interruptManager() {
   console::initialize(&_mini_uart);
 }
 
