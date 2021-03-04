@@ -18,6 +18,10 @@ void KShell::run() {
     putchar(' ');
     gets(_buf);
 
+    if (!strlen(_buf)) {
+      continue;
+    }
+
     if (!strcmp(_buf, "help")) {
       puts("usage:");
       puts("help   - Print all available commands");
