@@ -19,3 +19,13 @@ get_esr_el2:
 get_elr_el2:
   mrs x0, elr_el2
   ret
+
+.global get_cntfrq_el0
+get_cntfrq_el0:
+  mrs x0, cntfrq_el0
+  ret
+
+.global get_cntpct_el0
+get_cntpct_el0:
+  mrs x0, cntpct_el0
+  ret

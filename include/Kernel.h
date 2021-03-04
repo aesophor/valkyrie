@@ -14,12 +14,11 @@ class Kernel {
   ~Kernel() = default;
 
   void run();
+  uint32_t get_timestamp() const;
 
  private:
   Kernel();
 
-  void reset(int tick);
-  void cancel_reset();
 
   Mailbox _mailbox;
   MiniUART _mini_uart;
