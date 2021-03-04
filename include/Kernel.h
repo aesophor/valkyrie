@@ -23,7 +23,7 @@ class Kernel {
 
   Mailbox _mailbox;
   MiniUART _mini_uart;
-  InterruptManager _interruptManager;
+//  InterruptManager _interruptManager;
 };
 
 }  // namespace valkyrie::kernel
