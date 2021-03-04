@@ -6,6 +6,9 @@
 #include <String.h>
 #include <Utility.h>
 
+extern "C" uint32_t get_cntfrq_el0(void);
+extern "C" uint32_t get_cntpct_el0(void);
+
 namespace valkyrie::kernel {
 
 Kernel* Kernel::get_instance() {
@@ -35,6 +38,11 @@ void Kernel::run() {
   // Lab1 SimpleShell
   KShell shell;
   shell.run();
+}
+
+
+uint32_t Kernel::get_timestamp() const {
+  return 1000 * get_cntpct_el0() / get_cntfrq_el0();
 }
 
 }  // namespace valkyrie::kernel
