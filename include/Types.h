@@ -2,6 +2,9 @@
 #ifndef VALKYRIE_TYPES_H_
 #define VALKYRIE_TYPES_H_
 
+#define INT_MAX  2147483647
+#define INT_MIN -2147483648
+
 using uint64_t = unsigned long long;
 using int64_t = long long;
 

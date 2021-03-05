@@ -1,5 +1,5 @@
 SECTIONS {
-  . = 0x80000;
+  . = 0x60000;
 
   .text : { *(.text) }
   .rodata ALIGN(8) : { *(.rodata) }

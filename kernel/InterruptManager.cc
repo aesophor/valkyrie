@@ -10,9 +10,8 @@ extern "C" size_t get_elr_el2(void);
 
 namespace valkyrie::kernel {
 
-InterruptManager::InterruptManager() {
-  puts("current exception level: ", false);
-  print_hex(get_el());
+InterruptManager::InterruptManager()
+    : _current_exception_level(get_el()) {
   evt_init();
 }
 
@@ -36,14 +35,9 @@ void InterruptManager::handle_irq() {
   uint8_t ec = esr_el2 >> 26;
   uint32_t iss = esr_el2 & 0x1ffffff;
 
-  puts("Exception return address: ", false);
-  print_hex(ret_addr);
-
-  puts("Exception class (EC): ", false);
-  print_hex(ec);
-
-  puts("Instruction specific syndrome (ISS): ", false);
-  print_hex(iss);
+  printf("Exception return address: %x\n", ret_addr);
+  printf("Exception class (EC): %x\n", ec);
+  printf("Instruction specific syndrome (ISS): %d\n", iss);
 
   /*
   switch (irq) {
@@ -55,6 +49,11 @@ void InterruptManager::handle_irq() {
       break;
   }
   */
+}
+
+
+uint8_t InterruptManager::get_current_exception_level() const {
+  return _current_exception_level;
 }
 
 }  // namespace valkyrie::kernel

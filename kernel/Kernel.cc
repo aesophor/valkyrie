@@ -1,6 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <Kernel.h>
 
+#include <libs/printf.h>
+#include <Bootloader.h>
 #include <Console.h>
 #include <KShell.h>
 #include <String.h>
@@ -18,26 +20,33 @@ Kernel* Kernel::get_instance() {
 
 Kernel::Kernel()
     : _mailbox(),
-      _mini_uart() {
-//      _interruptManager() {
+      _mini_uart(),
+      _interruptManager() {
   console::initialize(&_mini_uart);
 }
 
 
 void Kernel::run() {
-  puts("valkyrie v0.1 by @aesophor\n");
-  puts("[*] board revision: ", false);
-  print_hex(_mailbox.get_board_revision());
+  printf("valkyrie v0.1 by @aesophor\n");
+
+  printf("[*] current exception level: %d\n",
+         _interruptManager.get_current_exception_level());
+
+  auto board_revision = _mailbox.get_board_revision();
+  printf("[*] board revision: 0x%x\n", board_revision);
 
   auto vc_memory_info = _mailbox.get_vc_memory();
-  puts("[*] vc core base address: ", false);
-  print_hex(vc_memory_info.first);
-  puts("[*] vc core size: ", false);
-  print_hex(vc_memory_info.second);
+  printf("[*] VC core base address: 0x%x\n", vc_memory_info.first);
+  printf("[*] VC core size: 0x%x\n", vc_memory_info.second);
+
+  // Lab2 Bootloader
+  Bootloader bootloader;
+  bootloader.prompt_kernel_size();
+  bootloader.prompt_kernel_binary_and_load();
 
   // Lab1 SimpleShell
-  KShell shell;
-  shell.run();
+  //KShell shell;
+  //shell.run();
 }
 
 
