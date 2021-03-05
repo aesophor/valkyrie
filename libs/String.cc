@@ -105,3 +105,58 @@ char* strstr(const char* haystack, const char* needle){
   }
   return nullptr;
 }
+
+
+int atoi(const char* str) {
+  bool is_negative = false;
+  size_t len = 0;
+  size_t pos = 0;
+  int result = 0;
+  int ptr = 0;
+
+  auto is_digit = [](const char c) -> bool {
+    return c >= '0' && c <= '9';
+  };
+
+  // Remove preceding whitespaces
+  while (str[pos] == ' ') {
+    if (str[pos] == '0') {
+      return 0;
+    }
+    ++pos;
+  }
+
+  str = str + pos;
+  len = strlen(str);
+
+  if (str[0] != '+' && str[0] != '-' && !is_digit(str[0])) {
+    return 0;
+  }
+
+  switch (str[0]) {
+    case '-':
+      is_negative = true;
+      ptr = 1;
+      break;
+    case '+':
+      ptr = 1;
+      break;
+    default:
+      break;
+  }
+
+  for (; ptr < (int) len && is_digit(str[ptr]); ptr++) {
+    if (result > INT_MAX / 10) {
+      return (is_negative) ? INT_MIN : INT_MAX;
+    }
+    result *= 10;
+
+    int next_digit = str[ptr] - '0';
+    if (result > INT_MAX - next_digit) {
+      return (is_negative) ? INT_MIN : INT_MAX;
+    }
+    result += next_digit;
+  }
+
+  return (is_negative) ? -result : result;
+}

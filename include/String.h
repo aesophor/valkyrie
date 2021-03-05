@@ -17,6 +17,8 @@ char* strncpy(char* dest, const char* src, size_t n);
 char* strcat(char* dest, const char* src);
 char* strstr(const char* haystack, const char* needle);
 
+int atoi(const char* str);
+
 }
 
 #endif  // VALKYRIE_STRING_H_

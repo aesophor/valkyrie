@@ -12,7 +12,7 @@ GDBFLAGS = -x ./debug.gdb
 
 BUILD_DIR = build
 ELF = valkyrie.elf
-IMG = kernel8.img
+IMG = bootloader.img
 SRC = $(wildcard **/*.S) $(wildcard **/*.cc)
 OBJ = boot.o $(filter-out boot.o, $(wildcard *.o))
 
