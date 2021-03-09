@@ -27,8 +27,8 @@ char _recv() {
   return ::mini_uart->recv();
 }
 
-char getchar(bool convert_newline) {
-  return ::mini_uart->getchar(convert_newline);
+char getchar() {
+  return ::mini_uart->getchar();
 }
 
 void putchar(const char c) {
