@@ -18,7 +18,8 @@ void initialize(MiniUART* mini_uart);
 
 extern "C" {
 
-char getchar();
+char _recv();
+char getchar(bool convert_newline = true);
 void putchar(const char c);
 void gets(char* s);
 void puts(const char* s, bool newline = true);

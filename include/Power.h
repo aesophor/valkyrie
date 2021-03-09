@@ -12,8 +12,8 @@ namespace valkyrie::kernel {
 
 // Causes the machine to reboot after watchdog timer expires.
 inline void reset(int tick) {
-  io::write(PM_RSTC, PM_PASSWORD | 0x20);  // full reset
-  io::write(PM_WDOG, PM_PASSWORD | tick);  // number of watchdog tick
+  io::put(PM_RSTC, PM_PASSWORD | 0x20);  // full reset
+  io::put(PM_WDOG, PM_PASSWORD | tick);  // number of watchdog tick
 }
 
 }  // namespace valkyrie::kernel

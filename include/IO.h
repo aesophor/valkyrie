@@ -9,12 +9,12 @@
 namespace valkyrie::kernel::io {
 
 template <typename T>
-T read(const size_t addr) {
+T get(const size_t addr) {
   return *reinterpret_cast<const T*>(addr);
 }
 
 template <typename T>
-void write(const size_t addr, const T data) {
+void put(const size_t addr, const T data) {
   *reinterpret_cast<T*>(addr) = data;
 }
 

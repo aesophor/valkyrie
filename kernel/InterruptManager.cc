@@ -25,7 +25,7 @@ void InterruptManager::disable() {
 }
 
 void InterruptManager::handle_irq() {
-  uint32_t irq = io::read<uint32_t>(IRQ_PENDING_1);
+  uint32_t irq = io::get<uint32_t>(IRQ_PENDING_1);
 
   // esr_el2[31:26] = EC
   // esr_el2[25] = IL
