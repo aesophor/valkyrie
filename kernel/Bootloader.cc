@@ -17,16 +17,23 @@ void Bootloader::prompt_kernel_size() {
 }
 
 void Bootloader::prompt_kernel_binary_and_load() {
-  printf("Send kernel binary: ");
+  printf("Send kernel binary...\n");
   
   // Receive kernel image byte by byte through miniUART.
   size_t addr = KERNEL_BASE_ADDR;
+
   for (size_t i = 0; i < _kernel_size; i++) {
-    io::write(addr++, getchar());
+    io::put<uint8_t>(addr++, _recv());
+  }
+
+  printf("kernel fully received!\n");
+  addr = KERNEL_BASE_ADDR;
+  for (size_t i = 0; i < _kernel_size; i++) {
+    printf("%x ", io::get<uint8_t>(addr++));
   }
 
   // Jump to the kernel and start executing there.
-  reinterpret_cast<void (*)(void)>(KERNEL_BASE_ADDR)();
+  ((void (*)(void)) (KERNEL_BASE_ADDR))();
 }
 
 }  // namespace valkyrie::kernel

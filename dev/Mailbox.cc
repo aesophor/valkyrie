@@ -48,14 +48,14 @@ void Mailbox::call() {
   const uint32_t addr = (reinterpret_cast<size_t>(&_msg) & ~0xf) | 0x8;
 
   // Block until the mailbox is not full.
-  while (io::read<uint32_t>(MAILBOX_STATUS) & MAILBOX_FULL);
-  io::write(MAILBOX_WRITE, addr);
+  while (io::get<uint32_t>(MAILBOX_STATUS) & MAILBOX_FULL);
+  io::put<uint32_t>(MAILBOX_WRITE, addr);
 
   // Block until the mailbox is not empty.
-  while (io::read<uint32_t>(MAILBOX_STATUS) & MAILBOX_EMPTY);
+  while (io::get<uint32_t>(MAILBOX_STATUS) & MAILBOX_EMPTY);
 
   // Block until the response is the one we've asked for.
-  while (io::read<uint32_t>(MAILBOX_READ) != addr);
+  while (io::get<uint32_t>(MAILBOX_READ) != addr);
 }
 
 }  // namespace valkyrie::kernel

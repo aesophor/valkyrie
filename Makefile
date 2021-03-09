@@ -31,7 +31,7 @@ run-debug:
 		-kernel $(BUILD_DIR)/$(IMG)\
 		-display none\
 		-serial null\
-		-serial stdio\
+		-serial pty\
 		-S -s
 
 run:
@@ -47,4 +47,3 @@ gdb:
 clean:
 	find . -type f -iname "*.o" | xargs rm
 	rm -rf $(BUILD_DIR)
-

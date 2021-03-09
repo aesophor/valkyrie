@@ -23,8 +23,12 @@ void initialize(MiniUART* mini_uart) {
 }  // namespace valkyrie::kernel::console
 
 
-char getchar() {
-  return ::mini_uart->getchar();
+char _recv() {
+  return ::mini_uart->recv();
+}
+
+char getchar(bool convert_newline) {
+  return ::mini_uart->getchar(convert_newline);
 }
 
 void putchar(const char c) {
