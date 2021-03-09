@@ -18,10 +18,7 @@ Kernel* Kernel::get_instance() {
   return &instance;
 }
 
-Kernel::Kernel()
-//    : _mailbox(),
- :     _mini_uart() {
-//      _interruptManager() {
+Kernel::Kernel() : _mini_uart() {
   console::initialize(&_mini_uart);
 }
 
@@ -29,25 +26,9 @@ Kernel::Kernel()
 void Kernel::run() {
   printf("[valkyrie bootloader] by @aesophor\n");
 
-  //printf("[*] current exception level: %d\n",
-  //       _interruptManager.get_current_exception_level());
-
-  /*
-  auto board_revision = _mailbox.get_board_revision();
-  printf("[*] board revision: 0x%x\n", board_revision);
-
-  auto vc_memory_info = _mailbox.get_vc_memory();
-  printf("[*] VC core base address: 0x%x\n", vc_memory_info.first);
-  printf("[*] VC core size: 0x%x\n", vc_memory_info.second);
-  */
-
   // Lab2 Bootloader
   Bootloader bootloader;
   bootloader.run();
-
-  // Lab1 SimpleShell
-  //KShell shell;
-  //shell.run();
 }
 
 
