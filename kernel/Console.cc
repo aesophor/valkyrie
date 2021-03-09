@@ -42,7 +42,3 @@ void gets(char* s) {
 void puts(const char* s, bool newline) {
   ::mini_uart->puts(s, newline);
 }
-
-void printk(const char* fmt, ...) {
-
-}
