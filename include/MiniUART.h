@@ -43,7 +43,7 @@ class MiniUART {
   uint8_t recv();
   void send(const uint8_t byte);
 
-  char getchar(bool convert_newline = true);
+  char getchar();
   void putchar(const char c);
 
   void gets(char* s);

@@ -27,7 +27,7 @@ Kernel::Kernel()
 
 
 void Kernel::run() {
-  printf("valkyrie v0.1 by @aesophor\n");
+  printf("[valkyrie bootloader] by @aesophor\n");
 
   //printf("[*] current exception level: %d\n",
   //       _interruptManager.get_current_exception_level());
@@ -43,8 +43,7 @@ void Kernel::run() {
 
   // Lab2 Bootloader
   Bootloader bootloader;
-  bootloader.prompt_kernel_size();
-  bootloader.prompt_kernel_binary_and_load();
+  bootloader.run();
 
   // Lab1 SimpleShell
   //KShell shell;

@@ -10,30 +10,30 @@ namespace valkyrie::kernel {
 Bootloader::Bootloader() : _kernel_size(), _buf() {}
 
 
+void Bootloader::run() {
+  puts("Now please run scripts/send.sh <kernel8.img>");
+  prompt_kernel_size();
+  prompt_kernel_binary_and_load();
+}
+
 void Bootloader::prompt_kernel_size() {
-  printf("Kernel size: ");
   gets(_buf);
   _kernel_size = atoi(_buf);
 }
 
 void Bootloader::prompt_kernel_binary_and_load() {
-  printf("Send kernel binary...\n");
-  
   // Receive kernel image byte by byte through miniUART.
   size_t addr = KERNEL_BASE_ADDR;
-
   for (size_t i = 0; i < _kernel_size; i++) {
     io::put<uint8_t>(addr++, _recv());
   }
 
-  printf("kernel fully received!\n");
-  addr = KERNEL_BASE_ADDR;
-  for (size_t i = 0; i < _kernel_size; i++) {
-    printf("%x ", io::get<uint8_t>(addr++));
-  }
+  printf("Your kernel8.img has been written to 0x%x\n", KERNEL_BASE_ADDR);
+  puts("Starting kernel...\n");
+  io::delay(1000);  // wait for all output to be printed
 
   // Jump to the kernel and start executing there.
-  ((void (*)(void)) (KERNEL_BASE_ADDR))();
+  reinterpret_cast<void (*)()>(KERNEL_BASE_ADDR)();
 }
 
 }  // namespace valkyrie::kernel

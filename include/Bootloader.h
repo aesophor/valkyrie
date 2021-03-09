@@ -14,10 +14,12 @@ class Bootloader {
   Bootloader();
   ~Bootloader() = default;
 
+  void run();
+
+ private:
   void prompt_kernel_size();
   void prompt_kernel_binary_and_load();
 
- private:
   size_t _kernel_size;
   char _buf[BUF_SIZE];
 };

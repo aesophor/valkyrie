@@ -92,9 +92,9 @@ void MiniUART::send(const uint8_t byte) {
 }
 
 
-char MiniUART::getchar(bool convert_newline) {
+char MiniUART::getchar() {
   char c = recv();
-  c = (c == '\r' && convert_newline) ? '\n' : c;
+  c = (c == '\r') ? '\n' : c;
   putchar(c);
   return c;
 }
