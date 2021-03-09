@@ -29,6 +29,7 @@ _start:
   // Transfer control to kmain()
   bl kmain
 
+.global _halt
 _halt:
   wfe
   b _halt

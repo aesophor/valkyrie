@@ -14,7 +14,7 @@ class Kernel {
   ~Kernel() = default;
 
   void run();
-  uint32_t get_timestamp() const;
+  [[noreturn]] void panic();
 
  private:
   Kernel();

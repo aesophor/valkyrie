@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <KShell.h>
 
+#include <Kernel.h>
 #include <Console.h>
 #include <Power.h>
 #include <String.h>
@@ -37,6 +38,8 @@ void KShell::run() {
       //loadimg();
     } else if (!strcmp(_buf, "exc")) {
       omg();
+    } else if (!strcmp(_buf, "panic")) {
+      Kernel::get_instance()->panic();
     } else {
       puts("command not found");
     }
