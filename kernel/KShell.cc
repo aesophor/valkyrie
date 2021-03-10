@@ -36,6 +36,9 @@ void KShell::run() {
       reset(100);
     } else if (!strcmp(_buf, "exc")) {
       omg();
+    } else if (!strcmp(_buf, "irq")) {
+      printk("ARM core timer enabled.\n");
+      Kernel::get_instance()->get_interrupt_manager()->enable();
     } else if (!strcmp(_buf, "panic")) {
       Kernel::get_instance()->panic();
     } else {

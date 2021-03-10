@@ -41,7 +41,7 @@ evt:
 
 .global evt_init
 evt_init:
-  // Load VBAR_EL1 with the address of exception vector table
+  // Load vbar_el2 with the address of exception vector table
   adr x0, evt
   msr vbar_el2, x0
   ret

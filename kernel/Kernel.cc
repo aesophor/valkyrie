@@ -1,12 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <Kernel.h>
 
-#include <libs/printf.h>
 #include <Console.h>
-#include <CPIO.h>
 #include <KShell.h>
-#include <String.h>
-#include <Utility.h>
 
 extern "C" [[noreturn]] void _halt(void);
 
@@ -20,12 +16,12 @@ Kernel* Kernel::get_instance() {
 Kernel::Kernel()
     : _mini_uart(),
       _mailbox(),
-      _interruptManager(),
+      _interrupt_manager(),
       _initrd_cpio(reinterpret_cast<const char*>(CPIO_BASE)) {
   printk("valkyrie by @aesophor\n");
 
   printk("current exception level: %d\n",
-         _interruptManager.get_current_exception_level());
+         _interrupt_manager.get_current_exception_level());
 
   auto board_revision = _mailbox.get_board_revision();
   printk("board revision: 0x%x\n", board_revision);
@@ -47,6 +43,11 @@ void Kernel::run() {
 void Kernel::panic() {
   printk("Kernel panic - not syncing!\n");
   _halt();
+}
+
+
+InterruptManager* Kernel::get_interrupt_manager() {
+  return &_interrupt_manager;
 }
 
 }  // namespace valkyrie::kernel

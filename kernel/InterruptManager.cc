@@ -3,21 +3,36 @@
 
 #include <Console.h>
 
-extern "C" void evt_init(void);
-extern "C" uint32_t get_el(void);
-extern "C" uint32_t get_esr_el2(void);
-extern "C" size_t get_elr_el2(void);
+extern "C" {
+
+void evt_init(void);
+uint32_t get_el(void);
+uint32_t get_esr_el2(void);
+size_t get_elr_el2(void);
+void enable_irq(void);
+void enable_el2_irq(void);
+
+}
+
 
 namespace valkyrie::kernel {
 
 InterruptManager::InterruptManager()
-    : _current_exception_level(get_el()) {
+    : _current_exception_level(get_el()),
+      _arm_core_timer() {
   evt_init();
+
+  // To use interrupt in EL2, you need to
+  // 1. set HCR_EL2.IMO
+  // 2. clear PSTATE.DAIF
+  // in order to enable CPU to accept interrupt.
+  enable_el2_irq();
 }
 
 
 void InterruptManager::enable() {
-
+  _arm_core_timer.enable();
+  enable_irq();
 }
 
 void InterruptManager::disable() {
@@ -25,8 +40,7 @@ void InterruptManager::disable() {
 }
 
 void InterruptManager::handle_irq() {
-  uint32_t irq = io::get<uint32_t>(IRQ_PENDING_1);
-
+  /*
   // esr_el2[31:26] = EC
   // esr_el2[25] = IL
   // esr_el2[24:0] = ISS
@@ -39,16 +53,13 @@ void InterruptManager::handle_irq() {
   printk("Exception class (EC): 0x%x\n", ec);
   printk("Instruction specific syndrome (ISS): 0x%x\n", iss);
 
-  /*
-  switch (irq) {
-    case (SYSTEM_TIMER_IRQ_1):
-      puts("received timer irq");
-      break;
-    default:
-      puts("Unknown pending irq...");
-      break;
-  }
+  _arm_core_timer.handle();
   */
+
+  static uint32_t jiffie = 0;
+  printk("ARM core timer interrupt: jiffie = %d\n", jiffie);
+  _arm_core_timer.handle();
+  ++jiffie;
 }
 
 

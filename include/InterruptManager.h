@@ -3,6 +3,7 @@
 #define VALKYRIE_INTERRUPT_MANAGER_H_
 
 #include <IO.h>
+#include <Timer.h>
 
 #define IRQ_BASIC_PENDING  (MMIO_BASE + 0x0000B200)
 #define IRQ_PENDING_1      (MMIO_BASE + 0x0000B204)
@@ -35,6 +36,8 @@ class InterruptManager {
 
  private:
   uint8_t _current_exception_level;
+
+  ARMCoreTimer _arm_core_timer;
 };
 
 }  // namespace valkyrie::kernel
