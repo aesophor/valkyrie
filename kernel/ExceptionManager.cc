@@ -65,9 +65,9 @@ void ExceptionManager::handle_irq() {
 
 
 uint8_t ExceptionManager::get_current_exception_level() const {
-  uint8_t el;
-  asm volatile("mrs %0, CurrentEL" : "=r" (el));
-  return el >> 2;
+  uint8_t exception_level;
+  asm volatile("mrs %0, CurrentEL" : "=r" (exception_level));
+  return exception_level >> 2;
 }
 
 ARMCoreTimer& ExceptionManager::get_arm_core_timer() {
