@@ -17,7 +17,10 @@ char* strncpy(char* dest, const char* src, size_t n);
 char* strcat(char* dest, const char* src);
 char* strstr(const char* haystack, const char* needle);
 
-int atoi(const char* str);
+// Convert the given C string `str` to a signed integer.
+// `base` can only be either: 10 or 16.
+// When `base` == 16, it should NOT start with "0x"
+int atoi(const char* str, const int base = 10);
 
 }
 

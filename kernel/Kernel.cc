@@ -39,7 +39,7 @@ void Kernel::run() {
   printk("VC core size: 0x%x\n", vc_memory_info.second);
 
   // Lab2 initramfs
-  //CPIO cpio(reinterpret_cast<char*>(CPIO_BASE));
+  CPIO cpio(reinterpret_cast<char*>(CPIO_BASE));
 
   // Lab1 SimpleShell
   KShell shell;

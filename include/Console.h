@@ -20,7 +20,7 @@ extern "C" uint32_t get_cntfrq_el0(void);
 extern "C" uint32_t get_cntpct_el0(void);
 
 template <typename... Args>
-void printk(char* fmt, Args... args) {
+void printk(char* fmt, Args&& ...args) {
   uint32_t timestamp = 1000 * get_cntpct_el0() / get_cntfrq_el0();
   printf("[%d.%06d] ", timestamp / 1000, timestamp % 1000);
   printf(fmt, args...);
