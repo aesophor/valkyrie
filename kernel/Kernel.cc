@@ -30,8 +30,10 @@ Kernel::Kernel()
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
 
-  //_initrd_cpio.parse();
+  printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
+  _initrd_cpio.parse();
   
+  printk("initializing exception manager\n");
   _exception_manager.enable();
 }
 
