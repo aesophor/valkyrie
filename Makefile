@@ -31,7 +31,7 @@ run-debug:
 		-kernel $(BUILD_DIR)/$(IMG)\
 		-display none\
 		-serial null\
-		-serial pty\
+		-serial stdio\
 		-S -s
 
 run:

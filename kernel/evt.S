@@ -19,29 +19,21 @@
 .global evt
 evt:
   evt_entry handle_exception
-  evt_entry handle_exception
-  evt_entry handle_exception
-  evt_entry handle_exception
-
-  evt_entry handle_exception
-  evt_entry handle_exception
+  evt_entry handle_irq
   evt_entry handle_exception
   evt_entry handle_exception
 
   evt_entry handle_exception
+  evt_entry handle_irq
   evt_entry handle_exception
+  evt_entry handle_exception
+
+  evt_entry handle_exception
+  evt_entry handle_irq
   evt_entry handle_exception
   evt_entry handle_exception
 
   evt_entry handle_exception
+  evt_entry handle_irq
   evt_entry handle_exception
   evt_entry handle_exception
-  evt_entry handle_exception
-
-
-.global evt_init
-evt_init:
-  // Load vbar_el2 with the address of exception vector table
-  adr x0, evt
-  msr vbar_el2, x0
-  ret

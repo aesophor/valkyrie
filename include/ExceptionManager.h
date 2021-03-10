@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_INTERRUPT_MANAGER_H_
-#define VALKYRIE_INTERRUPT_MANAGER_H_
+#ifndef VALKYRIE_EXCEPTION_MANAGER_H_
+#define VALKYRIE_EXCEPTION_MANAGER_H_
 
 #include <IO.h>
 #include <Timer.h>
@@ -23,23 +23,27 @@
 
 namespace valkyrie::kernel {
 
-class InterruptManager {
+class ExceptionManager {
  public:
-  InterruptManager();
-  ~InterruptManager() = default;
+  static ExceptionManager* get_instance();
+  ~ExceptionManager() = default;
 
   void enable();
   void disable();
+
+  void handle_exception();
   void handle_irq();
 
   uint8_t get_current_exception_level() const;
 
+  ARMCoreTimer& get_arm_core_timer();
+
  private:
-  uint8_t _current_exception_level;
+  ExceptionManager();
 
   ARMCoreTimer _arm_core_timer;
 };
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_INTERRUPT_MANAGER_H_
+#endif  // VALKYRIE_EXCEPTION_MANAGER_H_

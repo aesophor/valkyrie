@@ -16,12 +16,16 @@ void initialize(MiniUART* mini_uart);
 #define printf  tfp_printf
 #define sprintf tfp_sprintf
 
-extern "C" uint32_t get_cntfrq_el0(void);
-extern "C" uint32_t get_cntpct_el0(void);
-
 template <typename... Args>
 void printk(char* fmt, Args&& ...args) {
-  uint32_t timestamp = 1000 * get_cntpct_el0() / get_cntfrq_el0();
+  uint32_t cntpct_el0;
+  uint32_t cntfrq_el0;
+  uint32_t timestamp;
+
+  asm volatile("mrs %0, cntpct_el0" : "=r" (cntpct_el0));
+  asm volatile("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0));
+  timestamp = 1000 * cntpct_el0 / cntfrq_el0;
+
   printf("[%d.%06d] ", timestamp / 1000, timestamp % 1000);
   printf(fmt, args...);
 }
