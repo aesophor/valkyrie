@@ -47,6 +47,7 @@
 // [2] https://s-matyukevich.github.io/raspberry-pi-os/docs/lesson01/rpi-os.html
 #include <MiniUART.h>
 
+#include <Console.h>
 #include <IO.h>
 #include <String.h>
 
@@ -78,6 +79,9 @@ MiniUART::MiniUART() {
   io::put<uint32_t>(AUX_MU_BAUD_REG, 270);  // set baud rate to 115200
   io::put<uint32_t>(AUX_MU_IIR_REG, 6);     // no FIFO
   io::put<uint32_t>(AUX_MU_CNTL_REG, 3);    // re-enable tx and rx
+
+  // Register MiniUART as the driver for console.
+  console::initialize(this);
 }
 
 

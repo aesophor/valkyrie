@@ -10,8 +10,10 @@ namespace valkyrie::kernel {
 
 class CPIO {
  public:
-  CPIO(char* ptr);
+  CPIO(const char* base_addr);
   ~CPIO() = default;
+
+  void parse() const;
 
  private:
   struct [[gnu::packed]] Header final {
@@ -40,6 +42,8 @@ class CPIO {
     size_t pathname_len;
     size_t content_len;
   };
+
+  const char* _base_addr;
 };
 
 }  // namespace valkyrie::kernel

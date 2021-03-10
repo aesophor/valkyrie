@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
+#include <CPIO.h>
 #include <Mailbox.h>
 #include <MiniUART.h>
 #include <InterruptManager.h>
@@ -19,9 +20,10 @@ class Kernel {
  private:
   Kernel();
 
-  Mailbox _mailbox;
   MiniUART _mini_uart;
+  Mailbox _mailbox;
   InterruptManager _interruptManager;
+  CPIO _initrd_cpio;
 };
 
 }  // namespace valkyrie::kernel
