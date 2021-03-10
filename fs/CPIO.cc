@@ -13,8 +13,6 @@ CPIO::CPIO(const char* base_addr) : _base_addr(base_addr) {}
 
 
 void CPIO::parse() const {
-  printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
-
   for (const char* ptr = _base_addr; ;) {
     DirectoryEntry dentry = DirectoryEntry(ptr);
 
@@ -33,8 +31,6 @@ void CPIO::parse() const {
     ptr += sizeof(CPIO::Header) + dentry.pathname_len + dentry.content_len;
     while (strncmp(ptr, CPIO_MAGIC, 6)) ++ptr;
   }
-
-  printk("cpio parsing done\n");
 }
 
 

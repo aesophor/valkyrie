@@ -18,15 +18,15 @@ void initialize(MiniUART* mini_uart);
 
 template <typename... Args>
 void printk(char* fmt, Args&& ...args) {
-  uint32_t cntpct_el0;
-  uint32_t cntfrq_el0;
-  uint32_t timestamp;
+  size_t cntpct_el0;
+  size_t cntfrq_el0;
+  size_t timestamp;
 
   asm volatile("mrs %0, cntpct_el0" : "=r" (cntpct_el0));
   asm volatile("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0));
   timestamp = 1000 * cntpct_el0 / cntfrq_el0;
 
-  printf("[%d.%06d] ", timestamp / 1000, timestamp % 1000);
+  printf("[%d.%d] ", timestamp / 1000, timestamp % 1000);
   printf(fmt, args...);
 }
 
