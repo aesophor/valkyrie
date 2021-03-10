@@ -35,9 +35,9 @@ void InterruptManager::handle_irq() {
   uint8_t ec = esr_el2 >> 26;
   uint32_t iss = esr_el2 & 0x1ffffff;
 
-  printf("Exception return address: %x\n", ret_addr);
-  printf("Exception class (EC): %x\n", ec);
-  printf("Instruction specific syndrome (ISS): %d\n", iss);
+  printk("Exception return address: 0x%x\n", ret_addr);
+  printk("Exception class (EC): 0x%x\n", ec);
+  printk("Instruction specific syndrome (ISS): 0x%x\n", iss);
 
   /*
   switch (irq) {

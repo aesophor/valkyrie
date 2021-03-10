@@ -9,10 +9,13 @@
 
 namespace valkyrie::kernel {
 
-CPIO::CPIO(char* ptr) {
-  puts("[*] parsing cpio archive...");
+CPIO::CPIO(const char* base_addr) : _base_addr(base_addr) {}
 
-  while (true) {
+
+void CPIO::parse() const {
+  printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
+
+  for (const char* ptr = _base_addr; ;) {
     DirectoryEntry dentry = DirectoryEntry(ptr);
 
     if (!strcmp(dentry.pathname, CPIO_TRAILER)) {
@@ -29,10 +32,9 @@ CPIO::CPIO(char* ptr) {
 
     ptr += sizeof(CPIO::Header) + dentry.pathname_len + dentry.content_len;
     while (strncmp(ptr, CPIO_MAGIC, 6)) ++ptr;
-    //printf("next = %s\n", ptr);
   }
 
-  printk("initramfs parsing done\n");
+  printk("cpio parsing done\n");
 }
 
 

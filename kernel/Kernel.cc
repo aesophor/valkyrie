@@ -18,14 +18,10 @@ Kernel* Kernel::get_instance() {
 }
 
 Kernel::Kernel()
-    : _mailbox(),
-      _mini_uart(),
-      _interruptManager() {
-  console::initialize(&_mini_uart);
-}
-
-
-void Kernel::run() {
+    : _mini_uart(),
+      _mailbox(),
+      _interruptManager(),
+      _initrd_cpio(reinterpret_cast<const char*>(CPIO_BASE)) {
   printk("valkyrie by @aesophor\n");
 
   printk("current exception level: %d\n",
@@ -38,9 +34,11 @@ void Kernel::run() {
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
 
-  // Lab2 initramfs
-  CPIO cpio(reinterpret_cast<char*>(CPIO_BASE));
+  _initrd_cpio.parse();
+}
 
+
+void Kernel::run() {
   // Lab1 SimpleShell
   KShell shell;
   shell.run();
