@@ -17,12 +17,14 @@ class Kernel {
   void run();
   [[noreturn]] void panic();
 
+  InterruptManager* get_interrupt_manager();
+
  private:
   Kernel();
 
   MiniUART _mini_uart;
   Mailbox _mailbox;
-  InterruptManager _interruptManager;
+  InterruptManager _interrupt_manager;
   CPIO _initrd_cpio;
 };
 

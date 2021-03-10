@@ -4,7 +4,8 @@
 
 #include <Types.h>
 
-#define CPIO_BASE 0x8000000
+#define CPIO_BASE 0x20000000
+//#define CPIO_BASE 0x8000000
 
 namespace valkyrie::kernel {
 
