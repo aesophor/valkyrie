@@ -15,8 +15,7 @@ KShell::KShell() : _buf() {}
 void KShell::run() {
   while (true) {
     memset(_buf, 0, sizeof(_buf));
-    putchar('$');
-    putchar(' ');
+    printf("# ");
     gets(_buf);
 
     if (!strlen(_buf)) {
@@ -28,20 +27,19 @@ void KShell::run() {
       puts("help   - Print all available commands");
       puts("hello  - Print Hello World!");
       puts("reboot - Reboot machine");
+      puts("exc    - Trigger an exception via supervisor call (SVC)");
+      puts("panic  - Trigger a kernel panic and halt the kernel");
     } else if (!strcmp(_buf, "hello")) {
       puts("Hello World!");
     } else if (!strcmp(_buf, "reboot")) {
       puts("Rebooting...");
       reset(100);
-    } else if (!strcmp(_buf, "loadimg")) {
-      puts("Start loading kernel image...");
-      //loadimg();
     } else if (!strcmp(_buf, "exc")) {
       omg();
     } else if (!strcmp(_buf, "panic")) {
       Kernel::get_instance()->panic();
     } else {
-      puts("command not found");
+      printf("%s: command not found. Try <help>\n", _buf);
     }
   }
 }
