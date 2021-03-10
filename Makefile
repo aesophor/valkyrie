@@ -37,6 +37,7 @@ run-debug:
 run:
 	qemu-system-aarch64 -M raspi3\
 		-kernel $(BUILD_DIR)/$(IMG)\
+		-initrd initramfs.cpio\
 		-display none\
 		-serial null\
 		-serial stdio

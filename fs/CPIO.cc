@@ -10,30 +10,53 @@
 namespace valkyrie::kernel {
 
 CPIO::CPIO(char* ptr) {
-  puts("[*] parsing initramfs...");
+  puts("[*] parsing cpio archive...");
 
-  CPIO::Header header;
-  char pathname[64] = {0};
-  char content[512] = {0};
+  while (true) {
+    DirectoryEntry dentry = DirectoryEntry(ptr);
 
-  while (strcmp(content, CPIO_TRAILER)) {
-    // Advance the pointer until the underlying byte != 0x00
-    while (*ptr++ == 0);
+    if (!strcmp(dentry.pathname, CPIO_TRAILER)) {
+      break;
+    }
 
-    header = *reinterpret_cast<CPIO::Header*>(ptr);
-    ptr += sizeof(CPIO::Header);
+    printf("pathname     = %s\n", dentry.pathname);
+    //printf("pathname_len = %d\n", dentry.pathname_len);
+    if (dentry.content_len) {
+      printf("content      = %s\n", dentry.content);
+    }
+    //printf("content_len  = %d\n", dentry.content_len);
+    printf("-----\n");
 
-    size_t len = strlen(ptr);
-    strcpy(pathname, ptr);
-    ptr += len + 1;  // extra one for the null byte at the end
+    ptr += sizeof(CPIO::Header) + dentry.pathname_len + dentry.content_len;
+    while (strncmp(ptr, CPIO_MAGIC, 6)) ++ptr;
+    //printf("next = %s\n", ptr);
+  }
 
-    char* content_begin = ptr;
-    while (strcmp(ptr++, CPIO_MAGIC));
-    memcpy(content, content_begin, ptr - content_begin);
+  printk("initramfs parsing done\n");
+}
 
-    printf("pathname: %s\n", pathname);
-    printf("content: %s\n", content);
-    printf("------------------\n");
+
+CPIO::DirectoryEntry::DirectoryEntry(const char* ptr)
+    : header(reinterpret_cast<const CPIO::Header*>(ptr)) {
+  char buf[16] = {0};
+  strncpy(buf, header->c_namesize, 8);
+  pathname_len = atoi(buf, 16);
+  if (pathname_len % 2) {
+    ++pathname_len;
+  }
+
+  memset(buf, 0, sizeof(buf));
+  strncpy(buf, header->c_filesize, 8);
+  content_len = atoi(buf, 16);
+  if (content_len % 2) {
+    ++content_len;
+  }
+
+  pathname = ptr + sizeof(CPIO::Header);
+  content = ptr + sizeof(CPIO::Header) + pathname_len;
+
+  if (content_len) {
+    while (!*content) ++content;
   }
 }
 

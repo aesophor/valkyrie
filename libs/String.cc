@@ -107,20 +107,40 @@ char* strstr(const char* haystack, const char* needle){
 }
 
 
-int atoi(const char* str) {
+int atoi(const char* str, const int base) {
+  static auto is_digit = [](const char c) -> bool {
+    return c >= '0' && c <= '9';
+  };
+
+  static auto is_alphanumeric = [](const char c) -> bool {
+    return (c >= '0' && c <= '9') ||
+           (c >= 'A' && c <= 'F') ||
+           (c >= 'a' && c <= 'f');
+  };
+
+  static auto to_decimal = [](const char c) -> int {
+    int ret = 0;
+    if (is_digit(c)) {
+      ret = c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+      ret = c - 'A' + 10;
+    } else if (c >= 'a' && c <= 'f') {
+      ret = c - 'a' + 10;
+    }
+    return ret;
+  };
+
+  // TODO: assert(base == 10 || base == 16)
   bool is_negative = false;
   size_t len = 0;
   size_t pos = 0;
   int result = 0;
   int ptr = 0;
-
-  auto is_digit = [](const char c) -> bool {
-    return c >= '0' && c <= '9';
-  };
+  auto is_valid = (base == 10) ? is_digit : is_alphanumeric;
 
   // Remove preceding whitespaces
   while (str[pos] == ' ') {
-    if (str[pos] == '0') {
+    if (str[pos] == 0) {
       return 0;
     }
     ++pos;
@@ -129,7 +149,7 @@ int atoi(const char* str) {
   str = str + pos;
   len = strlen(str);
 
-  if (str[0] != '+' && str[0] != '-' && !is_digit(str[0])) {
+  if (str[0] != '+' && str[0] != '-' && !is_valid(str[0])) {
     return 0;
   }
 
@@ -138,20 +158,22 @@ int atoi(const char* str) {
       is_negative = true;
       ptr = 1;
       break;
+
     case '+':
       ptr = 1;
       break;
+
     default:
       break;
   }
 
-  for (; ptr < (int) len && is_digit(str[ptr]); ptr++) {
-    if (result > INT_MAX / 10) {
+  for (; ptr < (int) len && is_valid(str[ptr]); ptr++) {
+    if (result > INT_MAX / base) {
       return (is_negative) ? INT_MIN : INT_MAX;
     }
-    result *= 10;
+    result *= base;
 
-    int next_digit = str[ptr] - '0';
+    int next_digit = to_decimal(str[ptr]);
     if (result > INT_MAX - next_digit) {
       return (is_negative) ? INT_MIN : INT_MAX;
     }

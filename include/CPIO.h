@@ -4,7 +4,7 @@
 
 #include <Types.h>
 
-#define CPIO_BASE 0x20000000
+#define CPIO_BASE 0x8000000
 
 namespace valkyrie::kernel {
 
@@ -14,7 +14,7 @@ class CPIO {
   ~CPIO() = default;
 
  private:
-  struct [[gnu::packed]] Header {
+  struct [[gnu::packed]] Header final {
     char c_magic[6];
     char c_ino[8];
     char c_mode[8];
@@ -31,8 +31,14 @@ class CPIO {
     char c_check[8];
   };
 
-  struct DirectoryEntry {
-    CPIO::Header header;
+  struct DirectoryEntry final {
+    DirectoryEntry(const char* ptr);
+
+    const CPIO::Header* header;
+    const char* pathname;
+    const char* content;
+    size_t pathname_len;
+    size_t content_len;
   };
 };
 
