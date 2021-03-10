@@ -7,6 +7,7 @@
 #include <String.h>
 
 extern "C" void omg(void);
+extern "C" size_t get_sp(void);
 
 namespace valkyrie::kernel {
 
@@ -35,12 +36,12 @@ void KShell::run() {
       puts("Rebooting...");
       reset(100);
     } else if (!strcmp(_buf, "exc")) {
-      omg();
+      asm volatile("svc 1");
     } else if (!strcmp(_buf, "irq")) {
       printk("ARM core timer enabled.\n");
-      Kernel::get_instance()->get_interrupt_manager()->enable();
+      Kernel::get_instance()->get_exception_manager()->get_arm_core_timer().enable();
     } else if (!strcmp(_buf, "panic")) {
-      Kernel::get_instance()->panic();
+      panic("panic on demand");
     } else {
       printf("%s: command not found. Try <help>\n", _buf);
     }

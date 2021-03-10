@@ -9,17 +9,17 @@ namespace valkyrie::kernel {
 
 class ARMCoreTimer {
  public:
-  ARMCoreTimer() : _jiffie() {}
+  ARMCoreTimer() : _jiffies(0) {}
   ~ARMCoreTimer() = default;
 
   void enable();
   void handle();
 
-  size_t get_jiffie() const { return _jiffie; }
-  void tick() { ++_jiffie; }
+  uint32_t get_jiffies() const { return _jiffies; }
+  void tick() { ++_jiffies; }
 
  private:
-  [[gnu::aligned(16)]] size_t _jiffie;
+  uint32_t _jiffies;
 };
 
 }  // namespace valkyrie::kernel

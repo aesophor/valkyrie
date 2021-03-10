@@ -47,6 +47,17 @@
 .global handle_exception
 handle_exception:
   save_cpu_context
-  bl _ZN8valkyrie6kernel16InterruptManager10handle_irqEv
+  // `x0` should be `this` pointer
+  bl _ZN8valkyrie6kernel16ExceptionManager12get_instanceEv
+  bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEv
+  restore_cpu_context
+  eret
+
+.global handle_irq
+handle_irq:
+  save_cpu_context
+  // `x0` should be `this` pointer
+  bl _ZN8valkyrie6kernel16ExceptionManager12get_instanceEv
+  bl _ZN8valkyrie6kernel16ExceptionManager10handle_irqEv
   restore_cpu_context
   eret
