@@ -29,13 +29,13 @@ Kernel::Kernel()
 
   printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
   //_initrd_cpio.parse();
-  
-  printk("current exception level: %d\n",
-         _exception_manager.get_exception_level());
 
   printk("initializing exception manager\n");
-  //_exception_manager.enable();
-  _exception_manager.set_exception_level(1);
+  _exception_manager.switch_to_exception_level(1);
+  _exception_manager.enable_irqs();
+  _exception_manager.switch_to_exception_level(0);
+
+  printk("we've entered userspace\n");
 }
 
 
