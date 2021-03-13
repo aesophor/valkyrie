@@ -18,9 +18,9 @@ void initialize(MiniUART* mini_uart);
 
 template <typename... Args>
 void printk(char* fmt, Args&& ...args) {
-  size_t cntpct_el0;
-  size_t cntfrq_el0;
-  size_t timestamp;
+  uint64_t cntpct_el0;
+  uint64_t cntfrq_el0;
+  uint64_t timestamp;
 
   asm volatile("mrs %0, cntpct_el0" : "=r" (cntpct_el0));
   asm volatile("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0));
