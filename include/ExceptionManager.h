@@ -28,20 +28,21 @@ class ExceptionManager {
   static ExceptionManager* get_instance();
   ~ExceptionManager() = default;
 
-  void enable();
-  void disable();
+  void enable_irqs();
+  void disable_irqs();
 
   void handle_exception();
   void handle_irq();
 
   uint8_t get_exception_level() const;
-  void set_exception_level(const uint8_t level) const;
+  void switch_to_exception_level(const uint8_t level);
 
   ARMCoreTimer& get_arm_core_timer();
 
  private:
   ExceptionManager();
-
+ 
+  uint8_t _exception_level;
   ARMCoreTimer _arm_core_timer;
 };
 

@@ -10,11 +10,7 @@
   b \label
 .endm
 
-.extern handle_exception
-
 .section ".text"
-
-
 .align 11
 .global evt
 evt:

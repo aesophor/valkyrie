@@ -16,7 +16,6 @@ extern "C" [[noreturn]] void kmain(void) {
 
   // Run the kernel.
   auto kernel = valkyrie::kernel::Kernel::get_instance();
-  printk("starting shell...\n");
   kernel->run();
 
   // We should never reach here.

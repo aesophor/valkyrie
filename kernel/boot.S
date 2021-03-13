@@ -6,14 +6,18 @@
 // and start executing the code there. In our case,
 // 0x80000 is the address of `_start` (see scripts/linker.ld for details).
 //
-// We will set the SP (Stack Pointer) to 0x80000 and let it grow towards 0,
-// initialize the .bss segment to zeroes by calling memset,
-// and finally branch to the `kmain()` function.
+// We will do the following tasks in boot.S:
+// 1. Set the SP (Stack Pointer) to 0x80000 and let it grow towards 0
+// 2. initialize the .bss segment to zeroes by calling memset
+// 3. configure CPACR_EL1 to allow the use of variadic functions
+// 4. configure HCR_EL2.RW to 1 to run at EL1 in 64-bit mode
+// 5. finally, branch to the `kmain()` function.
 
 .extern memset
 .extern evt
 
 .section ".text"
+.global _start
 _start:
   // Initialize the stack pointer to the address of _start,
   // allowing it to grow toward lower address.
@@ -43,39 +47,6 @@ _start:
   orr x0, x0, (1 << 31)
   msr HCR_EL2, x0
 
-  // Setup EL1 stack
-  ldr x0, = _start
-  msr SP_EL1, x0
-
-  // Install the exception vector table to VBAR_EL1
-  ldr x0, = evt
-  msr VBAR_EL1, x0
-
-  // Configure SPSR_EL2 (Saved Program Status Register - EL2)
-  // See ARMv8 manual p.387 for details.
-  mrs x0, SPSR_EL2
-  orr x0, x0, (1 << 0)  // SP_ELx
-  orr x0, x0, (1 << 2)  // EL1
-  orr x0, x0, (0b1111 << 6)
-  msr SPSR_EL2, x0
-
-  // Configure ELR_EL2 which holds the return address of `eret`
-  ldr x0, = __el1_entry
-  msr ELR_EL2, x0
-
-  // Switch from EL2 to EL1
-  eret
-
-__el1_entry:
-  mov x0, 0x40000
-  msr sp_el0, x0
-  mov x0, 0 // EL0 with interrupt enabled
-  msr spsr_el1, x0
-  ldr x0, = __el0_entry
-  msr elr_el1, x0
-  eret
-
-__el0_entry:
   // Transfer control to kmain()
   bl kmain
 
