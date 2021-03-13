@@ -18,10 +18,7 @@ Kernel::Kernel()
       _mailbox(),
       _initrd_cpio(reinterpret_cast<const char*>(CPIO_BASE)),
       _exception_manager(*ExceptionManager::get_instance()) {
-  printk("valkyrie by @aesophor\n");
-
-  printk("current exception level: %d\n",
-         _exception_manager.get_current_exception_level());
+  printk("starting valkyrie OS...\n");
 
   auto board_revision = _mailbox.get_board_revision();
   printk("board revision: 0x%x\n", board_revision);
@@ -31,10 +28,14 @@ Kernel::Kernel()
   printk("VC core size: 0x%x\n", vc_memory_info.second);
 
   printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
-  _initrd_cpio.parse();
+  //_initrd_cpio.parse();
   
+  printk("current exception level: %d\n",
+         _exception_manager.get_exception_level());
+
   printk("initializing exception manager\n");
-  _exception_manager.enable();
+  //_exception_manager.enable();
+  _exception_manager.set_exception_level(1);
 }
 
 

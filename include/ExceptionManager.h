@@ -34,7 +34,8 @@ class ExceptionManager {
   void handle_exception();
   void handle_irq();
 
-  uint8_t get_current_exception_level() const;
+  uint8_t get_exception_level() const;
+  void set_exception_level(const uint8_t level) const;
 
   ARMCoreTimer& get_arm_core_timer();
 
