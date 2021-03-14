@@ -33,13 +33,14 @@ Kernel::Kernel()
   printk("initializing exception manager\n");
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable_irqs();
-  _exception_manager.switch_to_exception_level(0);
-
-  printk("we've entered userspace\n");
 }
 
 
 void Kernel::run() {
+  _exception_manager.switch_to_exception_level(0);
+  asm volatile("mov sp, %0" :: "r" (0x20000));
+
+  printk("starting shell...\n");
   // Lab1 SimpleShell
   KShell shell;
   shell.run();

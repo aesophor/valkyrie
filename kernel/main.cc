@@ -15,8 +15,7 @@ extern "C" [[noreturn]] void kmain(void) {
   }
 
   // Run the kernel.
-  auto kernel = valkyrie::kernel::Kernel::get_instance();
-  kernel->run();
+  valkyrie::kernel::Kernel::get_instance()->run();
 
   // We should never reach here.
   while (1);

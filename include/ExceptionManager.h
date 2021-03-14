@@ -23,7 +23,7 @@
 
 namespace valkyrie::kernel {
 
-class ExceptionManager {
+class ExceptionManager final {
  public:
   static ExceptionManager* get_instance();
   ~ExceptionManager() = default;
@@ -35,14 +35,14 @@ class ExceptionManager {
   void handle_irq();
 
   uint8_t get_exception_level() const;
-  void switch_to_exception_level(const uint8_t level);
+  void switch_to_exception_level(const uint8_t level,
+                                 const void* new_stack = 0);
 
   ARMCoreTimer& get_arm_core_timer();
 
  private:
   ExceptionManager();
  
-  uint8_t _exception_level;
   ARMCoreTimer _arm_core_timer;
 };
 

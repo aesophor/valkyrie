@@ -26,7 +26,7 @@ _start:
 
   // Initialize .bss by calling memset()
   ldr x0, = _bss_start
-  mov x1, 0
+  mov x1, #0
   ldr x2, = _bss_end
   sub x2, x2, x0
   bl memset
@@ -38,13 +38,13 @@ _start:
   // registers to make va_list use SIMD&FP registers properly.
   // See: https://lists.xen.org/archives/html/minios-devel/2018-07/msg00038.html
   mrs x0, CPACR_EL1
-  orr x0, x0, (0b11 << 20)
+  orr x0, x0, #(0b11 << 20)
   msr CPACR_EL1, x0
 
   // Configure HCR_EL2 (Hypervisor Configuration Register - EL2)
   // by setting HCR_EL2.RW to 1 (which means EL1 is AArch64)
   mrs x0, HCR_EL2
-  orr x0, x0, (1 << 31)
+  orr x0, x0, #(1 << 31)
   msr HCR_EL2, x0
 
   // Transfer control to kmain()

@@ -3,6 +3,7 @@
 
 #include <Console.h>
 #include <Kernel.h>
+#include <Syscall.h>
 
 #define EL0_STACK 0x20000
 #define EL1_STACK 0x40000
@@ -16,9 +17,7 @@ ExceptionManager* ExceptionManager::get_instance() {
   return &instance;
 }
 
-ExceptionManager::ExceptionManager()
-    : _exception_level(),
-      _arm_core_timer() {
+ExceptionManager::ExceptionManager() : _arm_core_timer() {
   // Install the address of exception vector table to VBAR_EL1.
   asm volatile("msr VBAR_EL1, %0" :: "r"(&evt));
 }
@@ -46,32 +45,45 @@ void ExceptionManager::handle_exception() {
   uint8_t ec = esr_el1 >> 26;
   uint32_t iss = esr_el1 & 0x1ffffff;
 
+  printk("Current exception lvl: %d\n", get_exception_level());
   printk("Exception return address: 0x%x\n", ret_addr);
   printk("Exception class (EC): 0x%x\n", ec);
   printk("Instruction specific syndrome (ISS): 0x%x\n", iss);
-  printk("Current exception lvl: %d\n", get_exception_level());
+
+  switch (ec) {
+    // SVC instruction execution in AArch64 state
+    case 0b10101:
+      if (iss == 0) {
+        syscall(0, 0, 0, 0, 0, 0, 0);
+      }
+      break;
+
+    // Trapped MSR, MRS, or System instruction execution
+    case 0b11000:
+      printk("oh shit 888\n");
+      break;
+
+    default:
+      break;
+  }
 }
 
 void ExceptionManager::handle_irq() {
   _arm_core_timer.handle();
   _arm_core_timer.tick();
-
   printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
 }
 
 
 uint8_t ExceptionManager::get_exception_level() const {
-  // Only accessible from EL1 or higher.
-  if (_exception_level == 0) {
-    return 0;
-  }
-
+  // Note: CurrentEL is Only accessible from EL1 or higher.
   uint8_t level;
   asm volatile("mrs %0, CurrentEL" : "=r" (level));
   return level >> 2;
 }
 
-void ExceptionManager::switch_to_exception_level(const uint8_t level) {
+void ExceptionManager::switch_to_exception_level(const uint8_t level,
+                                                 const void* new_stack) {
   uint64_t spsr;
   void* saved_stack_pointer;
   void* saved_return_address;
@@ -106,14 +118,17 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level) {
       break;
   }
 
-  _exception_level = level;
-
   // Execute `eret`
   asm volatile("eret");
 
 __restore_link_register:
   // Restore `saved_return_address` to `lr`
   asm volatile("mov lr, %0" :: "r" (saved_return_address));
+
+  // Maybe set the new stack
+  //if (new_stack) {
+    //asm volatile("mov sp, %0" :: "r" (new_stack));
+  //}
 }
 
 

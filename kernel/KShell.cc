@@ -6,9 +6,6 @@
 #include <Power.h>
 #include <String.h>
 
-extern "C" void omg(void);
-extern "C" size_t get_sp(void);
-
 namespace valkyrie::kernel {
 
 KShell::KShell() : _buf() {}
@@ -36,10 +33,10 @@ void KShell::run() {
       puts("Rebooting...");
       reset(100);
     } else if (!strcmp(_buf, "exc")) {
-      asm volatile("svc 1");
+      asm volatile("svc #1");
     } else if (!strcmp(_buf, "irq")) {
-      printk("ARM core timer enabled.\n");
-      Kernel::get_instance()->get_exception_manager()->get_arm_core_timer().enable();
+      asm volatile("mov x0, #0");
+      asm volatile("svc #0");
     } else if (!strcmp(_buf, "panic")) {
       panic("panic on demand");
     } else {
