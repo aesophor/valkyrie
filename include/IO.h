@@ -26,4 +26,4 @@ inline void delay(size_t cycles) {
 
 }  // namespace valkyrie::kernel::io
 
-#endif  // VALKYRIE_MINI_UART_H_
+#endif  // VALKYRIE_IO_H_
