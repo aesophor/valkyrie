@@ -2,10 +2,12 @@
 #include <CPIO.h>
 
 #include <Console.h>
+#include <Kernel.h>
 #include <String.h>
 
-#define CPIO_MAGIC   "070701"
-#define CPIO_TRAILER "TRAILER!!!"
+#define CPIO_MAGIC     "070701"
+#define CPIO_MAGIC_LEN 6
+#define CPIO_TRAILER   "TRAILER!!!"
 
 namespace valkyrie::kernel {
 
@@ -13,49 +15,43 @@ CPIO::CPIO(const char* base_addr) : _base_addr(base_addr) {}
 
 
 void CPIO::parse() const {
-  for (const char* ptr = _base_addr; ;) {
-    DirectoryEntry dentry = DirectoryEntry(ptr);
+  const char* ptr = _base_addr;
+  DirectoryEntry dentry;
 
-    if (!strcmp(dentry.pathname, CPIO_TRAILER)) {
-      break;
-    }
+  while ((dentry = DirectoryEntry(ptr))) {
+    printf("%s \t = %s\n", dentry.pathname, dentry.content);
 
-    printf("pathname     = %s\n", dentry.pathname);
-    //printf("pathname_len = %d\n", dentry.pathname_len);
-    if (dentry.content_len) {
-      printf("content      = %s\n", dentry.content);
-    }
-    //printf("content_len  = %d\n", dentry.content_len);
-    printf("-----\n");
-
+    // Advance ptr until it reaches the next header.
     ptr += sizeof(CPIO::Header) + dentry.pathname_len + dentry.content_len;
-    while (strncmp(ptr, CPIO_MAGIC, 6)) ++ptr;
+    while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
   }
 }
 
 
 CPIO::DirectoryEntry::DirectoryEntry(const char* ptr)
     : header(reinterpret_cast<const CPIO::Header*>(ptr)) {
-  char buf[16] = {0};
+  char buf[16];
+
+  // Obtain pathname size from the header.
+  memset(buf, 0, sizeof(buf));
   strncpy(buf, header->c_namesize, 8);
   pathname_len = atoi(buf, 16);
-  if (pathname_len % 2) {
-    ++pathname_len;
-  }
 
+  // Obtain content size from the header.
   memset(buf, 0, sizeof(buf));
   strncpy(buf, header->c_filesize, 8);
   content_len = atoi(buf, 16);
-  if (content_len % 2) {
-    ++content_len;
-  }
 
-  pathname = ptr + sizeof(CPIO::Header);
-  content = ptr + sizeof(CPIO::Header) + pathname_len;
+  // Update pathname and content pointers.
+  pathname = (pathname_len) ? ptr + sizeof(CPIO::Header) : 0;
+  content = (content_len) ? ptr + sizeof(CPIO::Header) + pathname_len : 0;
 
-  if (content_len) {
-    while (!*content) ++content;
-  }
+  // Advance content pointer.
+  while (content_len && !*content) ++content;
+}
+
+CPIO::DirectoryEntry::operator bool() const {
+  return strcmp(pathname, CPIO_TRAILER);
 }
 
 }  // namespace valkyrie::kernel
