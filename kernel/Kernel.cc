@@ -23,17 +23,17 @@ Kernel::Kernel()
   print_hardware_info();
 
   printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
-  //_initrd_cpio.parse();
+  _initrd_cpio.parse();
 
   printk("switching to EL1...\n");
   _exception_manager.switch_to_exception_level(1);
-  //_exception_manager.enable_irqs();
+  _exception_manager.enable_irqs();
 }
 
 
 void Kernel::run() {
-  //printk("switching to userspace... \n");
-  //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
+  printk("switching to userspace... \n");
+  _exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
   Shell shell;
