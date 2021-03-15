@@ -80,9 +80,9 @@ uint8_t ExceptionManager::get_exception_level() const {
 
 void ExceptionManager::switch_to_exception_level(const uint8_t level,
                                                  const size_t new_sp) {
-  uint64_t spsr;
-  void* saved_stack_pointer;
-  void* saved_return_address;
+  uint64_t spsr [[gnu::aligned(16)]];
+  void* saved_stack_pointer [[gnu::aligned(16)]];
+  void* saved_return_address [[gnu::aligned(16)]];
 
   asm volatile("mov %0, lr" : "=r" (saved_return_address));
   asm volatile("mov %0, sp" : "=r" (saved_stack_pointer));
@@ -122,9 +122,9 @@ __restore_link_register:
   asm volatile("mov lr, %0" :: "r" (saved_return_address));
 
   // Maybe set the new stack
-  if (new_sp) {
-    asm volatile("mov sp, %0" :: "r" (new_sp));
-  }
+  //if (new_sp) {
+  //  asm volatile("mov sp, %0" :: "r" (new_sp));
+  //}
 }
 
 
