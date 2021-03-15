@@ -2,7 +2,7 @@
 #include <Kernel.h>
 
 #include <Console.h>
-#include <KShell.h>
+#include <Shell.h>
 
 extern "C" [[noreturn]] void _halt(void);
 
@@ -34,7 +34,7 @@ void Kernel::run() {
   _exception_manager.switch_to_exception_level(0, /*new_stack=*/0x20000);
 
   // Lab1 SimpleShell
-  KShell shell;
+  Shell shell;
   shell.run();
 }
 

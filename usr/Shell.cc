@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <KShell.h>
+#include <Shell.h>
 
 #include <Kernel.h>
 #include <Console.h>
@@ -8,9 +8,9 @@
 
 namespace valkyrie::kernel {
 
-KShell::KShell() : _buf() {}
+Shell::Shell() : _buf() {}
 
-void KShell::run() {
+void Shell::run() {
   while (true) {
     memset(_buf, 0, sizeof(_buf));
     printf("root# ");
