@@ -1,24 +1,24 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_KSHELL_H_
-#define VALKYRIE_KSHELL_H_
+#ifndef VALKYRIE_SHELL_H_
+#define VALKYRIE_SHELL_H_
 
 #include <Types.h>
 
-#define KSHELL_BUF_SIZE 256
+#define SHELL_BUF_SIZE 256
 
 namespace valkyrie::kernel {
 
-class KShell {
+class Shell {
  public:
-  KShell();
-  ~KShell() = default;
+  Shell();
+  ~Shell() = default;
 
   void run();
 
  private:
-  char _buf[KSHELL_BUF_SIZE];
+  char _buf[SHELL_BUF_SIZE];
 };
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_KSHELL_H_
+#endif  // VALKYRIE_SHELL_H_
