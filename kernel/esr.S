@@ -47,13 +47,6 @@
 .global handle_exception
 handle_exception:
   save_cpu_context
-  mov x7, x6
-  mov x6, x5
-  mov x5, x4
-  mov x4, x3
-  mov x3, x2
-  mov x2, x1
-  mov x1, x0
   // `x0` should be `this` pointer
   bl _ZN8valkyrie6kernel16ExceptionManager12get_instanceEv
   bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEyyyyyyy

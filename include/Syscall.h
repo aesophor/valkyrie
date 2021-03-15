@@ -14,8 +14,8 @@ void sys_irq();
 // Indirect system call
 //
 // A system call is issued using the `svc 0` instruction.
-// The system call number is passed on register x8,
-// the parameters are stored in x0 ~ x5,
+// The system call number is passed via register x1,
+// the parameters are stored in x2 ~ x7,
 // and the return value will be stored in x0.
 template <typename... Args>
 uint64_t syscall(const size_t number, const Args ...args) {
@@ -25,7 +25,7 @@ uint64_t syscall(const size_t number, const Args ...args) {
       break;
 
     default:
-      printk("undefined syscall: 0x%x\n", number);
+      printk("bad system call: (id=0x%x)\n", number);
       break;
   }
 }

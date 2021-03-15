@@ -32,13 +32,15 @@ void ExceptionManager::disable_irqs() {
 }
 
 
-void ExceptionManager::handle_exception(const size_t arg1,
+void ExceptionManager::handle_exception(const size_t number,
+                                        const size_t arg1,
                                         const size_t arg2,
                                         const size_t arg3,
                                         const size_t arg4,
                                         const size_t arg5,
-                                        const size_t arg6,
-                                        const size_t number) {
+                                        const size_t arg6) {
+  printk("system call = 0x%x\n", number);
+
   const Exception ex = get_current_exception();
   printk("Current exception lvl: %d\n", get_exception_level());
   printk("Exception return address: 0x%x\n", ex.ret_addr);
@@ -77,7 +79,7 @@ uint8_t ExceptionManager::get_exception_level() const {
 }
 
 void ExceptionManager::switch_to_exception_level(const uint8_t level,
-                                                 const void* new_stack) {
+                                                 const size_t new_stack) {
   uint64_t spsr;
   void* saved_stack_pointer;
   void* saved_return_address;
@@ -100,7 +102,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       break;
 
     case 0:
-      // Setup EL0 stack (FIXME: define USER_STACK)
+      // Setup EL0 stack
       asm volatile("msr SP_EL0, %0" :: "r" (saved_stack_pointer));
       // Setup SPSR_EL1 (Saved Processor Status Register)
       asm volatile("msr SPSR_EL1, %0" :: "r" (0));
@@ -120,9 +122,9 @@ __restore_link_register:
   asm volatile("mov lr, %0" :: "r" (saved_return_address));
 
   // Maybe set the new stack
-  //if (new_stack) {
-    //asm volatile("mov sp, %0" :: "r" (new_stack));
-  //}
+  if (new_stack) {
+    asm volatile("mov sp, %0" :: "r" (new_stack));
+  }
 }
 
 
