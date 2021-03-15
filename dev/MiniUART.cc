@@ -114,8 +114,22 @@ void MiniUART::putchar(const char c) {
 
 
 void MiniUART::gets(char* s) {
+  const char* const begin = s;
   char c;
-  while ((c = getchar()) != '\n') *s++ = c;
+
+  while ((c = getchar()) != '\n') {
+    if (c == 0x7f) {  // is backspace
+      if (s > begin) {
+        *s-- = 0;
+        putchar('\b');
+        putchar(' ');
+        putchar('\b');
+      }
+    } else {
+      *s++ = c;
+    }
+  }
+
   *s = 0;
 }
 
