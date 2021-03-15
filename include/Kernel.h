@@ -22,6 +22,8 @@ class Kernel {
  private:
   Kernel();
 
+  void print_hardware_info();
+
   MiniUART _mini_uart;
   Mailbox _mailbox;
   CPIO _initrd_cpio;

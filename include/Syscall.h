@@ -2,25 +2,33 @@
 #ifndef VALKYRIE_SYSCALL_H_
 #define VALKYRIE_SYSCALL_H_
 
+#include <Console.h>
 #include <Types.h>
 
 namespace valkyrie::kernel {
 
-// Valkyrie's syscall convention is the same as that of Linux.
+// Individual system call declaration.
+void sys_irq();
+
+
+// Indirect system call
 //
 // A system call is issued using the `svc 0` instruction.
 // The system call number is passed on register x8,
 // the parameters are stored in x0 ~ x5,
 // and the return value will be stored in x0.
-void syscall(const size_t x0,
-             const size_t x1,
-             const size_t x2,
-             const size_t x3,
-             const size_t x4,
-             const size_t x5,
-             const size_t id);
+template <typename... Args>
+uint64_t syscall(const size_t number, const Args ...args) {
+  switch (number) {
+    case 0:
+      sys_irq();
+      break;
 
-void sys_irq();
+    default:
+      printk("undefined syscall: 0x%x\n", number);
+      break;
+  }
+}
 
 }  // namespace valkyrie::kernel
 
