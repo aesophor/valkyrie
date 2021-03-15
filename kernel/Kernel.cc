@@ -32,7 +32,7 @@ Kernel::Kernel()
 
 
 void Kernel::run() {
-  printk("switching to userspace... \n");
+  printk("switching to EL0... \n");
   _exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
