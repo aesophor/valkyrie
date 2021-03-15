@@ -19,6 +19,11 @@
 .section ".text"
 .global _start
 _start:
+  // Let core with cpuid != 0 enter busy loop
+  mrs x0, mpidr_el1
+  and x0, x0, 3
+  cbnz x0, _halt
+
   // Initialize the stack pointer to the address of _start,
   // allowing it to grow toward lower address.
   ldr x0, = _start
