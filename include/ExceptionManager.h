@@ -31,7 +31,13 @@ class ExceptionManager final {
   void enable_irqs();
   void disable_irqs();
 
-  void handle_exception();
+  void handle_exception(const size_t arg1,
+                        const size_t arg2,
+                        const size_t arg3,
+                        const size_t arg4,
+                        const size_t arg5,
+                        const size_t arg6,
+                        const size_t number);
   void handle_irq();
 
   uint8_t get_exception_level() const;
@@ -42,6 +48,14 @@ class ExceptionManager final {
 
  private:
   ExceptionManager();
+
+  struct Exception final {
+    uint8_t ec;    // exception class
+    uint32_t iss;  // instruction specific syndrome
+    size_t ret_addr;
+  };
+
+  Exception get_current_exception();
  
   ARMCoreTimer _arm_core_timer;
 };

@@ -32,34 +32,28 @@ void ExceptionManager::disable_irqs() {
 }
 
 
-void ExceptionManager::handle_exception() {
-  // esr_el2[31:26] = EC
-  // esr_el2[25] = IL
-  // esr_el2[24:0] = ISS
-  size_t ret_addr;
-  uint32_t esr_el1; 
-
-  asm volatile("mrs %0, elr_el1" : "=r" (ret_addr));
-  asm volatile("mrs %0, esr_el1" : "=r" (esr_el1));
-
-  uint8_t ec = esr_el1 >> 26;
-  uint32_t iss = esr_el1 & 0x1ffffff;
-
+void ExceptionManager::handle_exception(const size_t arg1,
+                                        const size_t arg2,
+                                        const size_t arg3,
+                                        const size_t arg4,
+                                        const size_t arg5,
+                                        const size_t arg6,
+                                        const size_t number) {
+  const Exception ex = get_current_exception();
   printk("Current exception lvl: %d\n", get_exception_level());
-  printk("Exception return address: 0x%x\n", ret_addr);
-  printk("Exception class (EC): 0x%x\n", ec);
-  printk("Instruction specific syndrome (ISS): 0x%x\n", iss);
+  printk("Exception return address: 0x%x\n", ex.ret_addr);
+  printk("Exception class (EC): 0x%x\n", ex.ec);
+  printk("Instruction specific syndrome (ISS): 0x%x\n", ex.iss);
 
-  switch (ec) {
-    // SVC instruction execution in AArch64 state
-    case 0b10101:
-      if (iss == 0) {
-        syscall(0, 0, 0, 0, 0, 0, 0);
+  // For ec and iss, see ARMv8 manual p.1877
+  switch (ex.ec) {
+    case 0b10101:  // SVC instruction execution in AArch64 state
+      if (ex.iss == 0) {
+        syscall(number, arg1, arg2, arg3, arg4, arg5, arg6);
       }
       break;
 
-    // Trapped MSR, MRS, or System instruction execution
-    case 0b11000:
+    case 0b11000:  // Trapped MSR, MRS, or System instruction execution
       printk("oh shit 888\n");
       break;
 
@@ -134,6 +128,23 @@ __restore_link_register:
 
 ARMCoreTimer& ExceptionManager::get_arm_core_timer() {
   return _arm_core_timer;
+}
+
+ExceptionManager::Exception ExceptionManager::get_current_exception() {
+  Exception ex;
+
+  // Obtain return address of current exception.
+  asm volatile("mrs %0, elr_el1" : "=r" (ex.ret_addr));
+
+  // esr_el2[31:26] = EC
+  // esr_el2[25] = IL
+  // esr_el2[24:0] = ISS
+  uint32_t esr_el1; 
+  asm volatile("mrs %0, esr_el1" : "=r" (esr_el1));
+  ex.ec = esr_el1 >> 26;
+  ex.iss = esr_el1 & 0x1ffffff;
+
+  return ex;
 }
 
 }  // namespace valkyrie::kernel
