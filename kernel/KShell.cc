@@ -36,13 +36,7 @@ void KShell::run() {
     } else if (!strcmp(_buf, "exc")) {
       asm volatile("svc #1");
     } else if (!strcmp(_buf, "irq")) {
-      asm volatile("mov x8, #0");
-      asm volatile("mov x0, #1");
-      asm volatile("mov x1, #2");
-      asm volatile("mov x2, #3");
-      asm volatile("mov x3, #4");
-      asm volatile("mov x4, #5");
-      asm volatile("mov x5, #6");
+      asm volatile("mov x1, #0");
       asm volatile("svc #0");
     } else if (!strcmp(_buf, "panic")) {
       panic("panic on demand");

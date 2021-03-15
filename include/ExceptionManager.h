@@ -31,18 +31,18 @@ class ExceptionManager final {
   void enable_irqs();
   void disable_irqs();
 
-  void handle_exception(const size_t arg1,
+  void handle_exception(const size_t number,
+                        const size_t arg1,
                         const size_t arg2,
                         const size_t arg3,
                         const size_t arg4,
                         const size_t arg5,
-                        const size_t arg6,
-                        const size_t number);
+                        const size_t arg6);
   void handle_irq();
 
   uint8_t get_exception_level() const;
   void switch_to_exception_level(const uint8_t level,
-                                 const void* new_stack = 0);
+                                 const size_t new_stack = 0);
 
   ARMCoreTimer& get_arm_core_timer();
 

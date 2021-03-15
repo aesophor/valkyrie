@@ -31,8 +31,7 @@ Kernel::Kernel()
 
 void Kernel::run() {
   printk("switching to userspace... \n");
-  _exception_manager.switch_to_exception_level(0);
-  asm volatile("mov sp, %0" :: "r" (0x20000));
+  _exception_manager.switch_to_exception_level(0, /*new_stack=*/0x20000);
 
   // Lab1 SimpleShell
   KShell shell;
