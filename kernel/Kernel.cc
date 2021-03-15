@@ -3,6 +3,7 @@
 
 #include <Console.h>
 #include <Shell.h>
+#include <Task.h>
 
 extern "C" [[noreturn]] void _halt(void);
 
@@ -24,14 +25,15 @@ Kernel::Kernel()
   printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
   //_initrd_cpio.parse();
 
-  printk("initializing exception management\n");
+  printk("switching to EL1...\n");
   _exception_manager.switch_to_exception_level(1);
+  //_exception_manager.enable_irqs();
 }
 
 
 void Kernel::run() {
-  printk("switching to userspace... \n");
-  _exception_manager.switch_to_exception_level(0, /*new_stack=*/0x20000);
+  //printk("switching to userspace... \n");
+  //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
   Shell shell;
