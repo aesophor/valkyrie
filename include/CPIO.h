@@ -35,7 +35,10 @@ class CPIO {
   };
 
   struct DirectoryEntry final {
+    DirectoryEntry() = default;
     DirectoryEntry(const char* ptr);
+
+    operator bool() const;
 
     const CPIO::Header* header;
     const char* pathname;
