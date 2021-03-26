@@ -16,11 +16,16 @@ Kernel::Kernel()
     : _mini_uart(),
       _mailbox(),
       _initrd_cpio(CPIO_BASE),
-      _exception_manager(*ExceptionManager::get_instance()) {}
+      _exception_manager(*ExceptionManager::get_instance()),
+      _memory_manager(*MemoryManager::get_instance()) {}
 
 
 void Kernel::run() {
-  printk("starting valkyrie OS...\n");
+  puts("\033[1;32m", false);
+  puts("--- Valkyrie OS ---");
+  puts("\033[1;33m", false);
+  puts("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>");
+  puts("\033[0m\n", false);
   print_hardware_info();
 
   printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
