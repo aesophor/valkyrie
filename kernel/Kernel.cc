@@ -5,8 +5,6 @@
 #include <Shell.h>
 #include <Task.h>
 
-extern "C" [[noreturn]] void _halt(void);
-
 namespace valkyrie::kernel {
 
 Kernel* Kernel::get_instance() {
