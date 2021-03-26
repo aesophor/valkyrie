@@ -21,11 +21,7 @@ Kernel::Kernel()
 
 
 void Kernel::run() {
-  puts("\033[1;32m", false);
-  puts("--- Valkyrie OS ---");
-  puts("\033[1;33m", false);
-  puts("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>");
-  puts("\033[0m\n", false);
+  print_banner();
   print_hardware_info();
 
   printk("parsing cpio archive at 0x%x\n", CPIO_BASE);
@@ -40,6 +36,15 @@ void Kernel::run() {
   // Lab1 SimpleShell
   Shell shell;
   shell.run();
+}
+
+
+void Kernel::print_banner() {
+  puts("\033[1;32m", /*newline=*/false);
+  puts("--- Valkyrie OS ---");
+  puts("\033[1;33m", /*newline=*/false);
+  puts("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>");
+  puts("\033[0m\n", /*newline=*/false);
 }
 
 void Kernel::print_hardware_info() {

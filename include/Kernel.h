@@ -24,6 +24,7 @@ class Kernel {
  private:
   Kernel();
 
+  void print_banner();
   void print_hardware_info();
 
   MiniUART _mini_uart;
