@@ -14,7 +14,6 @@
 // 5. finally, branch to the `kmain()` function.
 
 .extern memset
-.extern evt
 
 .section ".text"
 .global _start
