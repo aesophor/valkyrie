@@ -5,11 +5,6 @@
 #include <Kernel.h>
 #include <Syscall.h>
 
-#define EL0_STACK 0x20000
-#define EL1_STACK 0x40000
-
-const char *eret_ok = "eret ok!\n";
-
 extern "C" void* evt;
 
 namespace valkyrie::kernel {

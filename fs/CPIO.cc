@@ -11,7 +11,8 @@
 
 namespace valkyrie::kernel {
 
-CPIO::CPIO(const char* base_addr) : _base_addr(base_addr) {}
+CPIO::CPIO(const size_t base_addr)
+    : _base_addr(reinterpret_cast<const char*>(base_addr)) {}
 
 
 void CPIO::parse() const {

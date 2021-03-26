@@ -15,7 +15,7 @@ Kernel* Kernel::get_instance() {
 Kernel::Kernel()
     : _mini_uart(),
       _mailbox(),
-      _initrd_cpio(reinterpret_cast<const char*>(CPIO_BASE)),
+      _initrd_cpio(CPIO_BASE),
       _exception_manager(*ExceptionManager::get_instance()) {}
 
 
@@ -44,11 +44,6 @@ void Kernel::print_hardware_info() {
   auto vc_memory_info = _mailbox.get_vc_memory();
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
-}
-
-
-ExceptionManager* Kernel::get_exception_manager() {
-  return &_exception_manager;
 }
 
 }  // namespace valkyrie::kernel
