@@ -16,7 +16,6 @@ class Kernel {
   ~Kernel() = default;
 
   void run();
-  ExceptionManager* get_exception_manager();
 
   template <typename... Args>
   [[noreturn]] static void panic(char* fmt, Args&&... args);
