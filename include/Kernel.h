@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
+#include <Console.h>
 #include <CPIO.h>
 #include <Mailbox.h>
 #include <MiniUART.h>
@@ -15,9 +16,10 @@ class Kernel {
   ~Kernel() = default;
 
   void run();
-  [[noreturn]] void panic(const char* msg);
-
   ExceptionManager* get_exception_manager();
+
+  template <typename... Args>
+  [[noreturn]] static void panic(char* fmt, Args&&... args);
 
  private:
   Kernel();
@@ -30,11 +32,20 @@ class Kernel {
   ExceptionManager& _exception_manager;
 };
 
-}  // namespace valkyrie::kernel
 
+extern "C" [[noreturn]] void _halt(void);
 
-extern "C" [[noreturn]] inline void panic(const char* msg) {
-  valkyrie::kernel::Kernel::get_instance()->panic(msg);
+template <typename... Args>
+[[noreturn]] void Kernel::panic(char* fmt, Args&&... args) {
+  printk("Kernel panic: ");
+  printf(fmt, args...);
+
+  printk("---[ end Kernel panic: ");
+  printf(fmt, args...);
+
+  _halt();
 }
+
+}  // namespace valkyrie::kernel
 
 #endif  // VALKYRIE_KERNEL_H_

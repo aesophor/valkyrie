@@ -18,7 +18,7 @@ void initialize(MiniUART* mini_uart);
 
 // FIXME: not sure why we cannot access cntpct_el0 at EL0...(?)
 template <typename... Args>
-void printk(char* fmt, Args&& ...args) {
+void printk(char* fmt, Args&&... args) {
   uint64_t cntpct_el0;
   uint64_t cntfrq_el0;
   uint64_t timestamp;
