@@ -39,7 +39,7 @@ void Shell::run() {
       asm volatile("mov x1, #0");
       asm volatile("svc #0");
     } else if (!strcmp(_buf, "panic")) {
-      panic("panic on demand");
+      Kernel::panic("panic on demand\n");
     } else {
       printf("%s: command not found. Try <help>\n", _buf);
     }
