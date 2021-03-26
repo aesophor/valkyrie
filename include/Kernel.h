@@ -7,6 +7,7 @@
 #include <Mailbox.h>
 #include <MiniUART.h>
 #include <ExceptionManager.h>
+#include <MemoryManager.h>
 
 namespace valkyrie::kernel {
 
@@ -29,6 +30,7 @@ class Kernel {
   Mailbox _mailbox;
   CPIO _initrd_cpio;
   ExceptionManager& _exception_manager;
+  MemoryManager& _memory_manager;
 };
 
 
@@ -36,10 +38,10 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(char* fmt, Args&&... args) {
-  printk("Kernel panic: ");
+  printk("\033[0;31mKernel panic: \033[0m");
   printf(fmt, args...);
 
-  printk("---[ end Kernel panic: ");
+  printk("\033[0;31m---[ end Kernel panic: \033[0m");
   printf(fmt, args...);
 
   _halt();
