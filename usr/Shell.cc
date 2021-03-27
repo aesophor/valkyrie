@@ -3,6 +3,7 @@
 
 #include <Kernel.h>
 #include <Console.h>
+#include <MemoryManager.h>
 #include <Power.h>
 #include <String.h>
 
@@ -38,6 +39,10 @@ void Shell::run() {
     } else if (!strcmp(_buf, "irq")) {
       asm volatile("mov x1, #0");
       asm volatile("svc #0");
+    } else if (!strcmp(_buf, "kmalloc")) {
+      MemoryManager::get_instance()->kmalloc(4096 - 16);
+    } else if (!strcmp(_buf, "kfree")) {
+      MemoryManager::get_instance()->kfree(0);
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
     } else {
