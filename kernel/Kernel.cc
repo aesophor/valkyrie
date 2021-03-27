@@ -48,10 +48,10 @@ void Kernel::print_banner() {
 }
 
 void Kernel::print_hardware_info() {
-  auto board_revision = _mailbox.get_board_revision();
-  printk("board revision: 0x%x\n", board_revision);
+  const auto board_revision = _mailbox.get_board_revision();
+  const auto vc_memory_info = _mailbox.get_vc_memory();
 
-  auto vc_memory_info = _mailbox.get_vc_memory();
+  printk("board revision: 0x%x\n", board_revision);
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
 }
