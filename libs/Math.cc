@@ -34,4 +34,12 @@ int sqrt(int x) {
   return l - 1;
 }
 
+int log2(int x) {
+  int result = 0;
+  while (x >>= 1) {
+    ++result;
+  }
+  return result;
+}
+
 }  // namespace valkyrie::kernel

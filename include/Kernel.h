@@ -39,11 +39,13 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(char* fmt, Args&&... args) {
-  printk("\033[0;31mKernel panic: \033[0m");
+  printk("\033[1;31mKernel panic: \033[0;33m");
   printf(fmt, args...);
+  puts("\033[0m", /*newline=*/false);
 
-  printk("\033[0;31m---[ end Kernel panic: \033[0m");
+  printk("\033[1;31m---[ end Kernel panic: \033[0;33m");
   printf(fmt, args...);
+  puts("\033[0m", /*newline=*/false);
 
   _halt();
 }

@@ -14,6 +14,8 @@ class MemoryManager {
   void* kmalloc(size_t size);
   void  kfree(void* p);
 
+  void  dump_physical_memory_map() const;
+
  private:
   MemoryManager();
 
