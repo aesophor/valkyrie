@@ -4,7 +4,7 @@
 
 #define PAGE_SIZE  4096
 #define HEAP_BEGIN 0X10000000
-#define HEAP_END   0x10010000
+#define HEAP_END   0x10200000
 
 #define MAX_ORDER 10
 

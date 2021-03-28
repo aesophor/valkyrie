@@ -4,7 +4,7 @@
 
 #include <PageFrameAllocator.h>
 
-namespace valkyrie::kernel::io {
+namespace valkyrie::kernel {
 
 class SlabAllocator {
  public:
@@ -12,7 +12,6 @@ class SlabAllocator {
   ~SlabAllocator() = default;
 
  private:
-  PageFrameAllocator& _page_frame_allocator;
 };
 
 }  // namespace valkyrie::kernel
