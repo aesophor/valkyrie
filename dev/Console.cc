@@ -23,6 +23,8 @@ void initialize(MiniUART* mini_uart) {
 }  // namespace valkyrie::kernel::console
 
 
+extern "C" {
+
 char _recv() {
   return ::mini_uart->recv();
 }
@@ -41,4 +43,6 @@ void gets(char* s) {
 
 void puts(const char* s, bool newline) {
   ::mini_uart->puts(s, newline);
+}
+
 }
