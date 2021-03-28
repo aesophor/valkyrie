@@ -4,11 +4,7 @@
 namespace valkyrie::kernel {
 
 int pow(int base, int exponent) {
-  if (exponent == 0) {
-    return 1;
-  }
-
-  int result = base;
+  int result = 1;
   while (exponent-- > 0) {
     result *= base;
   }
