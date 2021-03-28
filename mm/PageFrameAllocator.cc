@@ -42,7 +42,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   Block* victim = _free_lists[order];
 
   if (victim && victim->order == requested_size / PAGE_SIZE) {
-    printf("hit!\n");
+    printf("freelist hit!\n");
     mark_block_as_allocated(victim);
     free_list_del_head(victim);
     dump_memory_map();
@@ -117,9 +117,8 @@ int PageFrameAllocator::get_page_frame_index(const Block* block) const {
 void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
   int idx = get_page_frame_index(block);
   int len = pow(2, block->order);
-  printf("allocated, idx = %d, len = %d\n", idx, len);
 
-  for (int i = 0; i < len && idx + i < _frame_array_size; i++) {
+  for (int i = 0; i < len; i++) {
     _frame_array[idx + i] = static_cast<int8_t>(ALLOCATED);
   }
 }
@@ -127,10 +126,9 @@ void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
 void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
   int idx = get_page_frame_index(block);
   int len = pow(2, block->order);
-  printf("allocatable, idx = %d, len = %d\n", idx, len);
 
   _frame_array[idx] = static_cast<int8_t>(block->order);
-  for (int i = 1; i < len && idx + i < _frame_array_size; i++) {
+  for (int i = 1; i < len; i++) {
     _frame_array[idx + i] = static_cast<int8_t>(DONT_ALLOCATE);
   }
 }
