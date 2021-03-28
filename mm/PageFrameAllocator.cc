@@ -78,7 +78,34 @@ void PageFrameAllocator::deallocate(void* p) {
     return;
   }
 
-  
+  Block* block = reinterpret_cast<Block*>(p) - 1;  // 1 is for the header
+  Block* buddy = get_buddy(block);
+
+  // When you can’t find the buddy of the merged block or
+  // the merged block size is maximum-block-size,
+  // the allocator stops and put the merged block to the linked-list.
+  while (!is_block_allocated(buddy) && block->order < 4) {
+    int block_idx = get_page_frame_index(block);
+    int buddy_idx = get_page_frame_index(buddy);
+    printf("merging blocks %d and %d\n", block_idx, buddy_idx);
+
+    // Remove the buddy from the free list.
+    free_list_del_entry(buddy);
+
+    // Update _frame_array.
+    mark_block_as_allocatable(block);
+
+    block->order++;
+    buddy = get_buddy(block);
+  }
+
+  // Put back the merged block to the free list.
+  free_list_add_head(block);
+
+  // Update _frame_array.
+  mark_block_as_allocatable(block);
+
+  dump_memory_map();
 }
 
 void PageFrameAllocator::dump_memory_map() const {
@@ -117,7 +144,7 @@ int PageFrameAllocator::get_page_frame_index(const Block* block) const {
 void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
   int idx = get_page_frame_index(block);
   int len = pow(2, block->order);
-
+ 
   for (int i = 0; i < len; i++) {
     _frame_array[idx + i] = static_cast<int8_t>(ALLOCATED);
   }
@@ -153,21 +180,42 @@ void PageFrameAllocator::free_list_add_head(Block* block) {
   }
 }
 
+void PageFrameAllocator::free_list_del_entry(Block* block) {
+  if (_free_lists[block->order] == block) {
+    free_list_del_head(block);
+    return;
+  }
+
+  Block* prev = nullptr;
+  Block* ptr = _free_lists[block->order];
+
+  while (ptr) {
+    if (ptr == block) {
+      prev->next = ptr->next;
+      ptr->next = nullptr;
+      break;
+    }
+
+    prev = ptr;
+    ptr = ptr->next;
+  }
+}
+
+
 PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
                                                            const int target_order) {
   if (!block) {
     Kernel::panic("kernel heap corrupted (block == nullptr)\n");
   }
 
-  if (block->order < 0) {
-    Kernel::panic("kernel heap corrupted (block->order < 0)\n");
+  if (block->order < 0 || block->order > MAX_ORDER) {
+    Kernel::panic("kernel heap corrupted (invalid block->order: %d)\n", block->order);
   }
 
 
   printf("---------------------------------\n");
   printf("comparing block order... %d vs %d\n", block->order, target_order);
 
-  // Otherwise, we need to split it recursively.
   free_list_del_head(block);
 
   if (block->order == target_order) {
@@ -180,7 +228,7 @@ PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
   buddies.second->order = buddies.first->order;
   printf("buddies: b1 = 0x%x, b2 = 0x%x\n", buddies.first, buddies.second);
 
-  // Add buddy2 to the free list.
+  // Add buddy1 and buddy2 to the free list.
   free_list_add_head(buddies.second);
   free_list_add_head(buddies.first);
 
@@ -204,6 +252,11 @@ int PageFrameAllocator::size_to_order(const size_t size) {
   //       8192  -> 1
   //       16384 -> 2
   return log2(size / PAGE_SIZE);
+}
+
+bool PageFrameAllocator::is_block_allocated(const Block* block) {
+  int idx = get_page_frame_index(block);
+  return _frame_array[idx] == static_cast<int8_t>(ALLOCATED);
 }
 
 }  // namespace valkyrie::kernel
