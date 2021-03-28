@@ -22,6 +22,10 @@ void MemoryManager::kfree(void* p) {
   }
 }
 
+void MemoryManager::dump_physical_memory_map() const {
+  _page_frame_allocator.dump_memory_map();
+}
+
 
 void* MemoryManager::allocate_page_frame() {
 

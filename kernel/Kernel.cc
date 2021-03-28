@@ -24,14 +24,14 @@ void Kernel::run() {
   print_banner();
   print_hardware_info();
 
-  printk("initializin initramfs at 0x%x\n", CPIO_BASE);
+  printk("initializing initramfs at 0x%x\n", CPIO_BASE);
   //_initrd_cpio.parse();
 
   printk("switching to supervisor mode...\n");
   _exception_manager.switch_to_exception_level(1);
 
-  printk("switching to user mode... (≧▽ ≦)\n");
-  _exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
+  //printk("switching to user mode... (≧▽ ≦)\n");
+  //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
   Shell shell;

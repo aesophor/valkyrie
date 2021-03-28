@@ -6,6 +6,7 @@ namespace valkyrie::kernel {
 
 int pow(int base, int exponent);
 int sqrt(int x);
+int log2(int x);
 
 }  // namespace valkyrie::kernel
 

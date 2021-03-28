@@ -4,6 +4,7 @@
 #include <Console.h>
 #include <Kernel.h>
 #include <Math.h>
+#include <Utility.h>
 
 namespace valkyrie::kernel {
 
@@ -12,45 +13,64 @@ PageFrameAllocator::PageFrameAllocator()
       _frame_array_size(sizeof(_frame_array) / sizeof(_frame_array[0])),
       _free_lists() {
   for (auto& entry : _frame_array) {
-    entry = DONT_ALLOCATE;
+    entry = static_cast<int8_t>(DONT_ALLOCATE);
   }
   _frame_array[0] = sqrt(_frame_array_size);
 
-  // The last free list should point to HEAP_BEGIN,
-  // while all the other free list should be nullptr.
-  int idx = get_free_list_index(HEAP_END - HEAP_BEGIN);
-  _free_lists[idx] = reinterpret_cast<PageFrameHeader*>(HEAP_BEGIN);
-  _free_lists[idx]->size = HEAP_END - HEAP_BEGIN;
-  _free_lists[idx]->next = nullptr;
+  int order = size_to_order(HEAP_END - HEAP_BEGIN);
+  _free_lists[order] = reinterpret_cast<Block*>(HEAP_BEGIN);
+  _free_lists[order]->order = _frame_array[0];
+  _free_lists[order]->next = nullptr;
 }
 
 
 void* PageFrameAllocator::allocate(size_t requested_size) {
-  // For each allocation request x, add the header size to x and
+  // For each allocation request x, add the block size to x and
   // raise that value to a power of 2 s.t. x >= the original requested_size.
-  requested_size += sizeof(PageFrameHeader);
-  int idx = get_free_list_index(requested_size);
+  requested_size += sizeof(Block);
+  int order = size_to_order(requested_size);
 
-  if (idx >= MAX_ORDER) {
-    Kernel::panic("idx >= MAX_ORDER\n");
+  if (order >= MAX_ORDER) {
+    Kernel::panic("order >= MAX_ORDER\n");
   }
 
   printf("allocating physical memory of %d bytes...\n", requested_size);
-  printf("searching free page frames from _free_lists[%d]...\n", idx);
+  printf("searching free block from _free_lists[%d]...\n", order);
 
-  // If there's an exact-fit page frame from the free list,
-  // then remove it from the free list and return that page frame.
-  PageFrameHeader* victim = _free_lists[idx];
-  while (victim) {
-    if (victim->size == requested_size) {
-      printf("hit!\n");
-      mark_page_frame_as_allocated(victim);
-      break;
-    }
-    victim = victim->next;
+  // If there's an exact-fit free block from the free list,
+  // then remove it from the free list and return that free block.
+  Block* victim = _free_lists[order];
+
+  if (victim && victim->order == requested_size / PAGE_SIZE) {
+    printf("hit!\n");
+    mark_block_as_allocated(victim);
+    free_list_del_head(victim);
+    dump_memory_map();
+    return victim + 1;  // skip the header 
   }
 
+  printf("no existing free block available\n");
+
+  // Search larger free blocks.
+  for (; order <= MAX_ORDER; order++) {
+    if (_free_lists[order]) {
+      victim = _free_lists[order];
+      printf("found a larger block with order %d\n", victim->order);
+      break;
+    }
+  }
+
+  if (order >= MAX_ORDER) {
+    Kernel::panic("out of memory\n");
+  }
+
+  // Recursively divide the victim free block in half,
+  // and update _free_lists until we've found an exact fit.
+  victim = split_block(victim, size_to_order(requested_size));
+  mark_block_as_allocated(victim);
+
   dump_memory_map();
+  return victim + 1;  // skip the header
 }
 
 void PageFrameAllocator::deallocate(void* p) {
@@ -61,56 +81,131 @@ void PageFrameAllocator::deallocate(void* p) {
   
 }
 
-
-void* PageFrameAllocator::get_page_frame_by_index(const size_t index) const {
-  return reinterpret_cast<void*>(HEAP_BEGIN + PAGE_SIZE * index);
-}
-
-int PageFrameAllocator::get_page_frame_index(PageFrameHeader* header) const {
-  return (reinterpret_cast<size_t>(header) - HEAP_BEGIN) / PAGE_SIZE;
-}
-
-void PageFrameAllocator::mark_page_frame_as_allocated(PageFrameHeader* header) {
-  // Update the frame array.
-  int index = get_page_frame_index(header);
-  int len = pow(2, header->size);
-
-  printf("index = %d\n", index);
-
-  for (int i = 0; i < len; i++) {
-    _frame_array[index + i] = ALLOCATED;
-  }
-}
-
 void PageFrameAllocator::dump_memory_map() const {
-  puts("\n~~~ dumping kernel heap~~~");
+  puts("--- dumping kernel heap ---");
 
   for (int i = 0; i < _frame_array_size; i++) {
-    if (_frame_array[i] == DONT_ALLOCATE) {
+    if (_frame_array[i] == static_cast<int8_t>(DONT_ALLOCATE)) {
       // Do nothing.
-    } else if (_frame_array[i] == ALLOCATED) {
-      printf("<%d>: allocated page frame\n", i);
+    } else if (_frame_array[i] == static_cast<int8_t>(ALLOCATED)) {
+      printf("<page frame #%d>: allocated page frame\n", i);
     } else {
-      printf("<%d>: free page frame\n", i);
+      printf("<page frame #%d>: free page frame\n", i);
     }
   }
-  puts("~~~ end dumping kernel heap~~~\n");
+
+  puts("");
+
+  for (int i = 0; i < MAX_ORDER; i++) {
+    printf("_free_lists[%d]: ", i);
+    Block* ptr = _free_lists[i];
+    while (ptr) {
+      printf("[%d] ->", ptr->order);
+      ptr = ptr->next;
+    }
+    printf("[nil]\n");
+  }
+
+  puts("--- end dumping kernel heap ---");
 }
 
 
-size_t PageFrameAllocator::get_free_list_index(const size_t x) {
-  int exponent = 0;
-  int value = PAGE_SIZE;
+int PageFrameAllocator::get_page_frame_index(const Block* block) const {
+  return (reinterpret_cast<size_t>(block) - HEAP_BEGIN) / PAGE_SIZE;
+}
 
-  while (exponent < MAX_ORDER) {
-    if (value >= x) {
-      break;
-    }
-    value <<= 1;
-    ++exponent;
+void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
+  int idx = get_page_frame_index(block);
+  int len = pow(2, block->order);
+  printf("allocated, idx = %d, len = %d\n", idx, len);
+
+  for (int i = 0; i < len && idx + i < _frame_array_size; i++) {
+    _frame_array[idx + i] = static_cast<int8_t>(ALLOCATED);
+  }
+}
+
+void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
+  int idx = get_page_frame_index(block);
+  int len = pow(2, block->order);
+  printf("allocatable, idx = %d, len = %d\n", idx, len);
+
+  _frame_array[idx] = static_cast<int8_t>(block->order);
+  for (int i = 1; i < len && idx + i < _frame_array_size; i++) {
+    _frame_array[idx + i] = static_cast<int8_t>(DONT_ALLOCATE);
+  }
+}
+
+
+void PageFrameAllocator::free_list_del_head(Block* block) {
+  if (!_free_lists[block->order]) {
+    return;
+  }
+  _free_lists[block->order] = _free_lists[block->order]->next;
+  block->next = nullptr;
+}
+
+void PageFrameAllocator::free_list_add_head(Block* block) {
+  // If the list is empty
+  if (!_free_lists[block->order]) {
+    _free_lists[block->order] = block;
+    block->next = nullptr;
+  } else {
+    block->next = _free_lists[block->order];
+    _free_lists[block->order] = block;
+  }
+}
+
+PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
+                                                           const int target_order) {
+  if (!block) {
+    Kernel::panic("kernel heap corrupted (block == nullptr)\n");
   }
 
-  return exponent;
+  if (block->order < 0) {
+    Kernel::panic("kernel heap corrupted (block->order < 0)\n");
+  }
+
+
+  printf("---------------------------------\n");
+  printf("comparing block order... %d vs %d\n", block->order, target_order);
+
+  // Otherwise, we need to split it recursively.
+  free_list_del_head(block);
+
+  if (block->order == target_order) {
+    return block;
+  }
+
+  // Update block headers
+  block->order--;
+  Pair<Block*, Block*> buddies = {block, get_buddy(block)};
+  buddies.second->order = buddies.first->order;
+  printf("buddies: b1 = 0x%x, b2 = 0x%x\n", buddies.first, buddies.second);
+
+  // Add buddy2 to the free list.
+  free_list_add_head(buddies.second);
+  free_list_add_head(buddies.first);
+
+  // Update _frame_array.
+  mark_block_as_allocatable(buddies.first);
+  mark_block_as_allocatable(buddies.second);
+
+  // Continue splitting buddy1.
+  return split_block(buddies.first, target_order);
+}
+
+PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
+  printf("block order = %d\n", block->order);
+  const size_t b1 = reinterpret_cast<size_t>(block);
+  const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
+  return reinterpret_cast<Block*>(b2);
+}
+
+int PageFrameAllocator::size_to_order(const size_t size) {
+  // e.g., 4096  -> 0
+  //       8192  -> 1
+  //       16384 -> 2
+  return log2(size / PAGE_SIZE);
 }
 
 }  // namespace valkyrie::kernel
