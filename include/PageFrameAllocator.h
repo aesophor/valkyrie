@@ -36,8 +36,11 @@ class PageFrameAllocator {
 
   void free_list_del_head(Block* block);
   void free_list_add_head(Block* block);
+  void free_list_del_entry(Block* block);
 
   int size_to_order(const size_t size);
+
+  bool is_block_allocated(const Block* block);
 
   // Recursively split the given block
   // until it is exactly the size of PAGE_SIZE * 2^`target_order`.

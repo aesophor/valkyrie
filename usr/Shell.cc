@@ -12,6 +12,8 @@ namespace valkyrie::kernel {
 Shell::Shell() : _buf() {}
 
 void Shell::run() {
+  void *p = nullptr;
+
   while (true) {
     memset(_buf, 0, sizeof(_buf));
     printf("root# ");
@@ -40,10 +42,10 @@ void Shell::run() {
       asm volatile("mov x1, #0");
       asm volatile("svc #0");
     } else if (!strcmp(_buf, "kmalloc")) {
-      void* p = MemoryManager::get_instance()->kmalloc(4096 - 16);
+      p = MemoryManager::get_instance()->kmalloc(4096 - 16);
       printf("got pointer 0x%x\n", p);
     } else if (!strcmp(_buf, "kfree")) {
-      MemoryManager::get_instance()->kfree(0);
+      MemoryManager::get_instance()->kfree(p);
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
     } else {

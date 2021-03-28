@@ -17,9 +17,7 @@ void* MemoryManager::kmalloc(size_t size) {
 }
 
 void MemoryManager::kfree(void* p) {
-  if (!p) {
-    return;
-  }
+  _page_frame_allocator.deallocate(p);
 }
 
 void MemoryManager::dump_physical_memory_map() const {
