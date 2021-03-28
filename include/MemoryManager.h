@@ -13,17 +13,17 @@ class MemoryManager {
 
   void* kmalloc(size_t size);
   void  kfree(void* p);
-
   void  dump_physical_memory_map() const;
 
  private:
   MemoryManager();
 
-  void* allocate_page_frame();
-  void  deallocate_page_frame(void* p);
-
   PageFrameAllocator _page_frame_allocator;
 };
+
+
+extern "C" void* kmalloc(const size_t requested_size);
+extern "C" void  kfree(void* p);
 
 }  // namespace valkyrie::kernel
 

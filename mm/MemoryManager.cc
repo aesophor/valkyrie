@@ -24,13 +24,13 @@ void MemoryManager::dump_physical_memory_map() const {
   _page_frame_allocator.dump_memory_map();
 }
 
-
-void* MemoryManager::allocate_page_frame() {
-
-}
-
-void MemoryManager::deallocate_page_frame(void* p) {
-
-}
-
 }  // namespace valkyrie::kernel
+
+
+extern "C" void* kmalloc(const size_t requested_size) {
+  return valkyrie::kernel::MemoryManager::get_instance()->kmalloc(requested_size);
+}
+
+extern "C" void kfree(void* p) {
+  valkyrie::kernel::MemoryManager::get_instance()->kfree(p);
+}

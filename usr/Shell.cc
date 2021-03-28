@@ -12,7 +12,11 @@ namespace valkyrie::kernel {
 Shell::Shell() : _buf() {}
 
 void Shell::run() {
-  void *p = nullptr;
+  void* p1 = kmalloc(4080);
+  void* p2 = kmalloc(8787);
+
+  kfree(p1);
+  kfree(p2);
 
   while (true) {
     memset(_buf, 0, sizeof(_buf));
@@ -41,11 +45,18 @@ void Shell::run() {
     } else if (!strcmp(_buf, "irq")) {
       asm volatile("mov x1, #0");
       asm volatile("svc #0");
+    /*
     } else if (!strcmp(_buf, "kmalloc")) {
-      p = MemoryManager::get_instance()->kmalloc(4096 - 16);
+      printf("how many bytes: ");
+      gets(_buf);
+      p = MemoryManager::get_instance()->kmalloc(atoi(_buf));
       printf("got pointer 0x%x\n", p);
     } else if (!strcmp(_buf, "kfree")) {
-      MemoryManager::get_instance()->kfree(p);
+      printf("which pointer to free (in hexadecimal without the 0x prefix): ");
+      gets(_buf);
+      void* ptr = reinterpret_cast<void*>(atoi(_buf, 16));
+      MemoryManager::get_instance()->kfree(ptr);
+    */
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
     } else {

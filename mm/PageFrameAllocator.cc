@@ -25,6 +25,10 @@ PageFrameAllocator::PageFrameAllocator()
 
 
 void* PageFrameAllocator::allocate(size_t requested_size) {
+  if (!requested_size) {
+    return nullptr;
+  }
+
   // For each allocation request x, add the block size to x and
   // raise that value to a power of 2 s.t. x >= the original requested_size.
   requested_size += sizeof(Block);
@@ -41,7 +45,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   // then remove it from the free list and return that free block.
   Block* victim = _free_lists[order];
 
-  if (victim && victim->order == requested_size / PAGE_SIZE) {
+  if (victim && victim->order == size_to_order(requested_size)) {
     printf("freelist hit!\n");
     mark_block_as_allocated(victim);
     free_list_del_head(victim);
@@ -81,6 +85,8 @@ void PageFrameAllocator::deallocate(void* p) {
   Block* block = reinterpret_cast<Block*>(p) - 1;  // 1 is for the header
   Block* buddy = get_buddy(block);
 
+  printf("deallocating block 0x%x\n", block);
+
   // When you can’t find the buddy of the merged block or
   // the merged block size is maximum-block-size,
   // the allocator stops and put the merged block to the linked-list.
@@ -95,7 +101,11 @@ void PageFrameAllocator::deallocate(void* p) {
     // Update _frame_array.
     mark_block_as_allocatable(block);
 
+    if (block > buddy) {
+      swap(block, buddy);
+    }
     block->order++;
+
     buddy = get_buddy(block);
   }
 
@@ -170,6 +180,10 @@ void PageFrameAllocator::free_list_del_head(Block* block) {
 }
 
 void PageFrameAllocator::free_list_add_head(Block* block) {
+  if (_free_lists[block->order] == block) {
+    return;
+  }
+
   // If the list is empty
   if (!_free_lists[block->order]) {
     _free_lists[block->order] = block;
@@ -241,7 +255,6 @@ PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
 }
 
 PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
-  printf("block order = %d\n", block->order);
   const size_t b1 = reinterpret_cast<size_t>(block);
   const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
   return reinterpret_cast<Block*>(b2);
