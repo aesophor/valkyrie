@@ -12,15 +12,18 @@ PageFrameAllocator::PageFrameAllocator()
     : _frame_array(),
       _frame_array_size(sizeof(_frame_array) / sizeof(_frame_array[0])),
       _free_lists() {
+  const int order = size_to_order(HEAP_END - HEAP_BEGIN);
+
   for (auto& entry : _frame_array) {
     entry = static_cast<int8_t>(DONT_ALLOCATE);
   }
-  _frame_array[0] = sqrt(_frame_array_size);
+  _frame_array[0] = static_cast<int8_t>(order);
 
-  int order = size_to_order(HEAP_END - HEAP_BEGIN);
   _free_lists[order] = reinterpret_cast<Block*>(HEAP_BEGIN);
   _free_lists[order]->order = _frame_array[0];
   _free_lists[order]->next = nullptr;
+
+  dump_memory_map();
 }
 
 
@@ -90,7 +93,7 @@ void PageFrameAllocator::deallocate(void* p) {
   // When you can’t find the buddy of the merged block or
   // the merged block size is maximum-block-size,
   // the allocator stops and put the merged block to the linked-list.
-  while (!is_block_allocated(buddy) && block->order < 4) {
+  while (!is_block_allocated(buddy) && block->order < MAX_ORDER - 1) {
     int block_idx = get_page_frame_index(block);
     int buddy_idx = get_page_frame_index(buddy);
     printf("merging blocks %d and %d\n", block_idx, buddy_idx);
@@ -137,7 +140,7 @@ void PageFrameAllocator::dump_memory_map() const {
     printf("_free_lists[%d]: ", i);
     Block* ptr = _free_lists[i];
     while (ptr) {
-      printf("[%d] ->", ptr->order);
+      printf("[%d] -> ", ptr->order);
       ptr = ptr->next;
     }
     printf("[nil]\n");
