@@ -35,3 +35,27 @@ extern "C" void* kmalloc(const size_t requested_size) {
 extern "C" void kfree(void* p) {
   valkyrie::kernel::MemoryManager::get_instance()->kfree(p);
 }
+
+void* operator new(size_t size) {
+  return kmalloc(size);
+}
+
+void* operator new[](size_t size) {
+  return kmalloc(size);
+}
+
+void operator delete(void* p) noexcept {
+  return kfree(p);
+}
+
+void operator delete[](void* p) noexcept {
+  return kfree(p);
+}
+
+void operator delete(void* p, size_t) noexcept {
+  return kfree(p);
+}
+
+void operator delete[](void* p, size_t) noexcept {
+  return kfree(p);
+}
