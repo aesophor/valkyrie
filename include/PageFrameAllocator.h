@@ -24,6 +24,8 @@ class PageFrameAllocator {
   void  deallocate(void* p);
   void  dump_memory_map() const;
 
+  void* allocate_one_page_frame();
+
  private:
   struct Block {
     Block* next;

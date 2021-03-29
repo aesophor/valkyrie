@@ -149,6 +149,10 @@ void PageFrameAllocator::dump_memory_map() const {
   puts("--- end dumping kernel heap ---");
 }
 
+void* PageFrameAllocator::allocate_one_page_frame() {
+  return allocate(PAGE_SIZE - sizeof(Block));
+}
+
 
 int PageFrameAllocator::get_page_frame_index(const Block* block) const {
   return (reinterpret_cast<size_t>(block) - HEAP_BEGIN) / PAGE_SIZE;

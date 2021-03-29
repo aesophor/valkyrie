@@ -9,7 +9,8 @@ MemoryManager* MemoryManager::get_instance() {
 }
 
 MemoryManager::MemoryManager()
-    : _page_frame_allocator() {}
+    : _page_frame_allocator(),
+      _slob_allocator(&_page_frame_allocator) {}
 
 
 void* MemoryManager::kmalloc(size_t size) {
