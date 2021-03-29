@@ -3,6 +3,14 @@
 
 namespace valkyrie::kernel {
 
+size_t round_up_to_pow2(size_t x) {
+  size_t result = 1;
+  while (result < x) {
+    result <<= 1;
+  }
+  return result;
+}
+
 int pow(int base, int exponent) {
   int result = 1;
   while (exponent-- > 0) {

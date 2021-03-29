@@ -33,7 +33,7 @@ void Kernel::run() {
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
-
+  
   // Lab1 SimpleShell
   Shell shell;
   shell.run();
