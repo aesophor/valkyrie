@@ -22,8 +22,6 @@ PageFrameAllocator::PageFrameAllocator()
   _free_lists[order] = reinterpret_cast<Block*>(HEAP_BEGIN);
   _free_lists[order]->order = _frame_array[0];
   _free_lists[order]->next = nullptr;
-
-  dump_memory_map();
 }
 
 
@@ -265,14 +263,6 @@ PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
   const size_t b1 = reinterpret_cast<size_t>(block);
   const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
   return reinterpret_cast<Block*>(b2);
-}
-
-size_t PageFrameAllocator::round_up_to_pow2(const size_t size) {
-  size_t result = 1;
-  while (result < size) {
-    result <<= 1;
-  }
-  return result;
 }
 
 int PageFrameAllocator::size_to_order(const size_t size) {

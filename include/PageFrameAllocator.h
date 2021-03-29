@@ -40,7 +40,6 @@ class PageFrameAllocator {
   void free_list_add_head(Block* block);
   void free_list_del_entry(Block* block);
 
-  size_t round_up_to_pow2(const size_t size);
   int size_to_order(const size_t size);
 
   bool is_block_allocated(const Block* block);

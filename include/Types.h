@@ -17,6 +17,6 @@ using int16_t = short;
 using uint8_t = unsigned char;
 using int8_t = char;
 
-using size_t = uint64_t;
+using size_t = unsigned long;
 
 #endif  // VALKYRIE_TYPES_H_

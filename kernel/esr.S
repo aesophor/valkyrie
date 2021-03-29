@@ -49,7 +49,7 @@ handle_exception:
   save_cpu_context
   // `x0` should be `this` pointer
   bl _ZN8valkyrie6kernel16ExceptionManager12get_instanceEv
-  bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEyyyyyyy
+  bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEmmmmmmm
   restore_cpu_context
   eret
 

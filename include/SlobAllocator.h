@@ -4,7 +4,9 @@
 
 #include <PageFrameAllocator.h>
 
-#define NUM_SUPPORTED_CHUNK_SIZES 10
+#define CHUNK_SIZE 32
+
+#define SLOB_MAX_ORDER 6
 
 namespace valkyrie::kernel {
 
@@ -18,17 +20,22 @@ class SlobAllocator {
   void  dump_slob_info() const;
 
  private:
-  int size_to_free_list_idx(const size_t size);
-
   struct Slob {
     Slob* next;
-    size_t size;
+    int64_t order;
   };
 
-  static const size_t _supported_chunk_sizes[NUM_SUPPORTED_CHUNK_SIZES];
+  Slob* split_from_top_chunk(size_t requested_size);
+  bool  is_top_chunk_used_up() const;
+
+  void free_list_del_head(Slob* chunk);
+  void free_list_add_head(Slob* chunk);
+
+  int size_to_order(const size_t size);
 
   PageFrameAllocator* _page_frame_allocator;
-  Slob* _free_lists[NUM_SUPPORTED_CHUNK_SIZES];
+  Slob* _free_lists[SLOB_MAX_ORDER];
+  void* _top_chunk;
 };
 
 }  // namespace valkyrie::kernel
