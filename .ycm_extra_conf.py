@@ -4,12 +4,13 @@ import ycm_core
 flags = [
   '-std=c++17',
   '-Iinclude',
-  '-fno-use-cxa-atexit',
+  '-ffreestanding',
+  '-nostdinc',
   '-nostdlib',
-  '-fno-builtin',
+  '-nostartfiles',
+  '-fno-threadsafe-statics',
   '-fno-rtti',
   '-fno-exceptions',
-  '-Wno-write-strings'
 ]
 
 # Base directory of the project, parent directory of all source files
