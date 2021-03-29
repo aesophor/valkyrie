@@ -1,19 +1,20 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_SLAB_ALLOCATOR_H_
-#define VALKYRIE_SLAB_ALLOCATOR_H_
+#ifndef VALKYRIE_SLOB_ALLOCATOR_H_
+#define VALKYRIE_SLOB_ALLOCATOR_H_
 
 #include <PageFrameAllocator.h>
 
 namespace valkyrie::kernel {
 
-class SlabAllocator {
+class SlobAllocator {
  public:
-  SlabAllocator();
-  ~SlabAllocator() = default;
+  SlobAllocator();
+  ~SlobAllocator() = default;
 
  private:
+
 };
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_SLAB_ALLOCATOR_H_
+#endif  // VALKYRIE_SLOB_ALLOCATOR_H_
