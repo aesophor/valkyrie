@@ -23,10 +23,19 @@ class MemoryManager {
   SlobAllocator _slob_allocator;
 };
 
+}  // namespace valkyrie::kernel
+
 
 extern "C" void* kmalloc(const size_t requested_size);
 extern "C" void  kfree(void* p);
 
-}  // namespace valkyrie::kernel
+void* operator new(size_t size);
+void* operator new[](size_t size);
+
+void operator delete(void* p) noexcept;
+void operator delete[](void* p) noexcept;
+
+void operator delete(void* p, size_t) noexcept;
+void operator delete[](void* p, size_t) noexcept;
 
 #endif  // VALKYRIE_MEMORY_MANAGER_H_
