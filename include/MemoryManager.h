@@ -3,7 +3,7 @@
 #define VALKYRIE_MEMORY_MANAGER_H_
 
 #include <PageFrameAllocator.h>
-#include <SlabAllocator.h>
+#include <SlobAllocator.h>
 
 namespace valkyrie::kernel {
 
@@ -20,7 +20,7 @@ class MemoryManager {
   MemoryManager();
 
   PageFrameAllocator _page_frame_allocator;
-//  SlabAllocator _slab_allocator;
+  SlobAllocator _slob_allocator;
 };
 
 

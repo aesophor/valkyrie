@@ -34,7 +34,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
 
   // For each allocation request x, add the block size to x and
   // raise that value to a power of 2 s.t. x >= the original requested_size.
-  requested_size += sizeof(Block);
+  requested_size = round_up_to_pow2(requested_size + sizeof(Block));
   int order = size_to_order(requested_size);
 
   if (order >= MAX_ORDER) {
@@ -261,6 +261,14 @@ PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
   const size_t b1 = reinterpret_cast<size_t>(block);
   const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
   return reinterpret_cast<Block*>(b2);
+}
+
+size_t PageFrameAllocator::round_up_to_pow2(const size_t size) {
+  size_t result = 1;
+  while (result < size) {
+    result <<= 1;
+  }
+  return result;
 }
 
 int PageFrameAllocator::size_to_order(const size_t size) {
