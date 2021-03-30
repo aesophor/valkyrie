@@ -12,11 +12,16 @@ namespace valkyrie::kernel {
 Shell::Shell() : _buf() {}
 
 void Shell::run() {
-  void* p1 = kmalloc(4080);
-  void* p2 = kmalloc(8787);
+  void* p1 = kmalloc(12);
+  printf("p1 = 0x%x\n", p1);
+  void* p2 = kmalloc(12);
+  printf("p2 = 0x%x\n", p2);
 
   kfree(p1);
   kfree(p2);
+
+  void* p3 = kmalloc(16);
+  printf("p3 = 0x%x\n", p3);
 
   while (true) {
     memset(_buf, 0, sizeof(_buf));

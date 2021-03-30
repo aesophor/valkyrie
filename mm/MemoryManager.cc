@@ -14,11 +14,11 @@ MemoryManager::MemoryManager()
 
 
 void* MemoryManager::kmalloc(size_t size) {
-  return _page_frame_allocator.allocate(size);
+  return _slob_allocator.allocate(size);
 }
 
 void MemoryManager::kfree(void* p) {
-  _page_frame_allocator.deallocate(p);
+  _slob_allocator.deallocate(p);
 }
 
 void MemoryManager::dump_physical_memory_map() const {

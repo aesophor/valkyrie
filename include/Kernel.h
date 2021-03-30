@@ -19,7 +19,7 @@ class Kernel {
   void run();
 
   template <typename... Args>
-  [[noreturn]] static void panic(char* fmt, Args&&... args);
+  [[noreturn]] static void panic(const char* fmt, Args&&... args);
 
  private:
   Kernel();
@@ -38,7 +38,7 @@ class Kernel {
 extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
-[[noreturn]] void Kernel::panic(char* fmt, Args&&... args) {
+[[noreturn]] void Kernel::panic(const char* fmt, Args&&... args) {
   printk("\033[1;31mKernel panic: \033[0;33m");
   printf(fmt, args...);
   puts("\033[0m", /*newline=*/false);
