@@ -8,11 +8,14 @@
 
 #define SLOB_MAX_ORDER 6
 
+#define SLOB_FLAG_FREE      0
+#define SLOB_FLAG_ALLOCATED 1
+
 namespace valkyrie::kernel {
 
 class SlobAllocator {
  public:
-  SlobAllocator(PageFrameAllocator* page_frame_allocator);
+  explicit SlobAllocator(PageFrameAllocator* page_frame_allocator);
   ~SlobAllocator() = default;
 
   void* allocate(size_t requested_size);
@@ -23,6 +26,10 @@ class SlobAllocator {
   struct Slob {
     Slob* next;
     int64_t order;
+    //uint32_t prev_size;
+
+    //bool is_allocated() const;
+    //void set_allocated(const bool allocated);
   };
 
   Slob* split_from_top_chunk(size_t requested_size);

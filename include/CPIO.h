@@ -10,7 +10,7 @@ namespace valkyrie::kernel {
 
 class CPIO {
  public:
-  CPIO(const size_t base_addr);
+  explicit CPIO(const size_t base_addr);
   ~CPIO() = default;
 
   void parse() const;

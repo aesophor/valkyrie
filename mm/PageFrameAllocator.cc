@@ -141,7 +141,7 @@ void PageFrameAllocator::dump_memory_map() const {
       printf("[%d] -> ", ptr->order);
       ptr = ptr->next;
     }
-    printf("[nil]\n");
+    printf("[null]\n");
   }
 
   puts("--- end dumping kernel heap ---");
