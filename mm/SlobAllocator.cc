@@ -36,6 +36,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
 
   printf("no existing free block available\n");
 
+  // FIXME: 邏輯有問題! 如果這次的 requested_size 不夠從 top chunk 切呢？
   if (is_top_chunk_used_up()) {
     _top_chunk = _page_frame_allocator->allocate_one_page_frame();
   }
@@ -50,8 +51,26 @@ void SlobAllocator::deallocate(void* p) {
     return;
   }
 
+  printf("deallocating... 0x%x\n", p);
   Slob* slob = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
+  printf("slob order: %d\n", slob->order);
+  //slob->flags = SLOB_FLAG_FREE;
   free_list_add_head(slob);
+
+  // Attempt to merge this chunk with its next one.
+  /*
+  size_t ptr = reinterpret_cast<size_t>(slob);
+  ptr -= slob->prev_size;
+  Slob* prev_slob = reinterpret_cast<Slob*>(ptr);
+
+  if (!prev_slob->is_allocated()) {
+
+  }
+  */
+
+  // Attempt to merge this chunk with its previous one.
+
+
   dump_slob_info();
 }
 
@@ -65,7 +84,7 @@ void SlobAllocator::dump_slob_info() const {
       printf("[%d] -> ", ptr->order);
       ptr = ptr->next;
     }
-    printf("[nil]\n");
+    printf("(null)\n");
   }
 
   puts("--- end dumping slob free lists ---");
@@ -74,6 +93,8 @@ void SlobAllocator::dump_slob_info() const {
 
 SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) {
   Slob* chunk = reinterpret_cast<Slob*>(_top_chunk);
+  chunk->next = nullptr;
+  chunk->order = size_to_order(requested_size);
 
   size_t top_chunk = reinterpret_cast<size_t>(_top_chunk);
   top_chunk += requested_size;
@@ -114,5 +135,20 @@ void SlobAllocator::free_list_add_head(Slob* chunk) {
 int SlobAllocator::size_to_order(const size_t size) {
   return log2(size / CHUNK_SIZE);
 }
+
+
+/*
+bool SlobAllocator::Slob::is_allocated() const {
+  return (prev_size & 1) == SLOB_FLAG_ALLOCATED;
+}
+
+void SlobAllocator::Slob::set_allocated(const bool allocated) {
+  if (is_allocated()) {
+    prev_size &= SLOB_FLAG_FREE;
+  } else {
+    prev_size |= SLOB_FLAG_ALLOCATED;
+  }
+}
+*/
 
 }  // namespace valkyrie::kernel
