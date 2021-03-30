@@ -30,6 +30,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
   if (victim && victim->order == size_to_order(requested_size)) {
     printf("freelist hit!\n");
     free_list_del_head(victim);
+    dump_slob_info();
     return victim + 1;
   }
 
@@ -40,6 +41,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
   }
 
   victim = split_from_top_chunk(requested_size);
+  dump_slob_info();
   return victim + 1;  // skip the header
 }
 
@@ -49,8 +51,8 @@ void SlobAllocator::deallocate(void* p) {
   }
 
   Slob* slob = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
-
   free_list_add_head(slob);
+  dump_slob_info();
 }
 
 void SlobAllocator::dump_slob_info() const {

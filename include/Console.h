@@ -13,12 +13,19 @@ void initialize(MiniUART* mini_uart);
 }  // namespace valkyrie::kernel::console
 
 
-#define printf  tfp_printf
-#define sprintf tfp_sprintf
-
-// FIXME: not sure why we cannot access cntpct_el0 at EL0...(?)
 template <typename... Args>
-void printk(char* fmt, Args&&... args) {
+void printf(const char* fmt, Args&&... args) {
+  tfp_printf(const_cast<char*>(fmt), args...);
+}
+
+template <typename... Args>
+void sprintf(char* s, const char* fmt, Args&&... args) {
+  tfp_sprintf(s, const_cast<char*>(fmt), args...);
+}
+
+template <typename... Args>
+void printk(const char* fmt, Args&&... args) {
+  // FIXME: not sure why we cannot access cntpct_el0 at EL0...(?)
   uint64_t cntpct_el0;
   uint64_t cntfrq_el0;
   uint64_t timestamp;
