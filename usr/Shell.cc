@@ -12,23 +12,6 @@ namespace valkyrie::kernel {
 Shell::Shell() : _buf() {}
 
 void Shell::run() {
-  void* p1 = kmalloc(12);
-  printf("p1 = 0x%x\n", p1);
-  void* p2 = kmalloc(12);
-  printf("p2 = 0x%x\n", p2);
-
-  kfree(p1);
-  kfree(p2);
-
-  void* p3 = kmalloc(128);
-  printf("p3 = 0x%x\n", p3);
-
-  void* p4 = kmalloc(128);
-  printf("p4 = 0x%x\n", p4);
-
-  kfree(p3);
-  kfree(p4);
-
   while (true) {
     memset(_buf, 0, sizeof(_buf));
     printf("root# ");
@@ -56,18 +39,16 @@ void Shell::run() {
     } else if (!strcmp(_buf, "irq")) {
       asm volatile("mov x1, #0");
       asm volatile("svc #0");
-    /*
     } else if (!strcmp(_buf, "kmalloc")) {
       printf("how many bytes: ");
       gets(_buf);
-      p = MemoryManager::get_instance()->kmalloc(atoi(_buf));
+      void* p = kmalloc(atoi(_buf));
       printf("got pointer 0x%x\n", p);
     } else if (!strcmp(_buf, "kfree")) {
       printf("which pointer to free (in hexadecimal without the 0x prefix): ");
       gets(_buf);
       void* ptr = reinterpret_cast<void*>(atoi(_buf, 16));
-      MemoryManager::get_instance()->kfree(ptr);
-    */
+      kfree(ptr);
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
     } else {
