@@ -29,6 +29,8 @@ class SlobAllocator {
     int32_t prev_chunk_size;
 
     int32_t get_prev_chunk_size() const;
+    void set_prev_chunk_size(const int32_t size);
+
     bool is_allocated() const;
     void set_allocated(bool allocated);
   };
@@ -55,9 +57,9 @@ class SlobAllocator {
 
 
   PageFrameAllocator* _page_frame_allocator;
-  void* _page_frame_begin;
+  void* _page_frame_allocatable_begin;
   void* _top_chunk;
-  void* _page_frame_end;
+  void* _page_frame_allocatable_end;
 
   Slob* _bins[NUM_OF_BINS];
   Slob* _unsorted_bin;
