@@ -26,6 +26,8 @@ class PageFrameAllocator {
 
   void* allocate_one_page_frame();
 
+  static size_t get_block_header_size();
+
  private:
   struct Block {
     Block* next;

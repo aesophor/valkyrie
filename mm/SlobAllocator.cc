@@ -9,8 +9,9 @@ namespace valkyrie::kernel {
 
 SlobAllocator::SlobAllocator(PageFrameAllocator* page_frame_allocator)
     : _page_frame_allocator(page_frame_allocator),
+      _page_frame_begin(),
       _top_chunk(),
-      _top_chunk_end(),
+      _page_frame_end(),
       _bins(),
       _unsorted_bin() {}
 
@@ -97,7 +98,9 @@ void SlobAllocator::deallocate(void* p) {
   size_t prev_chunk_addr = chunk_addr - chunk->get_prev_chunk_size();
   Slob* prev_chunk = reinterpret_cast<Slob*>(prev_chunk_addr);
 
-  if (!prev_chunk->is_allocated()) {
+  if (!prev_chunk->is_allocated() && !is_first_chunk_in_page_frame(chunk)) {
+    printf("omg!!!\n");
+    bin_del_entry(chunk);
     bin_del_entry(prev_chunk);
     size_t prev_chunk_size = get_chunk_size(prev_chunk->index);
     size_t curr_chunk_size = get_chunk_size(chunk->index);
@@ -117,7 +120,7 @@ void SlobAllocator::dump_slob_info() const {
     printf("_bins[%d] (%d): ", i, get_chunk_size(i));
     ptr = _bins[i];
     while (ptr) {
-      printf("[%d] -> ", get_chunk_size(ptr->index));
+      printf("[0x%x] -> ", ptr);
       ptr = ptr->next;
     }
     printf("(null)\n");
@@ -126,21 +129,33 @@ void SlobAllocator::dump_slob_info() const {
   printf("_unsorted_bin: ");
   ptr = _unsorted_bin;
   while (ptr) {
-    printf("[%d] -> ", get_chunk_size(ptr->index));
+    printf("[%d 0x%x] -> ", get_chunk_size(ptr->index), ptr);
     ptr = ptr->next;
   }
   printf("(null)\n");
+
+  printf("_page_frame_begin = 0x%x\n", _page_frame_begin);
+  printf("_top_chunk        = 0x%x\n", _top_chunk);
+  printf("_page_frame_end   = 0x%x\n", _page_frame_end);
 
   puts("--- end dumping slob bins ---");
 }
 
 
 void SlobAllocator::request_new_page_frame() {
-  _top_chunk = _page_frame_allocator->allocate_one_page_frame();
-  _top_chunk_end = reinterpret_cast<char*>(_top_chunk) + PAGE_SIZE;
+  _page_frame_begin = _page_frame_allocator->allocate_one_page_frame();
 
-  printf("_top_chunk     = 0x%x\n", _top_chunk);
-  printf("_top_chunk_end = 0x%x\n", _top_chunk_end);
+  _top_chunk = _page_frame_begin;
+
+  _page_frame_end = reinterpret_cast<char*>(_top_chunk) +
+                    PAGE_SIZE -
+                    PageFrameAllocator::get_block_header_size();
+}
+
+bool SlobAllocator::is_first_chunk_in_page_frame(const Slob* chunk) const {
+  size_t chunk_addr = reinterpret_cast<size_t>(chunk);
+  size_t page_frame_begin_addr = reinterpret_cast<size_t>(_page_frame_begin);
+  return chunk_addr == page_frame_begin_addr + sizeof(Slob);
 }
 
 SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) {
@@ -163,7 +178,7 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
 }
 
 bool SlobAllocator::is_top_chunk_used_up() const {
-  if (_top_chunk > _top_chunk_end) {
+  if (_top_chunk > _page_frame_end) {
     Kernel::panic("kernel heap corrupted (_top_chunk > _top_chunk_end)\n");
   }
   return get_top_chunk_size() == 0;
@@ -174,7 +189,7 @@ bool SlobAllocator::is_top_chunk_large_enough(const size_t requested_size) const
 }
 
 size_t SlobAllocator::get_top_chunk_size() const {
-  return reinterpret_cast<size_t>(_top_chunk_end) -
+  return reinterpret_cast<size_t>(_page_frame_end) -
          reinterpret_cast<size_t>(_top_chunk);
 }
 
@@ -291,15 +306,6 @@ void SlobAllocator::bin_del_entry(Slob* chunk) {
 }
 
 
-void SlobAllocator::unsorted_bin_add_head(Slob* chunk) {
-
-}
-
-void SlobAllocator::unsorted_bin_del_entry(Slob* chunk) {
-
-}
-
-
 int SlobAllocator::get_bin_index(size_t size) {
   int ret = (size - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP;
   printf("get_bin_index(%d) = %d\n", size, ret);
@@ -340,7 +346,7 @@ void SlobAllocator::Slob::set_allocated(bool allocated) {
   if (allocated) {
     prev_chunk_size |= 1;
   } else {
-    prev_chunk_size &= 0;
+    prev_chunk_size &= ~1;
   }
 }
 
