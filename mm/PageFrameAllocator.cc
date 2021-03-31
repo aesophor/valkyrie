@@ -30,7 +30,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
     return nullptr;
   }
 
-  // For each allocation request x, add the block size to x and
+  // For each allocation request x, add the block header size to x and
   // raise that value to a power of 2 s.t. x >= the original requested_size.
   requested_size = round_up_to_pow2(requested_size + sizeof(Block));
   int order = size_to_order(requested_size);
@@ -46,7 +46,8 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   // then remove it from the free list and return that free block.
   Block* victim = _free_lists[order];
 
-  if (victim && victim->order == size_to_order(requested_size)) {
+  //if (victim && victim->order == size_to_order(requested_size)) {
+  if (victim) {
     printf("freelist hit!\n");
     mark_block_as_allocated(victim);
     free_list_del_head(victim);
@@ -57,10 +58,10 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   printf("no existing free block available\n");
 
   // Search larger free blocks.
-  for (; order <= MAX_ORDER; order++) {
+  for (; order < MAX_ORDER; order++) {
     if (_free_lists[order]) {
       victim = _free_lists[order];
-      printf("found a larger block with order %d\n", victim->order);
+      printf("found a larger block with order %d\n", order);
       break;
     }
   }
@@ -141,7 +142,7 @@ void PageFrameAllocator::dump_memory_map() const {
       printf("[%d] -> ", ptr->order);
       ptr = ptr->next;
     }
-    printf("[null]\n");
+    printf("(null)\n");
   }
 
   puts("--- end dumping kernel heap ---");
@@ -177,14 +178,23 @@ void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
 
 
 void PageFrameAllocator::free_list_del_head(Block* block) {
-  if (!_free_lists[block->order]) {
+  if (!block) {
+    Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
+  }
+
+  if (!block || !_free_lists[block->order]) {
     return;
   }
+
   _free_lists[block->order] = _free_lists[block->order]->next;
   block->next = nullptr;
 }
 
 void PageFrameAllocator::free_list_add_head(Block* block) {
+  if (!block) {
+    Kernel::panic("kernel heap corrupted: free_list_add_head(nullptr)\n");
+  }
+
   if (_free_lists[block->order] == block) {
     return;
   }
@@ -200,6 +210,10 @@ void PageFrameAllocator::free_list_add_head(Block* block) {
 }
 
 void PageFrameAllocator::free_list_del_entry(Block* block) {
+  if (!block) {
+    Kernel::panic("kernel heap corrupted: free_list_del_entry(nullptr)\n");
+  }
+
   if (_free_lists[block->order] == block) {
     free_list_del_head(block);
     return;
@@ -224,11 +238,11 @@ void PageFrameAllocator::free_list_del_entry(Block* block) {
 PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
                                                            const int target_order) {
   if (!block) {
-    Kernel::panic("kernel heap corrupted (block == nullptr)\n");
+    Kernel::panic("kernel heap corrupted: block == nullptr\n");
   }
 
-  if (block->order < 0 || block->order > MAX_ORDER) {
-    Kernel::panic("kernel heap corrupted (invalid block->order: %d)\n", block->order);
+  if (block->order < 0 || block->order >= MAX_ORDER) {
+    Kernel::panic("kernel heap corrupted: invalid block->order (%d)\n", block->order);
   }
 
 

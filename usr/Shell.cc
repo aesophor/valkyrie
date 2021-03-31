@@ -20,7 +20,7 @@ void Shell::run() {
   kfree(p1);
   kfree(p2);
 
-  void* p3 = kmalloc(16);
+  void* p3 = kmalloc(12);
   printf("p3 = 0x%x\n", p3);
 
   while (true) {
