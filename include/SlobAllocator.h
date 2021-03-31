@@ -4,7 +4,7 @@
 
 #include <PageFrameAllocator.h>
 
-#define CHUNK_SMALLEST_SIZE 0x20
+#define CHUNK_SMALLEST_SIZE 0x10
 #define CHUNK_LARGEST_SIZE  0x80
 #define CHUNK_SIZE_GAP      0x10
 
@@ -34,6 +34,7 @@ class SlobAllocator {
   };
 
   void request_new_page_frame();
+  bool is_first_chunk_in_page_frame(const Slob* chunk) const;
 
   Slob* split_from_top_chunk(size_t requested_size);
   bool  is_top_chunk_used_up() const;
@@ -46,9 +47,6 @@ class SlobAllocator {
   void bin_add_head(Slob* chunk);
   void bin_del_entry(Slob* chunk);
 
-  void unsorted_bin_add_head(Slob* chunk);
-  void unsorted_bin_del_entry(Slob* chunk);
-
   int get_bin_index(size_t size);
   size_t get_chunk_size(const int index) const;
 
@@ -57,8 +55,9 @@ class SlobAllocator {
 
 
   PageFrameAllocator* _page_frame_allocator;
+  void* _page_frame_begin;
   void* _top_chunk;
-  void* _top_chunk_end;
+  void* _page_frame_end;
 
   Slob* _bins[NUM_OF_BINS];
   Slob* _unsorted_bin;
