@@ -9,9 +9,10 @@ namespace valkyrie::kernel {
 
 SlobAllocator::SlobAllocator(PageFrameAllocator* page_frame_allocator)
     : _page_frame_allocator(page_frame_allocator),
-      _bins(),
       _top_chunk(),
-      _top_chunk_end() {}
+      _top_chunk_end(),
+      _bins(),
+      _unsorted_bin() {}
 
 
 void* SlobAllocator::allocate(size_t requested_size) {
@@ -31,24 +32,28 @@ void* SlobAllocator::allocate(size_t requested_size) {
     return victim + 1;
   }
 
-  printf("no existing free chunk available\n");
-
-  // Search larger free chunks, and attempt to split an exact-fit chunk
-  // for a larger free chunk.
-  for (; index < NUM_OF_BINS; index++) {
-    if (_bins[index]) {
-      victim = _bins[index];
-      printf("found a larger chunk at _bins[%d]\n", index);
-      break;
+  // Search larger free chunks from the unsorted bin.
+  printf("no existing free chunk available. Searching from the unsorted bin.\n");
+  for (Slob* chunk = _unsorted_bin; chunk; chunk = chunk->next) {
+    if (get_chunk_size(chunk->index) >= requested_size) {
+      printf("found a larger chunk from _unsorted_bin\n");
+      victim = split_chunk(chunk, requested_size);
+      return victim + 1;
     }
   }
 
-  if (victim) {
-    victim = split_chunk(victim, requested_size);
-    return victim + 1;
+  // Search larger free chunks, and attempt to split an exact-fit chunk
+  // for a larger free chunk.
+  printf("no suitable free chunk from unsorted bin. Searching from regular bins.\n");
+  for (; index < NUM_OF_BINS; index++) {
+    if (_bins[index]) {
+      printf("found a larger chunk at _bins[%d]\n", index);
+      victim = split_chunk(_bins[index], requested_size);
+      return victim + 1;
+    }
   }
 
-  printf("no larger free chunk to split from. Splitting from the top chunk.\n");
+  printf("no larger free chunk from regular bins. Splitting from the top chunk.\n");
 
   if (is_top_chunk_used_up()) {
     request_new_page_frame();
@@ -71,24 +76,32 @@ void SlobAllocator::deallocate(void* p) {
   }
 
   printf("deallocating... 0x%x\n", p);
-  Slob* slob = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
-  printf("slob order: %d\n", slob->index);
-  //slob->flags = SLOB_FLAG_FREE;
-  bin_add_head(slob);
 
-  // Attempt to merge this chunk with its next one.
-  /*
-  size_t ptr = reinterpret_cast<size_t>(slob);
-  ptr -= slob->prev_size;
-  Slob* prev_slob = reinterpret_cast<Slob*>(ptr);
+  Slob* chunk = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
+  size_t chunk_addr = reinterpret_cast<size_t>(chunk);
 
-  if (!prev_slob->is_allocated()) {
+  // Maybe merge this chunk with the top chunk.
+  size_t next_chunk_addr = chunk_addr + get_chunk_size(chunk->index);
+  Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
 
+  if (next_chunk == _top_chunk) {
+    printf("merging with the top chunk\n");
+    _top_chunk = chunk;
+  } else {
+    bin_add_head(chunk);
   }
-  */
 
-  // Attempt to merge this chunk with its previous one.
+  // Maybe merge this chunk with its previous ones.
+  size_t prev_chunk_addr = chunk_addr - chunk->get_prev_chunk_size();
+  Slob* prev_chunk = reinterpret_cast<Slob*>(prev_chunk_addr);
 
+  if (!prev_chunk->is_allocated()) {
+    bin_del_entry(prev_chunk);
+    size_t prev_chunk_size = get_chunk_size(prev_chunk->index);
+    size_t curr_chunk_size = get_chunk_size(chunk->index);
+    prev_chunk->index = get_bin_index(prev_chunk_size + curr_chunk_size);
+    bin_add_head(prev_chunk);
+  }
 
   dump_slob_info();
 }
@@ -96,15 +109,25 @@ void SlobAllocator::deallocate(void* p) {
 void SlobAllocator::dump_slob_info() const {
   puts("--- dumping slob bins ---");
 
+  Slob* ptr = nullptr;
+
   for (int i = 0; i < NUM_OF_BINS; i++) {
     printf("_bins[%d]: ", i);
-    Slob* ptr = _bins[i];
+    ptr = _bins[i];
     while (ptr) {
       printf("[%d] -> ", ptr->index);
       ptr = ptr->next;
     }
     printf("(null)\n");
   }
+
+  printf("_unsorted_bin: ");
+  ptr = _unsorted_bin;
+  while (ptr) {
+    printf("[%d] -> ", ptr->index);
+    ptr = ptr->next;
+  }
+  printf("(null)\n");
 
   puts("--- end dumping slob bins ---");
 }
@@ -119,6 +142,8 @@ void SlobAllocator::request_new_page_frame() {
 }
 
 SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) {
+  static int32_t prev_chunk_size = 0;
+
   if (!requested_size) {
     return nullptr;
   }
@@ -126,6 +151,10 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
   Slob* chunk = reinterpret_cast<Slob*>(_top_chunk);
   chunk->next = nullptr;
   chunk->index = get_bin_index(requested_size);
+  chunk->prev_chunk_size = prev_chunk_size;
+  chunk->set_allocated(true);
+
+  prev_chunk_size = requested_size;
 
   _top_chunk = reinterpret_cast<char*>(_top_chunk) + requested_size;
   return chunk;
@@ -160,18 +189,24 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
   bin_del_head(chunk);
 
   // Update chunk headers
-  size_t remainder_size = get_chunk_size(chunk->index) - target_size;
-  size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
-
-  Slob* remainder = reinterpret_cast<Slob*>(remainder_addr);
-  remainder->next = nullptr;
-  remainder->index = get_bin_index(remainder_size);
-
   chunk->next = nullptr;
   chunk->index = get_bin_index(target_size);
+  chunk->set_allocated(true);
 
-  // Add remainder chunk to the corresponding bin.
-  bin_add_head(remainder);
+  size_t remainder_size = get_chunk_size(chunk->index) - target_size;
+
+  if (remainder_size > 0) {
+    size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
+    Slob* remainder = reinterpret_cast<Slob*>(remainder_addr);
+
+    remainder->next = nullptr;
+    remainder->index = get_bin_index(remainder_size);
+    remainder->prev_chunk_size = target_size;
+    remainder->set_allocated(false);
+
+    // Add the remainder chunk to the corresponding bin.
+    bin_add_head(remainder);
+  }
 
   return chunk;
 }
@@ -182,7 +217,15 @@ void SlobAllocator::bin_del_head(Slob* chunk) {
     Kernel::panic("kernel heap corrupted: bin_del_head(nullptr)\n");
   }
 
-  if (!chunk || !_bins[chunk->index]) {
+  // If `chunk` doesn't fit in regular bins,
+  // we should use bin_del_entry() to remove it from the unsorted bin.
+  if (chunk->index >= NUM_OF_BINS) {
+    bin_del_entry(chunk);
+    return;
+  }
+
+  // Try to remove the head element from the corresponding regular bin.
+  if (!_bins[chunk->index]) {
     return;
   }
 
@@ -195,18 +238,63 @@ void SlobAllocator::bin_add_head(Slob* chunk) {
     Kernel::panic("kernel heap corrupted: bin_add_head(nullptr)\n");
   }
 
-  if (_bins[chunk->index] == chunk) {
+  // If `chunk->index` >= NUM_OF_BINS,
+  // then we add this chunk to the head of _unsorted_bin.
+  Slob** bin_first_chunk = (chunk->index >= NUM_OF_BINS) ? &_unsorted_bin
+                                                         : &_bins[chunk->index];
+
+  if (*bin_first_chunk == chunk) {
     return;
   }
 
-  // If the list is empty
-  if (!_bins[chunk->index]) {
-    _bins[chunk->index] = chunk;
+  // If the bin is empty.
+  if (!*bin_first_chunk) {
+    *bin_first_chunk = chunk;
     chunk->next = nullptr;
   } else {
-    chunk->next = _bins[chunk->index];
-    _bins[chunk->index] = chunk;
+    chunk->next = *bin_first_chunk;
+    *bin_first_chunk = chunk;
   }
+}
+
+void SlobAllocator::bin_del_entry(Slob* chunk) {
+  if (!chunk) {
+    Kernel::panic("kernel heap corrupted: bin_del_entry(nullptr)\n");
+  }
+
+  // If `chunk->index` >= NUM_OF_BINS,
+  // then need to look for `chunk` from the unsorted bin.
+  Slob** bin_first_chunk = (chunk->index >= NUM_OF_BINS) ? &_unsorted_bin
+                                                         : &_bins[chunk->index];
+
+  if (*bin_first_chunk == chunk) {
+    *bin_first_chunk = (*bin_first_chunk)->next;
+    chunk->next = nullptr;
+    return;
+  }
+
+  Slob* prev = nullptr;
+  Slob* ptr = *bin_first_chunk;
+
+  while (ptr) {
+    if (ptr == chunk) {
+      prev->next = ptr->next;
+      ptr->next = nullptr;
+      break;
+    }
+
+    prev = ptr;
+    ptr = ptr->next;
+  }
+}
+
+
+void SlobAllocator::unsorted_bin_add_head(Slob* chunk) {
+
+}
+
+void SlobAllocator::unsorted_bin_del_entry(Slob* chunk) {
+
 }
 
 
@@ -232,9 +320,26 @@ size_t SlobAllocator::sanitize_size(size_t size) {
 size_t SlobAllocator::round_up_to_multiple_of_16(size_t x) {
   size_t result = 16;
   while (result < x) {
-    result <<= 1;
+    result += 16;
   }
   return result;
+}
+
+
+int32_t SlobAllocator::Slob::get_prev_chunk_size() const {
+  return prev_chunk_size & ~1;
+}
+
+bool SlobAllocator::Slob::is_allocated() const {
+  return static_cast<bool>(prev_chunk_size & 1);
+}
+
+void SlobAllocator::Slob::set_allocated(bool allocated) {
+  if (allocated) {
+    prev_chunk_size |= 1;
+  } else {
+    prev_chunk_size &= 0;
+  }
 }
 
 }  // namespace valkyrie::kernel

@@ -23,13 +23,14 @@ class SlobAllocator {
   void  dump_slob_info() const;
 
  private:
-  struct Slob {
+  struct Slob final {
     Slob* next;
-    int64_t index;
-    //uint32_t prev_size;
+    int32_t index;
+    int32_t prev_chunk_size;
 
-    //bool is_allocated() const;
-    //void set_allocated(const bool allocated);
+    int32_t get_prev_chunk_size() const;
+    bool is_allocated() const;
+    void set_allocated(bool allocated);
   };
 
   void request_new_page_frame();
@@ -43,6 +44,10 @@ class SlobAllocator {
 
   void bin_del_head(Slob* chunk);
   void bin_add_head(Slob* chunk);
+  void bin_del_entry(Slob* chunk);
+
+  void unsorted_bin_add_head(Slob* chunk);
+  void unsorted_bin_del_entry(Slob* chunk);
 
   int get_bin_index(size_t size);
   size_t get_chunk_size(const int index);
@@ -50,10 +55,13 @@ class SlobAllocator {
   size_t sanitize_size(size_t size);
   size_t round_up_to_multiple_of_16(size_t x);
 
+
   PageFrameAllocator* _page_frame_allocator;
-  Slob* _bins[NUM_OF_BINS];
   void* _top_chunk;
   void* _top_chunk_end;
+
+  Slob* _bins[NUM_OF_BINS];
+  Slob* _unsorted_bin;
 };
 
 }  // namespace valkyrie::kernel

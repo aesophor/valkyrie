@@ -20,8 +20,14 @@ void Shell::run() {
   kfree(p1);
   kfree(p2);
 
-  void* p3 = kmalloc(12);
+  void* p3 = kmalloc(128);
   printf("p3 = 0x%x\n", p3);
+
+  void* p4 = kmalloc(128);
+  printf("p4 = 0x%x\n", p4);
+
+  kfree(p3);
+  kfree(p4);
 
   while (true) {
     memset(_buf, 0, sizeof(_buf));
