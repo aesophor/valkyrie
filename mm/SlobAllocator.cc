@@ -9,9 +9,9 @@ namespace valkyrie::kernel {
 
 SlobAllocator::SlobAllocator(PageFrameAllocator* page_frame_allocator)
     : _page_frame_allocator(page_frame_allocator),
-      _page_frame_begin(),
+      _page_frame_allocatable_begin(),
       _top_chunk(),
-      _page_frame_end(),
+      _page_frame_allocatable_end(),
       _bins(),
       _unsorted_bin() {}
 
@@ -80,34 +80,55 @@ void SlobAllocator::deallocate(void* p) {
 
   printf("deallocating... 0x%x\n", p);
 
-  Slob* chunk = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
-  size_t chunk_addr = reinterpret_cast<size_t>(chunk);
+  Slob* mid_chunk = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
+  size_t mid_chunk_addr = reinterpret_cast<size_t>(mid_chunk);
+  size_t mid_chunk_size = get_chunk_size(mid_chunk->index);
 
-  // Maybe merge this chunk with the top chunk.
-  size_t next_chunk_addr = chunk_addr + get_chunk_size(chunk->index);
+  size_t next_chunk_addr = mid_chunk_addr + get_chunk_size(mid_chunk->index);
   Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
+  size_t next_chunk_size = get_chunk_size(next_chunk->index);
 
+  size_t prev_chunk_addr = mid_chunk_addr - mid_chunk->get_prev_chunk_size();
+  Slob* prev_chunk = reinterpret_cast<Slob*>(prev_chunk_addr);
+  size_t prev_chunk_size = mid_chunk->get_prev_chunk_size();
+
+  // Final chunk pointer and size (after being merged)
+  Slob* chunk = mid_chunk;
+  size_t chunk_size = mid_chunk_size;
+
+  // Mark current chunk as unallcated.
+  mid_chunk->set_allocated(false);
+
+  // Maybe merge this chunk with its previous one.
+  if (!prev_chunk->is_allocated() && !is_first_chunk_in_page_frame(mid_chunk)) {
+    printf("merging with prev_chunk (0x%x)\n", prev_chunk);
+    bin_del_entry(prev_chunk);
+    chunk_size += prev_chunk_size;
+    prev_chunk->next = next_chunk;
+    prev_chunk->index = get_bin_index(chunk_size);
+    next_chunk->set_prev_chunk_size(chunk_size);
+    chunk = prev_chunk;
+  }
+
+  // Maybe merge this chunk with its next one.
   if (next_chunk == _top_chunk) {
+    // The next one is the top chunk.
     printf("merging with the top chunk\n");
     _top_chunk = chunk;
-  } else {
-    bin_add_head(chunk);
+    goto out;
+  } else if (!next_chunk->is_allocated()) {
+    printf("merging with next_chunk\n");
+    bin_del_entry(next_chunk);
+    chunk_size += next_chunk_size;
+    chunk->next = next_chunk->next;
+    chunk->index = get_bin_index(chunk_size);
+    chunk->next->set_prev_chunk_size(chunk_size);
   }
 
-  // Maybe merge this chunk with its previous ones.
-  size_t prev_chunk_addr = chunk_addr - chunk->get_prev_chunk_size();
-  Slob* prev_chunk = reinterpret_cast<Slob*>(prev_chunk_addr);
+  // Put the merged chunk to the bin.
+  bin_add_head(chunk);
 
-  if (!prev_chunk->is_allocated() && !is_first_chunk_in_page_frame(chunk)) {
-    printf("omg!!!\n");
-    bin_del_entry(chunk);
-    bin_del_entry(prev_chunk);
-    size_t prev_chunk_size = get_chunk_size(prev_chunk->index);
-    size_t curr_chunk_size = get_chunk_size(chunk->index);
-    prev_chunk->index = get_bin_index(prev_chunk_size + curr_chunk_size);
-    bin_add_head(prev_chunk);
-  }
-
+out:
   dump_slob_info();
 }
 
@@ -120,7 +141,7 @@ void SlobAllocator::dump_slob_info() const {
     printf("_bins[%d] (%d): ", i, get_chunk_size(i));
     ptr = _bins[i];
     while (ptr) {
-      printf("[0x%x] -> ", ptr);
+      printf("[%d 0x%x] -> ", get_chunk_size(ptr->index), ptr);
       ptr = ptr->next;
     }
     printf("(null)\n");
@@ -134,28 +155,29 @@ void SlobAllocator::dump_slob_info() const {
   }
   printf("(null)\n");
 
-  printf("_page_frame_begin = 0x%x\n", _page_frame_begin);
-  printf("_top_chunk        = 0x%x\n", _top_chunk);
-  printf("_page_frame_end   = 0x%x\n", _page_frame_end);
+  printf("_page_frame_allocatable_begin = 0x%x\n", _page_frame_allocatable_begin);
+  printf("_top_chunk                    = 0x%x\n", _top_chunk);
+  printf("_page_frame_allocatable_end   = 0x%x\n", _page_frame_allocatable_end);
 
   puts("--- end dumping slob bins ---");
 }
 
 
 void SlobAllocator::request_new_page_frame() {
-  _page_frame_begin = _page_frame_allocator->allocate_one_page_frame();
+  _page_frame_allocatable_begin = _page_frame_allocator->allocate_one_page_frame();
 
-  _top_chunk = _page_frame_begin;
+  _top_chunk = _page_frame_allocatable_begin;
 
-  _page_frame_end = reinterpret_cast<char*>(_top_chunk) +
-                    PAGE_SIZE -
-                    PageFrameAllocator::get_block_header_size();
+  _page_frame_allocatable_end = reinterpret_cast<char*>(_top_chunk) +
+                                PAGE_SIZE -
+                                PageFrameAllocator::get_block_header_size();
 }
 
 bool SlobAllocator::is_first_chunk_in_page_frame(const Slob* chunk) const {
   size_t chunk_addr = reinterpret_cast<size_t>(chunk);
-  size_t page_frame_begin_addr = reinterpret_cast<size_t>(_page_frame_begin);
-  return chunk_addr == page_frame_begin_addr + sizeof(Slob);
+  size_t page_frame_allocatable_begin_addr
+    = reinterpret_cast<size_t>(_page_frame_allocatable_begin);
+  return chunk_addr == page_frame_allocatable_begin_addr;
 }
 
 SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) {
@@ -178,7 +200,7 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
 }
 
 bool SlobAllocator::is_top_chunk_used_up() const {
-  if (_top_chunk > _page_frame_end) {
+  if (_top_chunk > _page_frame_allocatable_end) {
     Kernel::panic("kernel heap corrupted (_top_chunk > _top_chunk_end)\n");
   }
   return get_top_chunk_size() == 0;
@@ -189,7 +211,7 @@ bool SlobAllocator::is_top_chunk_large_enough(const size_t requested_size) const
 }
 
 size_t SlobAllocator::get_top_chunk_size() const {
-  return reinterpret_cast<size_t>(_page_frame_end) -
+  return reinterpret_cast<size_t>(_page_frame_allocatable_end) -
          reinterpret_cast<size_t>(_top_chunk);
 }
 
@@ -336,6 +358,12 @@ size_t SlobAllocator::round_up_to_multiple_of_16(size_t x) {
 
 int32_t SlobAllocator::Slob::get_prev_chunk_size() const {
   return prev_chunk_size & ~1;
+}
+
+void SlobAllocator::Slob::set_prev_chunk_size(const int32_t size) {
+  const bool flag = is_allocated();
+  prev_chunk_size = size;
+  set_allocated(flag);
 }
 
 bool SlobAllocator::Slob::is_allocated() const {
