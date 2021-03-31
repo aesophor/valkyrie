@@ -4,12 +4,12 @@
 
 #include <PageFrameAllocator.h>
 
-#define CHUNK_SIZE 32
+#define CHUNK_SMALLEST_SIZE 0x20
+#define CHUNK_LARGEST_SIZE  0x80
+#define CHUNK_SIZE_GAP      0x10
 
-#define SLOB_MAX_ORDER 6
-
-#define SLOB_FLAG_FREE      0
-#define SLOB_FLAG_ALLOCATED 1
+#define NUM_OF_BINS \
+  ((CHUNK_LARGEST_SIZE - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP + 1)
 
 namespace valkyrie::kernel {
 
@@ -25,24 +25,35 @@ class SlobAllocator {
  private:
   struct Slob {
     Slob* next;
-    int64_t order;
+    int64_t index;
     //uint32_t prev_size;
 
     //bool is_allocated() const;
     //void set_allocated(const bool allocated);
   };
 
+  void request_new_page_frame();
+
   Slob* split_from_top_chunk(size_t requested_size);
   bool  is_top_chunk_used_up() const;
+  bool  is_top_chunk_large_enough(const size_t requested_size) const;
+  size_t get_top_chunk_size() const;
 
-  void free_list_del_head(Slob* chunk);
-  void free_list_add_head(Slob* chunk);
+  Slob* split_chunk(Slob* chunk, const size_t target_size);
 
-  int size_to_order(const size_t size);
+  void bin_del_head(Slob* chunk);
+  void bin_add_head(Slob* chunk);
+
+  int get_bin_index(size_t size);
+  size_t get_chunk_size(const int index);
+
+  size_t sanitize_size(size_t size);
+  size_t round_up_to_multiple_of_16(size_t x);
 
   PageFrameAllocator* _page_frame_allocator;
-  Slob* _free_lists[SLOB_MAX_ORDER];
+  Slob* _bins[NUM_OF_BINS];
   void* _top_chunk;
+  void* _top_chunk_end;
 };
 
 }  // namespace valkyrie::kernel
