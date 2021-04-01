@@ -8,8 +8,8 @@
 
 #define MAX_ORDER 10
 
-#define ALLOCATED     -1
-#define DONT_ALLOCATE -2
+#define ALLOCATED     static_cast<int8_t>(-1)
+#define DONT_ALLOCATE static_cast<int8_t>(-2)
 
 #include <Types.h>
 
