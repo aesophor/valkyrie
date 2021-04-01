@@ -186,7 +186,7 @@ void PageFrameAllocator::free_list_del_head(Block* block) {
     Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
   }
 
-  if (!block || !_free_lists[block->order]) {
+  if (!_free_lists[block->order]) {
     return;
   }
 
