@@ -162,7 +162,7 @@ void SlobAllocator::dump_slob_info() const {
   printf("_page_frame_allocatable_end   = 0x%x\n", _page_frame_allocatable_end);
 
   if (unlikely(_top_chunk > _page_frame_allocatable_end)) {
-    Kernel::panic("kernel heap corrupted"
+    Kernel::panic("kernel heap corrupted "
                   "(_top_chunk > _page_frame_allocatable_end)\n");
   }
 }
@@ -209,7 +209,6 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
 }
 
 bool SlobAllocator::is_top_chunk_used_up() const {
-
   return get_top_chunk_size() == 0;
 }
 
