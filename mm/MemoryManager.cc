@@ -14,11 +14,22 @@ MemoryManager::MemoryManager()
 
 
 void* MemoryManager::kmalloc(size_t size) {
-  return _slob_allocator.allocate(size);
+  if (size + PageFrameAllocator::get_block_header_size() >= PAGE_SIZE) {
+    return _page_frame_allocator.allocate(size);
+  } else {
+    return _slob_allocator.allocate(size);
+  }
 }
 
 void MemoryManager::kfree(void* p) {
-  _slob_allocator.deallocate(p);
+  size_t addr = reinterpret_cast<size_t>(p) -
+                PageFrameAllocator::get_block_header_size();
+
+  if (addr % PAGE_SIZE == 0) {
+    _page_frame_allocator.deallocate(p);
+  } else {
+    _slob_allocator.deallocate(p);
+  }
 }
 
 void MemoryManager::dump_physical_memory_map() const {
