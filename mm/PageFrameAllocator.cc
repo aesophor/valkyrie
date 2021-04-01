@@ -15,7 +15,7 @@ PageFrameAllocator::PageFrameAllocator()
       _free_lists() {
   const int order = size_to_order(HEAP_END - HEAP_BEGIN);
 
-  for (int i = 1; i < _frame_array_size; i++) {
+  for (size_t i = 1; i < _frame_array_size; i++) {
     _frame_array[i] = DONT_ALLOCATE;
   }
   _frame_array[0] = order;
@@ -40,27 +40,20 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
     Kernel::panic("order >= MAX_ORDER\n");
   }
 
-  printf("allocating physical memory of %d bytes...\n", requested_size);
-  printf("searching free block from _free_lists[%d]...\n", order);
-
   // If there's an exact-fit free block from the free list,
   // then remove it from the free list and return that free block.
   Block* victim = nullptr;
 
   if (likely(victim = _free_lists[order])) {
-    printf("freelist hit!\n");
     mark_block_as_allocated(victim);
     free_list_del_head(victim);
     goto out;
   }
 
-  printf("no existing free block available\n");
-
   // Search larger free blocks.
   for (; order < MAX_ORDER; order++) {
     if (_free_lists[order]) {
       victim = _free_lists[order];
-      printf("found a larger block with order %d\n", order);
       break;
     }
   }
@@ -87,16 +80,10 @@ void PageFrameAllocator::deallocate(void* p) {
   Block* block = reinterpret_cast<Block*>(p) - 1;  // 1 is for the header
   Block* buddy = get_buddy(block);
 
-  printf("deallocating block 0x%x\n", block);
-
   // When you can’t find the buddy of the merged block or
   // the merged block size is maximum-block-size,
   // the allocator stops and put the merged block to the linked-list.
   while (!is_block_allocated(buddy) && block->order < MAX_ORDER - 1) {
-    int block_idx = get_page_frame_index(block);
-    int buddy_idx = get_page_frame_index(buddy);
-    printf("merging blocks %d and %d\n", block_idx, buddy_idx);
-
     // Remove the buddy from the free list.
     free_list_del_entry(buddy);
 
@@ -249,10 +236,6 @@ PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
     Kernel::panic("kernel heap corrupted: invalid block->order (%d)\n", block->order);
   }
 
-
-  printf("---------------------------------\n");
-  printf("comparing block order... %d vs %d\n", block->order, target_order);
-
   free_list_del_head(block);
 
   if (block->order == target_order) {
@@ -263,7 +246,6 @@ PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
   block->order--;
   Pair<Block*, Block*> buddies = {block, get_buddy(block)};
   buddies.second->order = buddies.first->order;
-  printf("buddies: b1 = 0x%x, b2 = 0x%x\n", buddies.first, buddies.second);
 
   // Add buddy1 and buddy2 to the free list.
   free_list_add_head(buddies.second);
@@ -284,15 +266,12 @@ PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
 }
 
 int PageFrameAllocator::size_to_order(const size_t size) {
-  // e.g., 4096  -> 0
-  //       8192  -> 1
-  //       16384 -> 2
+  // e.g., 4096 -> 0, 8192 -> 1, 16384 -> 2
   return log2(size / PAGE_SIZE);
 }
 
 bool PageFrameAllocator::is_block_allocated(const Block* block) {
-  int idx = get_page_frame_index(block);
-  return _frame_array[idx] == ALLOCATED;
+  return _frame_array[get_page_frame_index(block)] == ALLOCATED;
 }
 
 }  // namespace valkyrie::kernel
