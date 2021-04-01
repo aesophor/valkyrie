@@ -15,10 +15,10 @@ PageFrameAllocator::PageFrameAllocator()
       _free_lists() {
   const int order = size_to_order(HEAP_END - HEAP_BEGIN);
 
-  for (auto& entry : _frame_array) {
-    entry = static_cast<int8_t>(DONT_ALLOCATE);
+  for (int i = 1; i < _frame_array_size; i++) {
+    _frame_array[i] = DONT_ALLOCATE;
   }
-  _frame_array[0] = static_cast<int8_t>(order);
+  _frame_array[0] = order;
 
   _free_lists[order] = reinterpret_cast<Block*>(HEAP_BEGIN);
   _free_lists[order]->order = _frame_array[0];
@@ -124,9 +124,9 @@ void PageFrameAllocator::dump_memory_map() const {
   puts("--- dumping buddy ---");
 
   for (size_t i = 0; i < _frame_array_size; i++) {
-    if (_frame_array[i] == static_cast<int8_t>(DONT_ALLOCATE)) {
+    if (_frame_array[i] == DONT_ALLOCATE) {
       // Do nothing.
-    } else if (_frame_array[i] == static_cast<int8_t>(ALLOCATED)) {
+    } else if (_frame_array[i] == ALLOCATED) {
       printf("<page frame #%d>: allocated page frame\n", i);
     } else {
       printf("<page frame #%d>: free page frame\n", i);
@@ -166,7 +166,7 @@ void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
   int len = pow(2, block->order);
  
   for (int i = 0; i < len; i++) {
-    _frame_array[idx + i] = static_cast<int8_t>(ALLOCATED);
+    _frame_array[idx + i] = ALLOCATED;
   }
 }
 
@@ -174,9 +174,9 @@ void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
   int idx = get_page_frame_index(block);
   int len = pow(2, block->order);
 
-  _frame_array[idx] = static_cast<int8_t>(block->order);
+  _frame_array[idx] = block->order;
   for (int i = 1; i < len; i++) {
-    _frame_array[idx + i] = static_cast<int8_t>(DONT_ALLOCATE);
+    _frame_array[idx + i] = DONT_ALLOCATE;
   }
 }
 
@@ -292,7 +292,7 @@ int PageFrameAllocator::size_to_order(const size_t size) {
 
 bool PageFrameAllocator::is_block_allocated(const Block* block) {
   int idx = get_page_frame_index(block);
-  return _frame_array[idx] == static_cast<int8_t>(ALLOCATED);
+  return _frame_array[idx] == ALLOCATED;
 }
 
 }  // namespace valkyrie::kernel
