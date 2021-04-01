@@ -41,11 +41,11 @@ void Kernel::run() {
 
 
 void Kernel::print_banner() {
-  puts("\033[1;32m", /*newline=*/false);
+  console::set_color(console::Color::GREEN, /*bold=*/true);
   puts("--- Valkyrie OS ---");
-  puts("\033[1;33m", /*newline=*/false);
+  console::set_color(console::Color::YELLOW, /*bold=*/true);
   puts("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>");
-  puts("\033[0m\n", /*newline=*/false);
+  console::clear_color();
 }
 
 void Kernel::print_hardware_info() {
