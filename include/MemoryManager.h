@@ -16,6 +16,9 @@ class MemoryManager {
   void  kfree(void* p);
   void  dump_physical_memory_map() const;
 
+  void* page_alloc(size_t size) { return _page_frame_allocator.allocate(size); }
+  void  page_free(void* p) { _page_frame_allocator.deallocate(p); }
+
  private:
   MemoryManager();
 
