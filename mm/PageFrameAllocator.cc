@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <PageFrameAllocator.h>
 
+#include <Compiler.h>
 #include <Console.h>
 #include <Kernel.h>
 #include <Math.h>
@@ -26,7 +27,7 @@ PageFrameAllocator::PageFrameAllocator()
 
 
 void* PageFrameAllocator::allocate(size_t requested_size) {
-  if (!requested_size) {
+  if (unlikely(!requested_size)) {
     return nullptr;
   }
 
@@ -35,7 +36,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   requested_size = round_up_to_pow2(requested_size + sizeof(Block));
   int order = size_to_order(requested_size);
 
-  if (order >= MAX_ORDER) {
+  if (unlikely(order >= MAX_ORDER)) {
     Kernel::panic("order >= MAX_ORDER\n");
   }
 
@@ -44,15 +45,13 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
 
   // If there's an exact-fit free block from the free list,
   // then remove it from the free list and return that free block.
-  Block* victim = _free_lists[order];
+  Block* victim = nullptr;
 
-  //if (victim && victim->order == size_to_order(requested_size)) {
-  if (victim) {
+  if (likely(victim = _free_lists[order])) {
     printf("freelist hit!\n");
     mark_block_as_allocated(victim);
     free_list_del_head(victim);
-    dump_memory_map();
-    return victim + 1;  // skip the header 
+    goto out;
   }
 
   printf("no existing free block available\n");
@@ -66,7 +65,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
     }
   }
 
-  if (order >= MAX_ORDER) {
+  if (unlikely(order >= MAX_ORDER)) {
     Kernel::panic("out of memory\n");
   }
 
@@ -75,12 +74,13 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   victim = split_block(victim, size_to_order(requested_size));
   mark_block_as_allocated(victim);
 
+out:
   dump_memory_map();
   return victim + 1;  // skip the header
 }
 
 void PageFrameAllocator::deallocate(void* p) {
-  if (!p) {
+  if (unlikely(!p)) {
     return;
   }
 
@@ -139,7 +139,7 @@ void PageFrameAllocator::dump_memory_map() const {
     printf("_free_lists[%d]: ", i);
     Block* ptr = _free_lists[i];
     while (ptr) {
-      printf("[%d] -> ", ptr->order);
+      printf("[%d 0x%x] -> ", ptr->order, ptr);
       ptr = ptr->next;
     }
     printf("(null)\n");
@@ -182,11 +182,11 @@ void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
 
 
 void PageFrameAllocator::free_list_del_head(Block* block) {
-  if (!block) {
+  if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
   }
 
-  if (!_free_lists[block->order]) {
+  if (unlikely(!_free_lists[block->order])) {
     return;
   }
 
@@ -195,11 +195,11 @@ void PageFrameAllocator::free_list_del_head(Block* block) {
 }
 
 void PageFrameAllocator::free_list_add_head(Block* block) {
-  if (!block) {
+  if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_add_head(nullptr)\n");
   }
 
-  if (_free_lists[block->order] == block) {
+  if (unlikely(_free_lists[block->order] == block)) {
     return;
   }
 
@@ -214,7 +214,7 @@ void PageFrameAllocator::free_list_add_head(Block* block) {
 }
 
 void PageFrameAllocator::free_list_del_entry(Block* block) {
-  if (!block) {
+  if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_del_entry(nullptr)\n");
   }
 
@@ -241,11 +241,11 @@ void PageFrameAllocator::free_list_del_entry(Block* block) {
 
 PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
                                                            const int target_order) {
-  if (!block) {
+  if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: block == nullptr\n");
   }
 
-  if (block->order < 0 || block->order >= MAX_ORDER) {
+  if (unlikely(block->order < 0 || block->order >= MAX_ORDER)) {
     Kernel::panic("kernel heap corrupted: invalid block->order (%d)\n", block->order);
   }
 

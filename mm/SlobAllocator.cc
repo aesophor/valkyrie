@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <SlobAllocator.h>
 
+#include <Compiler.h>
 #include <Console.h>
 #include <Kernel.h>
 #include <Math.h>
@@ -17,7 +18,7 @@ SlobAllocator::SlobAllocator(PageFrameAllocator* page_frame_allocator)
 
 
 void* SlobAllocator::allocate(size_t requested_size) {
-  if (!requested_size) {
+  if (unlikely(!requested_size)) {
     return nullptr;
   }
 
@@ -74,7 +75,7 @@ out:
 }
 
 void SlobAllocator::deallocate(void* p) {
-  if (!p) {
+  if (unlikely(!p)) {
     return;
   }
 
@@ -200,9 +201,10 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
 }
 
 bool SlobAllocator::is_top_chunk_used_up() const {
-  if (_top_chunk > _page_frame_allocatable_end) {
+  if (unlikely(_top_chunk > _page_frame_allocatable_end)) {
     Kernel::panic("kernel heap corrupted (_top_chunk > _top_chunk_end)\n");
   }
+
   return get_top_chunk_size() == 0;
 }
 
@@ -217,11 +219,11 @@ size_t SlobAllocator::get_top_chunk_size() const {
 
 SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
                                                 const size_t target_size) {
-  if (!chunk) {
+  if (unlikely(!chunk)) {
     Kernel::panic("kernel heap corrupted (chunk == nullptr)\n");
   }
 
-  if (chunk->index < 0) {
+  if (unlikely(chunk->index < 0)) {
     Kernel::panic("kernel heap corrupted (invalid chunk->index: %d)\n", chunk->index);
   }
 
@@ -230,7 +232,7 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
   // Update chunk headers
   size_t remainder_size = get_chunk_size(chunk->index) - target_size;
 
-  if (remainder_size > 0) {
+  if (likely(remainder_size > 0)) {
     size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
     Slob* remainder = reinterpret_cast<Slob*>(remainder_addr);
 
@@ -252,7 +254,7 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
 
 
 void SlobAllocator::bin_del_head(Slob* chunk) {
-  if (!chunk) {
+  if (unlikely(!chunk)) {
     Kernel::panic("kernel heap corrupted: bin_del_head(nullptr)\n");
   }
 
@@ -273,7 +275,7 @@ void SlobAllocator::bin_del_head(Slob* chunk) {
 }
 
 void SlobAllocator::bin_add_head(Slob* chunk) {
-  if (!chunk) {
+  if (unlikely(!chunk)) {
     Kernel::panic("kernel heap corrupted: bin_add_head(nullptr)\n");
   }
 
@@ -297,7 +299,7 @@ void SlobAllocator::bin_add_head(Slob* chunk) {
 }
 
 void SlobAllocator::bin_del_entry(Slob* chunk) {
-  if (!chunk) {
+  if (unlikely(!chunk)) {
     Kernel::panic("kernel heap corrupted: bin_del_entry(nullptr)\n");
   }
 
@@ -329,9 +331,7 @@ void SlobAllocator::bin_del_entry(Slob* chunk) {
 
 
 int SlobAllocator::get_bin_index(size_t size) {
-  int ret = (size - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP;
-  printf("get_bin_index(%d) = %d\n", size, ret);
-  return ret;
+  return (size - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP;
 }
 
 size_t SlobAllocator::get_chunk_size(const int index) const {
