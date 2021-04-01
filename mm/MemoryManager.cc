@@ -14,7 +14,10 @@ MemoryManager::MemoryManager()
 
 
 void* MemoryManager::kmalloc(size_t size) {
-  if (size + PageFrameAllocator::get_block_header_size() >= PAGE_SIZE) {
+  // FIXME: clean up this shit ... ( ´•̥̥̥ω•̥̥̥` ) 
+  if (size +
+      PageFrameAllocator::get_block_header_size() +
+      SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
     return _page_frame_allocator.allocate(size);
   } else {
     return _slob_allocator.allocate(size);

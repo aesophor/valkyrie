@@ -155,12 +155,20 @@ void SlobAllocator::dump_slob_info() const {
     ptr = ptr->next;
   }
   printf("(null)\n");
+  puts("--- end dumping slob bins ---");
 
   printf("_page_frame_allocatable_begin = 0x%x\n", _page_frame_allocatable_begin);
   printf("_top_chunk                    = 0x%x\n", _top_chunk);
   printf("_page_frame_allocatable_end   = 0x%x\n", _page_frame_allocatable_end);
 
-  puts("--- end dumping slob bins ---");
+  if (unlikely(_top_chunk > _page_frame_allocatable_end)) {
+    Kernel::panic("kernel heap corrupted"
+                  "(_top_chunk > _page_frame_allocatable_end)\n");
+  }
+}
+
+size_t SlobAllocator::get_chunk_header_size() {
+  return sizeof(SlobAllocator::Slob);
 }
 
 
@@ -201,14 +209,13 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
 }
 
 bool SlobAllocator::is_top_chunk_used_up() const {
-  if (unlikely(_top_chunk > _page_frame_allocatable_end)) {
-    Kernel::panic("kernel heap corrupted (_top_chunk > _top_chunk_end)\n");
-  }
 
   return get_top_chunk_size() == 0;
 }
 
 bool SlobAllocator::is_top_chunk_large_enough(const size_t requested_size) const {
+  printf("top_chunk_size = %d\n", get_top_chunk_size());
+  printf("requested_size = %d\n", requested_size);
   return get_top_chunk_size() >= requested_size;
 }
 

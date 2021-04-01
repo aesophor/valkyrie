@@ -121,7 +121,7 @@ void PageFrameAllocator::deallocate(void* p) {
 }
 
 void PageFrameAllocator::dump_memory_map() const {
-  puts("--- dumping kernel heap ---");
+  puts("--- dumping buddy ---");
 
   for (size_t i = 0; i < _frame_array_size; i++) {
     if (_frame_array[i] == static_cast<int8_t>(DONT_ALLOCATE)) {
@@ -145,7 +145,7 @@ void PageFrameAllocator::dump_memory_map() const {
     printf("(null)\n");
   }
 
-  puts("--- end dumping kernel heap ---");
+  puts("--- end dumping buddy ---");
 }
 
 void* PageFrameAllocator::allocate_one_page_frame() {

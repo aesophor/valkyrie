@@ -22,6 +22,8 @@ class SlobAllocator {
   void  deallocate(void* p);
   void  dump_slob_info() const;
 
+  static size_t get_chunk_header_size();
+
  private:
   struct Slob final {
     Slob* next;
