@@ -28,17 +28,14 @@ void* SlobAllocator::allocate(size_t requested_size) {
 
   // Search for an exact-fit free chunk from the corresponding bin.
   if (index < NUM_OF_BINS && (victim = _bins[index])) {
-    printf("_bins[%d] hit!\n", index);
     victim->set_allocated(true);
     bin_del_head(victim);
     goto out;
   }
 
   // Search larger free chunks from the unsorted bin.
-  printf("no existing free chunk available. Searching from the unsorted bin.\n");
   for (Slob* chunk = _unsorted_bin; chunk; chunk = chunk->next) {
     if (get_chunk_size(chunk->index) >= requested_size) {
-      printf("found a larger chunk from _unsorted_bin\n");
       victim = split_chunk(chunk, requested_size);
       goto out;
     }
@@ -46,7 +43,6 @@ void* SlobAllocator::allocate(size_t requested_size) {
 
   // Search larger free chunks, and attempt to split an exact-fit chunk
   // from a larger free chunk.
-  printf("no suitable free chunk from unsorted bin. Searching from regular bins.\n");
   for (; index < NUM_OF_BINS; index++) {
     if (_bins[index]) {
       printf("found a larger chunk at _bins[%d]\n", index);
@@ -54,8 +50,6 @@ void* SlobAllocator::allocate(size_t requested_size) {
       goto out;
     }
   }
-
-  printf("no larger free chunk from regular bins. Splitting from the top chunk.\n");
 
   if (is_top_chunk_used_up()) {
     request_new_page_frame();
@@ -79,8 +73,6 @@ void SlobAllocator::deallocate(void* p) {
     return;
   }
 
-  printf("deallocating... 0x%x\n", p);
-
   Slob* mid_chunk = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
   size_t mid_chunk_addr = reinterpret_cast<size_t>(mid_chunk);
   size_t mid_chunk_size = get_chunk_size(mid_chunk->index);
@@ -102,7 +94,6 @@ void SlobAllocator::deallocate(void* p) {
 
   // Maybe merge this chunk with its previous one.
   if (!prev_chunk->is_allocated() && !is_first_chunk_in_page_frame(mid_chunk)) {
-    printf("merging with prev_chunk (0x%x)\n", prev_chunk);
     bin_del_entry(prev_chunk);
     chunk_size += prev_chunk_size;
     prev_chunk->next = next_chunk;
@@ -114,11 +105,9 @@ void SlobAllocator::deallocate(void* p) {
   // Maybe merge this chunk with its next one.
   if (next_chunk == _top_chunk) {
     // The next one is the top chunk.
-    printf("merging with the top chunk\n");
     _top_chunk = chunk;
     goto out;
   } else if (!next_chunk->is_allocated()) {
-    printf("merging with next_chunk\n");
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
     chunk->next = next_chunk->next;
@@ -213,8 +202,6 @@ bool SlobAllocator::is_top_chunk_used_up() const {
 }
 
 bool SlobAllocator::is_top_chunk_large_enough(const size_t requested_size) const {
-  printf("top_chunk_size = %d\n", get_top_chunk_size());
-  printf("requested_size = %d\n", requested_size);
   return get_top_chunk_size() >= requested_size;
 }
 
@@ -247,8 +234,7 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
     remainder->prev_chunk_size = target_size;
     remainder->set_allocated(false);
 
-    // Add the remainder chunk to the corresponding bin.
-    printf("putting the remainder to bin\n");
+    // Put the remainder chunk to the corresponding bin.
     bin_add_head(remainder);
   }
 
@@ -373,7 +359,7 @@ void SlobAllocator::Slob::set_prev_chunk_size(const int32_t size) {
 }
 
 bool SlobAllocator::Slob::is_allocated() const {
-  return static_cast<bool>(prev_chunk_size & 1);
+  return prev_chunk_size & 1;
 }
 
 void SlobAllocator::Slob::set_allocated(bool allocated) {
