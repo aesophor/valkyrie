@@ -45,7 +45,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
   }
 
   // Search larger free chunks, and attempt to split an exact-fit chunk
-  // for a larger free chunk.
+  // from a larger free chunk.
   printf("no suitable free chunk from unsorted bin. Searching from regular bins.\n");
   for (; index < NUM_OF_BINS; index++) {
     if (_bins[index]) {
