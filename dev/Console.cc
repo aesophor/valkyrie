@@ -20,7 +20,7 @@ void initialize(MiniUART* mini_uart) {
   init_printf(nullptr, _putchar);
 }
 
-void set_fg_color(Color fg_color, bool bold) {
+void set_color(Color fg_color, bool bold) {
   printf("\033[%d;3%dm", bold, fg_color);
 }
 
