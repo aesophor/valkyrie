@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_CONSOLE_H_
 #define VALKYRIE_CONSOLE_H_
 
+#include <ConsoleColors.h>
 #include <Types.h>
 #include <MiniUART.h>
 #include <libs/printf.h>
@@ -9,6 +10,9 @@
 namespace valkyrie::kernel::console {
 
 void initialize(MiniUART* mini_uart);
+
+void set_color(Color fg_color, bool bold = false);
+void clear_color();
 
 }  // namespace valkyrie::kernel::console
 
