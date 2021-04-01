@@ -29,7 +29,7 @@ void Kernel::run() {
 
   printk("switching to supervisor mode...\n");
   _exception_manager.switch_to_exception_level(1);
-  //_exception_manager.enable_irqs();
+  _exception_manager.enable_irqs();
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
