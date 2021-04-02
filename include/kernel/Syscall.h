@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_SYSCALL_H_
 #define VALKYRIE_SYSCALL_H_
 
-#include <Console.h>
 #include <Types.h>
+#include <dev/Console.h>
 
 namespace valkyrie::kernel {
 

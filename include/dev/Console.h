@@ -2,9 +2,9 @@
 #ifndef VALKYRIE_CONSOLE_H_
 #define VALKYRIE_CONSOLE_H_
 
-#include <ConsoleColors.h>
 #include <Types.h>
-#include <MiniUART.h>
+#include <dev/ConsoleColors.h>
+#include <dev/MiniUART.h>
 #include <libs/printf.h>
 
 namespace valkyrie::kernel::console {

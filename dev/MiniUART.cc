@@ -45,11 +45,11 @@
 // Reference:
 // [1] https://cs140e.sergio.bz/docs/BCM2837-ARM-Peripherals.pdf
 // [2] https://s-matyukevich.github.io/raspberry-pi-os/docs/lesson01/rpi-os.html
-#include <MiniUART.h>
+#include <dev/MiniUART.h>
 
-#include <Console.h>
-#include <IO.h>
-#include <String.h>
+#include <dev/Console.h>
+#include <dev/IO.h>
+#include <libs/String.h>
 
 namespace valkyrie::kernel {
 

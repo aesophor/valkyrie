@@ -1,10 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <SlobAllocator.h>
+#include <mm/SlobAllocator.h>
 
 #include <Algorithm.h>
 #include <Compiler.h>
-#include <Console.h>
-#include <Kernel.h>
+#include <dev/Console.h>
+#include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 

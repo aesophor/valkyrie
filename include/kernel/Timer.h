@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_TIMER_H_
 #define VALKYRIE_TIMER_H_
 
-#include <GPIO.h>
 #include <Types.h>
+#include <dev/GPIO.h>
 
 namespace valkyrie::kernel {
 

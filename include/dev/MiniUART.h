@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_MINI_UART_H_
 #define VALKYRIE_MINI_UART_H_
 
-#include <GPIO.h>
 #include <Types.h>
+#include <dev/GPIO.h>
 
 // Quoting from BCM2837-ARM-Peripherals.pdf (pg. 6)
 // ------------------------------------------------

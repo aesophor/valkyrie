@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_GPIO_H_
 #define VALKYRIE_GPIO_H_
 
-#include <IO.h>
+#include <dev/IO.h>
 
 // Defined according to BCM2837-ARM-Peripherals.pdf (pg. 90 ~ 91)
 // 刻到手軟 Zzzzz

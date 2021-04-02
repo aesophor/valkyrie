@@ -1,8 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <Syscall.h>
+#include <kernel/Syscall.h>
 
-#include <Console.h>
-#include <Kernel.h>
+#include <dev/Console.h>
+#include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 

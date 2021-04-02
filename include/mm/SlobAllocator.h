@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_SLOB_ALLOCATOR_H_
 #define VALKYRIE_SLOB_ALLOCATOR_H_
 
-#include <PageFrameAllocator.h>
+#include <mm/PageFrameAllocator.h>
 
 #define CHUNK_SMALLEST_SIZE static_cast<size_t>(0x10)
 #define CHUNK_LARGEST_SIZE  static_cast<size_t>(0x80)

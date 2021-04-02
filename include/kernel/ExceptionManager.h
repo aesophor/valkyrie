@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_EXCEPTION_MANAGER_H_
 #define VALKYRIE_EXCEPTION_MANAGER_H_
 
-#include <IO.h>
-#include <Timer.h>
+#include <dev/IO.h>
+#include <kernel/Timer.h>
 
 #define IRQ_BASIC_PENDING  (MMIO_BASE + 0x0000B200)
 #define IRQ_PENDING_1      (MMIO_BASE + 0x0000B204)

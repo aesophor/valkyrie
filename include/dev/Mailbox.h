@@ -2,9 +2,9 @@
 #ifndef VALKYRIE_MAILBOX_H_
 #define VALKYRIE_MAILBOX_H_
 
-#include <IO.h>
 #include <Types.h>
 #include <Utility.h>
+#include <dev/IO.h>
 
 #define MAILBOX_BASE   (MMIO_BASE + 0xb880)
 

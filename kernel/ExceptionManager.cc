@@ -1,9 +1,9 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <ExceptionManager.h>
+#include <kernel/ExceptionManager.h>
 
-#include <Console.h>
-#include <Kernel.h>
-#include <Syscall.h>
+#include <dev/Console.h>
+#include <kernel/Kernel.h>
+#include <kernel/Syscall.h>
 
 extern "C" void* evt;
 

@@ -1,11 +1,11 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <Shell.h>
+#include <usr/Shell.h>
 
-#include <Kernel.h>
-#include <Console.h>
-#include <MemoryManager.h>
-#include <Power.h>
-#include <String.h>
+#include <dev/Console.h>
+#include <kernel/Kernel.h>
+#include <kernel/Power.h>
+#include <libs/String.h>
+#include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {
 

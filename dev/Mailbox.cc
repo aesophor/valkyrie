@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <Mailbox.h>
+#include <dev/Mailbox.h>
 
 #define GET_BOARD_REVISION  0x00010002
 #define GET_VC_MEMORY       0x00010006

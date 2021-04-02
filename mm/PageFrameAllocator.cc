@@ -1,11 +1,11 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <PageFrameAllocator.h>
+#include <mm/PageFrameAllocator.h>
 
 #include <Compiler.h>
-#include <Console.h>
-#include <Kernel.h>
-#include <Math.h>
 #include <Utility.h>
+#include <dev/Console.h>
+#include <kernel/Kernel.h>
+#include <libs/Math.h>
 
 namespace valkyrie::kernel {
 
