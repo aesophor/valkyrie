@@ -16,7 +16,7 @@ class Kernel {
   static Kernel* get_instance();
   ~Kernel() = default;
 
-  void run();
+  [[noreturn]] void run();
 
   template <typename... Args>
   [[noreturn]] static void panic(const char* fmt, Args&&... args);
