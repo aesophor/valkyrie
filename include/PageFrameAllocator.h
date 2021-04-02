@@ -49,8 +49,10 @@ class PageFrameAllocator {
   // Recursively split the given block
   // until it is exactly the size of PAGE_SIZE * 2^`target_order`.
   Block* split_block(Block* block, const int target_order);
-
   Block* get_buddy(Block* block);
+
+  size_t sanitize_size(size_t size);
+  size_t round_up_to_pow_of_2(size_t x);
 
   // The Frame Array (or "The Array")
   // See: https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab3.html#data-structure

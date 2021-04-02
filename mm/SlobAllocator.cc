@@ -22,9 +22,10 @@ void* SlobAllocator::allocate(size_t requested_size) {
     return nullptr;
   }
 
-  Slob* victim = nullptr;
   requested_size = sanitize_size(requested_size + sizeof(Slob));
   int index = get_bin_index(requested_size);
+
+  Slob* victim = nullptr;
 
   // Search for an exact-fit free chunk from the corresponding bin.
   if (index < NUM_OF_BINS && (victim = _bins[index])) {
@@ -105,16 +106,17 @@ void SlobAllocator::deallocate(void* p) {
   if (next_chunk == _top_chunk) {
     // The next one is the top chunk.
     _top_chunk = chunk;
+    return;
   } else if (!next_chunk->is_allocated()) {
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
     chunk->next = next_chunk->next;
     chunk->index = get_bin_index(chunk_size);
     chunk->next->set_prev_chunk_size(chunk_size);
-
-    // Put the merged chunk to the bin.
-    bin_add_head(chunk);
   }
+
+  // Put the merged chunk to the bin.
+  bin_add_head(chunk);
 }
 
 void SlobAllocator::dump_slob_info() const {
