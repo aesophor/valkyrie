@@ -56,17 +56,11 @@ void Shell::run() {
       void* ptr = reinterpret_cast<void*>(atoi(_buf, 16));
       kfree(ptr);
 
-    } else if (!strcmp(_buf, "pmalloc")) {
-      printf("how many bytes: ");
-      gets(_buf);
-      void* p = MemoryManager::get_instance()->page_alloc(atoi(_buf));
-      printf("got pointer 0x%x\n", p);
+    } else if (!strcmp(_buf, "buddy_info")) {
+      MemoryManager::get_instance()->dump_page_frame_allocator_info();
 
-    } else if (!strcmp(_buf, "pfree")) {
-      printf("which pointer to free (in hexadecimal without the 0x prefix): ");
-      gets(_buf);
-      void* ptr = reinterpret_cast<void*>(atoi(_buf, 16));
-      MemoryManager::get_instance()->page_free(ptr);
+    } else if (!strcmp(_buf, "slob_info")) {
+      MemoryManager::get_instance()->dump_slob_allocator_info();
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
