@@ -35,20 +35,17 @@ void MemoryManager::kfree(void* p) {
   }
 }
 
-void MemoryManager::dump_physical_memory_map() const {
+
+void MemoryManager::dump_page_frame_allocator_info() const {
   _page_frame_allocator.dump_memory_map();
+}
+
+void MemoryManager::dump_slob_allocator_info() const {
+  _slob_allocator.dump_slob_info();
 }
 
 }  // namespace valkyrie::kernel
 
-
-extern "C" void* kmalloc(const size_t requested_size) {
-  return valkyrie::kernel::MemoryManager::get_instance()->kmalloc(requested_size);
-}
-
-extern "C" void kfree(void* p) {
-  valkyrie::kernel::MemoryManager::get_instance()->kfree(p);
-}
 
 void* operator new(size_t size) {
   return kmalloc(size);

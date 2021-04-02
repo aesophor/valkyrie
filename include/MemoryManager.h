@@ -14,10 +14,9 @@ class MemoryManager {
 
   void* kmalloc(size_t size);
   void  kfree(void* p);
-  void  dump_physical_memory_map() const;
 
-  void* page_alloc(size_t size) { return _page_frame_allocator.allocate(size); }
-  void  page_free(void* p) { _page_frame_allocator.deallocate(p); }
+  void dump_page_frame_allocator_info() const;
+  void dump_slob_allocator_info() const;
 
  private:
   MemoryManager();
@@ -29,8 +28,13 @@ class MemoryManager {
 }  // namespace valkyrie::kernel
 
 
-extern "C" void* kmalloc(const size_t requested_size);
-extern "C" void  kfree(void* p);
+extern "C" inline void* kmalloc(const size_t requested_size) {
+  return valkyrie::kernel::MemoryManager::get_instance()->kmalloc(requested_size);
+}
+
+extern "C" inline void kfree(void* p) {
+  valkyrie::kernel::MemoryManager::get_instance()->kfree(p);
+}
 
 void* operator new(size_t size);
 void* operator new[](size_t size);
