@@ -46,7 +46,7 @@ class UniquePtr {
       return;
     }
     delete _p;
-    _p = nullptr;
+    _p = p;
   }
 
   T* release() {
