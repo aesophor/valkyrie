@@ -54,7 +54,7 @@ template <typename... Args>
   printf(fmt, args...);
   console::clear_color();
 
-  ExceptionManager::get_instance()->disable_irqs();
+  ExceptionManager::get_instance()->disable();
   _halt();
 }
 

@@ -28,8 +28,8 @@ class ExceptionManager final {
   static ExceptionManager* get_instance();
   ~ExceptionManager() = default;
 
-  void enable_irqs();
-  void disable_irqs();
+  void enable();
+  void disable();
 
   void handle_exception(const size_t number,
                         const size_t arg1,
