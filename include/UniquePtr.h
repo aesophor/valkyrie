@@ -10,18 +10,28 @@ namespace valkyrie::kernel {
 template <typename T>
 class UniquePtr {
  public:
-  UniquePtr() : _p() {}
-  explicit UniquePtr(T* p) : _p(p) {}
+  UniquePtr()
+    : _p() {}
+
+  explicit UniquePtr(T* p)
+    : _p(p) {}
+
   ~UniquePtr() { reset(); }
 
-  UniquePtr(UniquePtr&& other) noexcept : _p(other.release()) {}
+  // Move constructor
+  UniquePtr(UniquePtr&& other) noexcept
+    : _p(other.release()) {}
 
+  // Move assignment operator
   UniquePtr& operator =(UniquePtr&& other) noexcept {
     reset(other.release());
     return *this;
   }
 
+  // Copy constructor
   UniquePtr(const UniquePtr&) = delete;
+
+  // Copy assignment operator
   UniquePtr& operator =(const UniquePtr&) = delete;
 
 
