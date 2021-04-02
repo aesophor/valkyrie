@@ -37,6 +37,7 @@ class UniquePtr {
 
   T* operator ->() const { return get(); }
   T& operator *() const { return *get(); }
+  operator bool() const { return static_cast<bool>(_p); }
 
   T* get() const { return _p; }
 
