@@ -14,7 +14,7 @@
 
 - [x] Bootloader [see tag: lab2-bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader)
 - [x] Exception/Interrupt Handling
-- [x] System calls
+- [x] System Calls
 - [x] Physical Page Allocator
 - [x] Optimized SLOB Allocator (a minimal version of ptmalloc)
 - [ ] Virtual Memory
