@@ -20,12 +20,12 @@ ExceptionManager::ExceptionManager() : _arm_core_timer() {
 }
 
 
-void ExceptionManager::enable_irqs() {
-  asm volatile("msr daifclr, 0b0010");  // unmask IRQs
+void ExceptionManager::enable() {
+  asm volatile("msr DAIFCLR, 0b1111");
 }
 
-void ExceptionManager::disable_irqs() {
-  asm volatile("msr daifset, 0b0010");  // mask IRQs
+void ExceptionManager::disable() {
+  asm volatile("msr DAIFSET, 0b1111");
 }
 
 
