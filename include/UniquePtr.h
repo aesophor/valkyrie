@@ -16,13 +16,13 @@ class UniquePtr {
 
   UniquePtr(UniquePtr&& other) noexcept : _p(other.release()) {}
 
-  UniquePtr& operator=(UniquePtr&& other) noexcept {
+  UniquePtr& operator =(UniquePtr&& other) noexcept {
     reset(other.release());
     return *this;
   }
 
   UniquePtr(const UniquePtr&) = delete;
-  UniquePtr& operator=(const UniquePtr&) = delete;
+  UniquePtr& operator =(const UniquePtr&) = delete;
 
 
   T* operator ->() const { return get(); }
