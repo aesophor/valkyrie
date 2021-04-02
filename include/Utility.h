@@ -12,14 +12,6 @@ struct Pair {
 
 
 template <typename T>
-void swap(T& t1, T& t2) {
-  T temp = t1;
-  t1 = t2;
-  t2 = temp;
-}
-
-
-template <typename T>
 struct _RemoveReference { using Type = T; };
 
 template <typename T>
@@ -29,8 +21,29 @@ template <typename T>
 struct _RemoveReference<T&&> { using Type = T; };
 
 template <typename T>
-typename _RemoveReference<T>::Type&& move(T&& arg) {
-  return static_cast<typename _RemoveReference<T>::Type&&>(arg);
+using RemoveReference = typename _RemoveReference<T>::Type;
+
+template <typename T>
+constexpr RemoveReference<T>&& move(T&& t) {
+  return static_cast<RemoveReference<T>&&>(t);
+}
+
+template <typename T>
+constexpr T&& forward(RemoveReference<T>& t) {
+  return static_cast<T&&>(t);
+}
+
+template <typename T>
+constexpr T&& forward(RemoveReference<T>&& t) {
+  return static_cast<T&&>(t);
+}
+
+
+template <typename T>
+constexpr void swap(T& t1, T& t2) {
+  T tmp = move(t1);
+  t1 = move(t2);
+  t2 = move(tmp);
 }
 
 }  // namespace valkyrie::kernel

@@ -5,10 +5,6 @@ using ctor_func_t = void (*)();
 extern ctor_func_t start_ctors;
 extern ctor_func_t end_ctors;
 
-// Defined in kernel/boot.S
-extern "C" [[noreturn]] void _halt(void);
-
-
 // Valkyrie Kernel C++ entry point  ヽ(○´∀`○)ﾉ
 extern "C" [[noreturn]] void kmain(void) {
   // Invoke all static global constructors.
@@ -17,5 +13,4 @@ extern "C" [[noreturn]] void kmain(void) {
   }
 
   valkyrie::kernel::Kernel::get_instance()->run();
-  _halt();
 }
