@@ -11,28 +11,28 @@ template <typename T>
 class UniquePtr {
  public:
   UniquePtr()
-    : _p() {}
+      : _p() {}
 
   explicit UniquePtr(T* p)
-    : _p(p) {}
+      : _p(p) {}
 
   ~UniquePtr() { reset(); }
-
-  // Move constructor
-  UniquePtr(UniquePtr&& other) noexcept
-    : _p(other.release()) {}
-
-  // Move assignment operator
-  UniquePtr& operator =(UniquePtr&& other) noexcept {
-    reset(other.release());
-    return *this;
-  }
 
   // Copy constructor
   UniquePtr(const UniquePtr&) = delete;
 
   // Copy assignment operator
   UniquePtr& operator =(const UniquePtr&) = delete;
+
+  // Move constructor
+  UniquePtr(UniquePtr&& other) noexcept
+      : _p(other.release()) {}
+
+  // Move assignment operator
+  UniquePtr& operator =(UniquePtr&& other) noexcept {
+    reset(other.release());
+    return *this;
+  }
 
 
   T* operator ->() const { return get(); }
