@@ -10,6 +10,18 @@
 | --- | ----------- | --- | --- |
 | `309551004` | `aesophor` | `王冠中` | aesophor.cs09g@nctu.edu.tw |
 
+## Progress
+
+- [x] Bootloader [see tag: lab2-bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader)
+- [x] Exception/Interrupt Handling
+- [x] System calls
+- [x] Physical Page Allocator
+- [x] Optimized SLOB Allocator (a minimal version of ptmalloc)
+- [ ] Virtual Memory
+- [ ] Multitasking
+- [ ] Filesystem
+- [ ] Virtual Filesystem
+
 ## Build and Deploy
 
 * [BUILD.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/BUILD.md)
