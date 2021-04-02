@@ -26,6 +26,7 @@ class UniquePtr {
 
 
   T* operator ->() const { return get(); }
+  T& operator *() const { return *get(); }
 
   T* get() const { return _p; }
 
