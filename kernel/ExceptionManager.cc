@@ -99,7 +99,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       spsr |= (0b1111 << 6);  // DAIF masked
       asm volatile("msr SPSR_EL2, %0" :: "r" (spsr));
       // Setup ELR_EL2
-      asm volatile("msr ELR_EL2, %0" :: "r" (&&__restore_link_register));
+      asm volatile("msr ELR_EL2, %0" :: "r" (&&restore_link_register));
       break;
 
     case 0:
@@ -108,7 +108,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       // Setup SPSR_EL1 (Saved Processor Status Register)
       asm volatile("msr SPSR_EL1, %0" :: "r" (0));
       // Setup ELR_EL1
-      asm volatile("msr ELR_EL1, %0" :: "r" (&&__restore_link_register));
+      asm volatile("msr ELR_EL1, %0" :: "r" (&&restore_link_register));
       break;
 
     default:
@@ -118,7 +118,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
   // Execute `eret`
   asm volatile("eret");
 
-__restore_link_register:
+restore_link_register:
   // Restore `saved_return_address` to `lr`
   asm volatile("mov lr, %0" :: "r" (saved_return_address));
 
