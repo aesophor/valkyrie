@@ -64,7 +64,6 @@ void* SlobAllocator::allocate(size_t requested_size) {
   victim = split_from_top_chunk(requested_size);
 
 out:
-  dump_slob_info();
   return victim + 1;  // skip the header
 }
 
@@ -106,20 +105,16 @@ void SlobAllocator::deallocate(void* p) {
   if (next_chunk == _top_chunk) {
     // The next one is the top chunk.
     _top_chunk = chunk;
-    goto out;
   } else if (!next_chunk->is_allocated()) {
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
     chunk->next = next_chunk->next;
     chunk->index = get_bin_index(chunk_size);
     chunk->next->set_prev_chunk_size(chunk_size);
+
+    // Put the merged chunk to the bin.
+    bin_add_head(chunk);
   }
-
-  // Put the merged chunk to the bin.
-  bin_add_head(chunk);
-
-out:
-  dump_slob_info();
 }
 
 void SlobAllocator::dump_slob_info() const {
