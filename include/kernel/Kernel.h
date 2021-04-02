@@ -2,7 +2,6 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
-#include <Memory.h>
 #include <dev/Console.h>
 #include <dev/Mailbox.h>
 #include <dev/MiniUART.h>
