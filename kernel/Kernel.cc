@@ -1,9 +1,9 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <Kernel.h>
+#include <kernel/Kernel.h>
 
-#include <Console.h>
-#include <Shell.h>
-#include <Task.h>
+#include <Utility.h>
+#include <dev/Console.h>
+#include <usr/Shell.h>
 
 namespace valkyrie::kernel {
 
@@ -33,7 +33,7 @@ void Kernel::run() {
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
-  
+
   // Lab1 SimpleShell
   Shell shell;
   shell.run();

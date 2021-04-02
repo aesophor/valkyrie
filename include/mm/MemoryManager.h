@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_MEMORY_MANAGER_H_
 #define VALKYRIE_MEMORY_MANAGER_H_
 
-#include <PageFrameAllocator.h>
-#include <SlobAllocator.h>
+#include <mm/PageFrameAllocator.h>
+#include <mm/SlobAllocator.h>
 
 namespace valkyrie::kernel {
 

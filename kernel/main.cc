@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <Kernel.h>
+#include <kernel/Kernel.h>
 
 using ctor_func_t = void (*)();
 extern ctor_func_t start_ctors;

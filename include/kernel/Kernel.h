@@ -2,12 +2,12 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
-#include <Console.h>
-#include <CPIO.h>
-#include <Mailbox.h>
-#include <MiniUART.h>
-#include <ExceptionManager.h>
-#include <MemoryManager.h>
+#include <dev/Console.h>
+#include <dev/Mailbox.h>
+#include <dev/MiniUART.h>
+#include <fs/CPIO.h>
+#include <kernel/ExceptionManager.h>
+#include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {
 
