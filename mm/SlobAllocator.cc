@@ -1,10 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <SlobAllocator.h>
 
+#include <Algorithm.h>
 #include <Compiler.h>
 #include <Console.h>
 #include <Kernel.h>
-#include <Math.h>
 
 namespace valkyrie::kernel {
 
@@ -330,11 +330,7 @@ size_t SlobAllocator::get_chunk_size(const int index) const {
 
 
 size_t SlobAllocator::sanitize_size(size_t size) {
-  if (size < CHUNK_SMALLEST_SIZE) {
-    size = CHUNK_SMALLEST_SIZE;
-  }
-
-  return round_up_to_multiple_of_16(size);
+  return round_up_to_multiple_of_16(max(size, CHUNK_SMALLEST_SIZE));
 }
 
 size_t SlobAllocator::round_up_to_multiple_of_16(size_t x) {

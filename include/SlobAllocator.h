@@ -4,12 +4,12 @@
 
 #include <PageFrameAllocator.h>
 
-#define CHUNK_SMALLEST_SIZE 0x10
-#define CHUNK_LARGEST_SIZE  0x80
+#define CHUNK_SMALLEST_SIZE static_cast<size_t>(0x10)
+#define CHUNK_LARGEST_SIZE  static_cast<size_t>(0x80)
 #define CHUNK_SIZE_GAP      0x10
 
 #define NUM_OF_BINS \
-  ((CHUNK_LARGEST_SIZE - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP + 1)
+  static_cast<int>((CHUNK_LARGEST_SIZE - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP + 1)
 
 namespace valkyrie::kernel {
 
