@@ -89,7 +89,7 @@ void SlobAllocator::deallocate(void* p) {
   Slob* chunk = mid_chunk;
   size_t chunk_size = mid_chunk_size;
 
-  // Mark current chunk as unallcated.
+  // Mark current chunk as unallocated.
   mid_chunk->set_allocated(false);
 
   // Maybe merge this chunk with its previous one.
@@ -108,6 +108,7 @@ void SlobAllocator::deallocate(void* p) {
     _top_chunk = chunk;
     return;
   } else if (!next_chunk->is_allocated()) {
+    // The next one is a regular freed chunk.
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
     chunk->next = next_chunk->next;
