@@ -68,7 +68,6 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   mark_block_as_allocated(victim);
 
 out:
-  dump_memory_map();
   return victim + 1;  // skip the header
 }
 
@@ -103,8 +102,6 @@ void PageFrameAllocator::deallocate(void* p) {
 
   // Update _frame_array.
   mark_block_as_allocatable(block);
-
-  dump_memory_map();
 }
 
 void PageFrameAllocator::dump_memory_map() const {
