@@ -2,6 +2,8 @@
 #ifndef VALKYRIE_UTILITY_H_
 #define VALKYRIE_UTILITY_H_
 
+#include <Types.h>
+
 namespace valkyrie::kernel {
 
 template <typename T1, typename T2>
@@ -9,6 +11,19 @@ struct Pair {
   T1 first;
   T2 second;
 };
+
+
+template<class T>
+struct _RemoveExtent { using Type = T; };
+ 
+template<class T>
+struct _RemoveExtent<T[]> { using Type = T; };
+ 
+template<class T, size_t N>
+struct _RemoveExtent<T[N]> { using Type = T; };
+
+template< class T >
+using RemoveExtent = typename _RemoveExtent<T>::Type;
 
 
 template <typename T>
@@ -22,6 +37,7 @@ struct _RemoveReference<T&&> { using Type = T; };
 
 template <typename T>
 using RemoveReference = typename _RemoveReference<T>::Type;
+
 
 template <typename T>
 constexpr RemoveReference<T>&& move(T&& t) {

@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_UNIQUE_PTR_H_
 #define VALKYRIE_UNIQUE_PTR_H_
 
+#include <Types.h>
 #include <Utility.h>
 
 namespace valkyrie::kernel {
@@ -45,6 +46,30 @@ class UniquePtr {
  private:
   T* _p;
 };
+
+
+template <typename T>
+struct _Unique_if { using _SingleObject = UniquePtr<T>; };
+
+template <typename T>
+struct _Unique_if<T[]> { using _UnknownBound = UniquePtr<T[]>; };
+
+template <typename T, size_t N>
+struct _Unique_if<T[N]> { using _KnownBound = void; };
+
+template <typename T, typename... Args>
+typename _Unique_if<T>::_SingleObject make_unique(Args&&... args) {
+  return UniquePtr<T>(new T(forward<Args>(args)...));
+}
+
+template <typename T>
+typename _Unique_if<T>::_UnknownBound make_unique(size_t n) {
+  using U = RemoveExtent<T>;
+  return UniquePtr<T>(new U[n]());
+}
+
+template <typename T, typename... Args>
+typename _Unique_if<T>::_KnownBound make_unique(Args&&...) = delete;
 
 }  // namespace valkyrie::kernel
 
