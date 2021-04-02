@@ -33,11 +33,12 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
 
   // For each allocation request x, add the block header size to x and
   // raise that value to a power of 2 s.t. x >= the original requested_size.
-  requested_size = round_up_to_pow2(requested_size + sizeof(Block));
+  requested_size = sanitize_size(requested_size + sizeof(Block));
   int order = size_to_order(requested_size);
 
   if (unlikely(order >= MAX_ORDER)) {
-    Kernel::panic("order >= MAX_ORDER\n");
+    printk("unable to allocate physical memory of %d bytes\n", requested_size);
+    return nullptr;
   }
 
   // If there's an exact-fit free block from the free list,
@@ -59,7 +60,8 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
   }
 
   if (unlikely(order >= MAX_ORDER)) {
-    Kernel::panic("out of memory\n");
+    printk("unable to allocate physical memory of %d bytes\n", requested_size);
+    return nullptr;
   }
 
   // Recursively divide the victim free block in half,
@@ -261,6 +263,20 @@ PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
   const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
   return reinterpret_cast<Block*>(b2);
 }
+
+
+size_t PageFrameAllocator::sanitize_size(size_t size) {
+  return round_up_to_pow_of_2(size);
+}
+
+size_t PageFrameAllocator::round_up_to_pow_of_2(size_t x) {
+  size_t result = 1;
+  while (result < x) {
+    result <<= 1;
+  }
+  return result;
+}
+
 
 int PageFrameAllocator::size_to_order(const size_t size) {
   // e.g., 4096 -> 0, 8192 -> 1, 16384 -> 2
