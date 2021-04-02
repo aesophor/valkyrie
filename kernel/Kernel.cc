@@ -2,7 +2,6 @@
 #include <kernel/Kernel.h>
 
 #include <Memory.h>
-#include <Utility.h>
 #include <dev/Console.h>
 #include <usr/Shell.h>
 
