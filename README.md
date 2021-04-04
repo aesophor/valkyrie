@@ -1,10 +1,3 @@
-<div align="center">
-  <h3>Unix-like ARM64 kernel</h3>
-  <img src="/Documentation/logo.png">
-</div>
-
-<br>
-
 ## Overview
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
