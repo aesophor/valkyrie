@@ -204,6 +204,7 @@ class SharedPtr<T[]> {
   }* _ctrl;
 };
 
+
 template <typename T>
 struct _SharedIf { using _SingleObject = SharedPtr<T>; };
 
@@ -221,8 +222,7 @@ typename _SharedIf<T>::_SingleObject make_shared(Args&&... args) {
 
 template <typename T>
 typename _SharedIf<T>::_UnknownBound make_shared(size_t n) {
-  using U = RemoveExtent<T>;
-  return SharedPtr<T>(new U[n]());
+  return SharedPtr<T>(new RemoveExtent<T>[n]());
 }
 
 template <typename T, typename... Args>
