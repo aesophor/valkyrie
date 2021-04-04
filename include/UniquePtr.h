@@ -135,6 +135,7 @@ struct _UniqueIf<T[]> { using _UnknownBound = UniquePtr<T[]>; };
 template <typename T, size_t N>
 struct _UniqueIf<T[N]> { using _KnownBound = void; };
 
+
 template <typename T, typename... Args>
 typename _UniqueIf<T>::_SingleObject make_unique(Args&&... args) {
   return UniquePtr<T>(new T(forward<Args>(args)...));
@@ -142,8 +143,7 @@ typename _UniqueIf<T>::_SingleObject make_unique(Args&&... args) {
 
 template <typename T>
 typename _UniqueIf<T>::_UnknownBound make_unique(size_t n) {
-  using U = RemoveExtent<T>;
-  return UniquePtr<T>(new U[n]());
+  return UniquePtr<T>(new RemoveExtent<T>[n]());
 }
 
 template <typename T, typename... Args>
