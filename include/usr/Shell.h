@@ -11,7 +11,7 @@ namespace valkyrie::kernel {
 class Shell {
  public:
   Shell();
-  ~Shell();
+  ~Shell() = default;
 
   void run();
 

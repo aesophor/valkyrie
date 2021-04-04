@@ -11,10 +11,6 @@ namespace valkyrie::kernel {
 
 Shell::Shell() : _buf() {}
 
-Shell::~Shell() {
-  printf("Shell::~Shell()\n");
-}
-
 void Shell::run() {
   while (true) {
     memset(_buf, 0, sizeof(_buf));
