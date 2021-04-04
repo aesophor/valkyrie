@@ -11,12 +11,11 @@ template <typename T>
 class UniquePtr {
  public:
   // Default Constructor
-  UniquePtr()
-      : _p() {}
+  UniquePtr() : _p() {}
 
   // Constructor
-  explicit UniquePtr(T* p)
-      : _p(p) {}
+  explicit
+  UniquePtr(T* p) : _p(p) {}
 
   // Destructor
   ~UniquePtr() { reset(); }
@@ -28,8 +27,7 @@ class UniquePtr {
   UniquePtr& operator =(const UniquePtr&) = delete;
 
   // Move constructor
-  UniquePtr(UniquePtr&& other) noexcept
-      : _p(other.release()) {}
+  UniquePtr(UniquePtr&& other) noexcept : _p(other.release()) {}
 
   // Move assignment operator
   UniquePtr& operator =(UniquePtr&& other) noexcept {
@@ -40,12 +38,12 @@ class UniquePtr {
 
   T* operator ->() const { return get(); }
   T& operator *() const { return *get(); }
-  operator bool() const { return static_cast<bool>(_p); }
+  operator bool() const { return get(); }
 
   T* get() const { return _p; }
 
   void reset(T* p = nullptr) {
-    if (p == _p) {
+    if (_p == p) {
       return;
     }
     delete _p;
