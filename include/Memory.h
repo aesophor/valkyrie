@@ -3,5 +3,6 @@
 #define VALKYRIE_MEMORY_H_
 
 #include <UniquePtr.h>
+#include <SharedPtr.h>
 
 #endif  // VALKYRIE_MEMORY_H_
