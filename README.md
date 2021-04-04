@@ -1,8 +1,7 @@
 <div align="center">
-  <p>Unix-like ARM64 kernel</p>
+  <h3>Unix-like ARM64 kernel</h3>
+  <img src="/Documentation/logo.png">
 </div>
-
-<br>
 
 ## Valkyrie OS for ARM64
 
