@@ -51,7 +51,7 @@ class UniquePtr {
   }
 
   void swap(UniquePtr& r) noexcept {
-    ::valkyrie::kernel::swap(_p, r);
+    ::valkyrie::kernel::swap(_p, r._p);
   }
 
   T* release() {
