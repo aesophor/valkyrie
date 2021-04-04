@@ -37,8 +37,9 @@ void Kernel::run() {
   _exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
-  auto shell = make_unique<Shell>();
-  shell->run();
+  auto shell = make_unique<Shell[]>(2);
+  shell[0].run();
+  //shell->run();
 
   printf("you shouldn't have reached here :(\n");
   _halt();
