@@ -16,6 +16,7 @@
 // Reference:
 // [1] https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab4.html
 // [2] https://lowenware.com/blog/osdev/aarch64-gic-and-timer-interrupt/
+
 #include <kernel/Timer.h>
 
 #define CORE0_TIMER_IRQ_CTRL       0x40000040
