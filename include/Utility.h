@@ -13,16 +13,16 @@ struct Pair {
 };
 
 
-template<class T>
+template <typename T>
 struct _RemoveExtent { using Type = T; };
  
-template<class T>
+template <typename T>
 struct _RemoveExtent<T[]> { using Type = T; };
  
-template<class T, size_t N>
+template <typename T, size_t N>
 struct _RemoveExtent<T[N]> { using Type = T; };
 
-template< class T >
+template <typename T >
 using RemoveExtent = typename _RemoveExtent<T>::Type;
 
 
