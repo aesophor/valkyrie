@@ -52,7 +52,7 @@ class UniquePtr {
 
   void swap(UniquePtr& r) noexcept {
     using ::valkyrie::kernel::swap;
-    swap(_p, r._p);
+    swap(*this, r);
   }
 
   T* release() {
@@ -61,46 +61,28 @@ class UniquePtr {
     return p;
   }
 
- private:
+ protected:
   T* _p;
 };
 
 
-// https://stackoverflow.com/questions/47360599/c-is-there-a-way-for-a-template-class-specialization-to-contain-code-from-th
+
 template <typename T>
-class UniquePtr<T[]> {
+class UniquePtr<T[]> : private UniquePtr<T> {
  public:
-  // Default Constructor
-  UniquePtr() : _p() {}
+  using UniquePtr<T>::UniquePtr;
+  using UniquePtr<T>::operator=;
 
-  // Constructor
-  explicit
-  UniquePtr(T* p) : _p(p) {}
-
-  // Destructor
   ~UniquePtr() { reset(); }
 
-  // Copy constructor
-  UniquePtr(const UniquePtr&) = delete;
-
-  // Copy assignment operator
-  UniquePtr& operator =(const UniquePtr&) = delete;
-
-  // Move constructor
-  UniquePtr(UniquePtr&& other) noexcept : _p(other.release()) {}
-
-  // Move assignment operator
-  UniquePtr& operator =(UniquePtr&& other) noexcept {
-    reset(other.release());
-    return *this;
-  }
-
   T& operator [](size_t i) { return get()[i]; }
-  T* operator ->() const { return get(); }
-  T& operator *() const { return *get(); }
-  operator bool() const { return get(); }
+  using UniquePtr<T>::operator ->;
+  using UniquePtr<T>::operator *;
+  using UniquePtr<T>::operator bool;
 
-  T* get() const { return _p; }
+  using UniquePtr<T>::get;
+  using UniquePtr<T>::release;
+  using UniquePtr<T>::swap;
 
   void reset(T* p = nullptr) {
     if (_p == p) {
@@ -110,20 +92,11 @@ class UniquePtr<T[]> {
     _p = p;
   }
 
-  void swap(UniquePtr& r) noexcept {
-    using ::valkyrie::kernel::swap;
-    swap(_p, r._p);
-  }
-
-  T* release() {
-    T* p = _p;
-    _p = nullptr;
-    return p;
-  }
 
  private:
-  T* _p;
+  using UniquePtr<T>::_p;
 };
+
 
 
 template <typename T>
@@ -135,6 +108,7 @@ struct _UniqueIf<T[]> { using _UnknownBound = UniquePtr<T[]>; };
 template <typename T, size_t N>
 struct _UniqueIf<T[N]> { using _KnownBound = void; };
 
+
 template <typename T, typename... Args>
 typename _UniqueIf<T>::_SingleObject make_unique(Args&&... args) {
   return UniquePtr<T>(new T(forward<Args>(args)...));
@@ -142,8 +116,7 @@ typename _UniqueIf<T>::_SingleObject make_unique(Args&&... args) {
 
 template <typename T>
 typename _UniqueIf<T>::_UnknownBound make_unique(size_t n) {
-  using U = RemoveExtent<T>;
-  return UniquePtr<T>(new U[n]());
+  return UniquePtr<T>(new RemoveExtent<T>[n]());
 }
 
 template <typename T, typename... Args>
