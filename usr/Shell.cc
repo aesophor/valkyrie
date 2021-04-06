@@ -23,15 +23,12 @@ void Shell::run() {
 
     if (!strcmp(_buf, "help")) {
       puts("usage:");
-      puts("help   - Print all available commands");
-      puts("hello  - Print Hello World!");
-      puts("reboot - Reboot machine");
-      puts("exc    - Trigger an exception via supervisor call (SVC)");
-      puts("irq    - Execute sys_irq() which enables ARM core timer");
-      puts("panic  - Trigger a kernel panic and halt the kernel");
-
-    } else if (!strcmp(_buf, "hello")) {
-      puts("Hello World!");
+      puts("help          - Print all available commands");
+      puts("reboot        - Reboot machine");
+      puts("exc           - Trigger an exception via supervisor call (SVC)");
+      puts("timer_enable  - enable the ARM core timer");
+      puts("timer_disable - disable the ARM core timer");
+      puts("panic         - Trigger a kernel panic and halt the kernel");
 
     } else if (!strcmp(_buf, "reboot")) {
       puts("Rebooting...");
@@ -40,8 +37,12 @@ void Shell::run() {
     } else if (!strcmp(_buf, "exc")) {
       asm volatile("svc #1");
 
-    } else if (!strcmp(_buf, "irq")) {
+    } else if (!strcmp(_buf, "timer_enable")) {
       asm volatile("mov x1, #0");
+      asm volatile("svc #0");
+
+    } else if (!strcmp(_buf, "timer_disable")) {
+      asm volatile("mov x1, #1");
       asm volatile("svc #0");
 
     } else if (!strcmp(_buf, "kmalloc")) {
