@@ -42,7 +42,7 @@ void ARMCoreTimer::disable() {
   // Disable ARM Core Timer.
   asm volatile("msr CNTP_CTL_EL0, %0" :: "r"(0));
   // Mask timer interrupt.
-  asm volatile("str %0, [%1]" :: "r"(0b0010), "r"(CORE0_TIMER_IRQ_CTRL));
+  asm volatile("str %0, [%1]" :: "r"(0b0000), "r"(CORE0_TIMER_IRQ_CTRL));
 }
 
 
