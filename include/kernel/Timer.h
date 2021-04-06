@@ -3,22 +3,24 @@
 #define VALKYRIE_TIMER_H_
 
 #include <Types.h>
-#include <dev/GPIO.h>
 
 namespace valkyrie::kernel {
 
 class ARMCoreTimer {
  public:
-  ARMCoreTimer() : _jiffies(0) {}
+  ARMCoreTimer();
   ~ARMCoreTimer() = default;
 
   void enable();
-  void handle();
+  void disable();
 
-  uint32_t get_jiffies() const { return _jiffies; }
-  void tick() { ++_jiffies; }
+  void handle();
+  void arrange_next_timer_irq_after(const uint32_t second);
+
+  uint32_t get_jiffies() const;
 
  private:
+  uint32_t _interval;
   uint32_t _jiffies;
 };
 

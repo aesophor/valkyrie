@@ -68,7 +68,6 @@ void ExceptionManager::handle_exception(const size_t number,
 
 void ExceptionManager::handle_irq() {
   _arm_core_timer.handle();
-  _arm_core_timer.tick();
   printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
 }
 

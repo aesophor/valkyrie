@@ -8,7 +8,8 @@
 namespace valkyrie::kernel {
 
 // Individual system call declaration.
-void sys_irq();
+void sys_timer_irq_enable();
+void sys_timer_irq_disable();
 
 
 // Indirect system call
@@ -21,7 +22,11 @@ template <typename... Args>
 void syscall(const size_t number, const Args ...args) {
   switch (number) {
     case 0:
-      sys_irq();
+      sys_timer_irq_enable();
+      break;
+
+    case 1:
+      sys_timer_irq_disable();
       break;
 
     default:
