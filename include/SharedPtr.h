@@ -11,21 +11,40 @@ template <typename T>
 class SharedPtr {
  public:
   // Default Constructor
-  SharedPtr() : _ctrl() {}
+  SharedPtr()
+      : _ctrl(),
+        _alias() {}
 
   // Constructor (from a raw pointer)
   explicit
-  SharedPtr(T* p) : _ctrl(new ControlBlock(p, 1)) {}
+  SharedPtr(T* p)
+      : _ctrl(new ControlBlock(p, 1)),
+        _alias() {}
 
   // Constructor (from an UniquePtr<T>)
   explicit
-  SharedPtr(UniquePtr<T>&& r) : _ctrl(new ControlBlock(r.release(), 1)) {}
+  SharedPtr(UniquePtr<T>&& r)
+      : _ctrl(new ControlBlock(r.release(), 1)),
+        _alias() {}
+
+  // Aliasing Constructor
+  // It allows us to construct a new SharedPtr instance that shares
+  // ownership with another SharedPtr `r`, but with a different pointer value.
+  template <typename U> friend class SharedPtr;
+  template <typename U>
+  SharedPtr(const SharedPtr<U>& r, T* ptr)
+      : _ctrl(reinterpret_cast<ControlBlock*>(r._ctrl)),
+        _alias(ptr) {
+    inc_use_count();
+  }
 
   // Destructor
   ~SharedPtr() { dec_use_count(); }
 
   // Copy constructor
-  SharedPtr(const SharedPtr& other) : _ctrl(other._ctrl) {
+  SharedPtr(const SharedPtr& other)
+      : _ctrl(other._ctrl),
+        _alias() {
     inc_use_count();
   }
 
@@ -46,7 +65,9 @@ class SharedPtr {
       dec_use_count();
     }
     _ctrl = other._ctrl;
+    _alias = other._alias;
     other._ctrl = nullptr;
+    other._alias = nullptr;
     return *this;
   }
 
@@ -56,6 +77,9 @@ class SharedPtr {
   operator bool() const { return get(); }
 
   T* get() const {
+    if (_alias) {
+      return _alias;
+    }
     return (_ctrl) ? _ctrl->p : nullptr;
   }
 
@@ -65,14 +89,18 @@ class SharedPtr {
 
   void swap(SharedPtr& r) noexcept {
     using ::valkyrie::kernel::swap;
-    swap(_ctrl, r._ctrl);
+    swap(*this, r);
   }
 
   int use_count() const {
     return (is_valid()) ? _ctrl->use_count : 0;
   }
 
- private:
+ protected:
+  bool is_valid() const {
+    return _ctrl && _ctrl->use_count >= 0;
+  }
+
   void inc_use_count() {
     if (is_valid()) {
       ++(_ctrl->use_count);
@@ -83,126 +111,70 @@ class SharedPtr {
     if (is_valid()) {
       --(_ctrl->use_count);
 
-      if (use_count() <= 0) {
+      if (use_count() == 0) {
         delete _ctrl->p;
         delete _ctrl;
+
+        _ctrl->p = nullptr;
+        _ctrl = nullptr;
       }
     }
   }
 
-  bool is_valid() const {
-    return _ctrl;
-  }
 
-
-  struct ControlBlock {
+  struct ControlBlock final {
     ControlBlock(T* p = nullptr, int use_count = 0)
         : p(p), use_count(use_count) {}
 
     T* p;
     int use_count;
   }* _ctrl;
+
+  // For SharedPtr's aliasing constructor.
+  T* _alias;
 };
 
 
-// https://stackoverflow.com/questions/47360599/c-is-there-a-way-for-a-template-class-specialization-to-contain-code-from-th
+
 template <typename T>
-class SharedPtr<T[]> {
+class SharedPtr<T[]> : private SharedPtr<T> {
  public:
-  // Default Constructor
-  SharedPtr() : _ctrl() {}
+  using SharedPtr<T>::SharedPtr;
+  using SharedPtr<T>::operator=;
 
-  // Constructor (from a raw pointer)
-  explicit
-  SharedPtr(T* p) : _ctrl(new ControlBlock(p, 1)) {}
-
-  // Constructor (from an UniquePtr<T>)
-  explicit
-  SharedPtr(UniquePtr<T>&& r) : _ctrl(new ControlBlock(r.release(), 1)) {}
-
-  // Destructor
   ~SharedPtr() { dec_use_count(); }
 
-  // Copy constructor
-  SharedPtr(const SharedPtr& other) : _ctrl(other._ctrl) {
-    inc_use_count();
-  }
-
-  // Copy assignment operator
-  SharedPtr& operator =(const SharedPtr& other) {
-    reset(other);
-    return *this;
-  }
-
-  // Move constructor
-  SharedPtr(SharedPtr&& other) noexcept {
-    *this = move(other);
-  }
-
-  // Move assignment operator
-  SharedPtr& operator =(SharedPtr&& other) noexcept {
-    if (is_valid()) {
-      dec_use_count();
-    }
-    _ctrl = other._ctrl;
-    other._ctrl = nullptr;
-    return *this;
-  }
-
-
   T& operator [](size_t i) { return get()[i]; }
-  T* operator ->() const { return get(); }
-  T& operator *() const { return *get(); }
-  operator bool() const { return get(); }
+  using SharedPtr<T>::operator ->;
+  using SharedPtr<T>::operator *;
+  using SharedPtr<T>::operator bool;
 
-  T* get() const {
-    return (_ctrl) ? _ctrl->p : nullptr;
-  }
-
-  void reset(T* p = nullptr) {
-    SharedPtr<T>(p).swap(*this);
-  }
-
-  void swap(SharedPtr& r) noexcept {
-    using ::valkyrie::kernel::swap;
-    swap(_ctrl, r._ctrl);
-  }
-
-  int use_count() const {
-    return (is_valid()) ? _ctrl->use_count : 0;
-  }
+  using SharedPtr<T>::get;
+  using SharedPtr<T>::reset;
+  using SharedPtr<T>::swap;
+  using SharedPtr<T>::use_count;
 
  private:
-  void inc_use_count() {
-    if (is_valid()) {
-      ++(_ctrl->use_count);
-    }
-  }
+  using SharedPtr<T>::is_valid;
+  using SharedPtr<T>::inc_use_count;
 
   void dec_use_count() {
     if (is_valid()) {
       --(_ctrl->use_count);
 
-      if (use_count() <= 0) {
+      if (use_count() == 0) {
         delete[] _ctrl->p;
         delete _ctrl;
+
+        _ctrl->p = nullptr;
+        _ctrl = nullptr;
       }
     }
   }
 
-  bool is_valid() const {
-    return _ctrl;
-  }
-
-
-  struct ControlBlock {
-    ControlBlock(T* p = nullptr, int use_count = 0)
-        : p(p), use_count(use_count) {}
-
-    T* p;
-    int use_count;
-  }* _ctrl;
+  using SharedPtr<T>::_ctrl;
 };
+
 
 
 template <typename T>
@@ -227,6 +199,34 @@ typename _SharedIf<T>::_UnknownBound make_shared(size_t n) {
 
 template <typename T, typename... Args>
 typename _SharedIf<T>::_KnownBound make_shared(Args&&...) = delete;
+
+
+
+template <typename T, typename U>
+SharedPtr<T> static_pointer_cast(const SharedPtr<U>& r) noexcept {
+  auto p = static_cast<T*>(r.get());
+  return SharedPtr<T>(r, p);
+}
+
+template <typename T, typename U>
+SharedPtr<T> dynamic_pointer_cast(const SharedPtr<U>& r) noexcept {
+  if (auto p = dynamic_cast<T*>(r.get())) {
+    return SharedPtr<T>(r, p);
+  }
+  return SharedPtr<T>();
+}
+
+template <typename T, typename U>
+SharedPtr<T> const_pointer_cast(const SharedPtr<U>& r) noexcept {
+  auto p = const_cast<T*>(r.get());
+  return SharedPtr<T>(r, p);
+}
+
+template <typename T, typename U>
+SharedPtr<T> reinterpret_pointer_cast(const SharedPtr<U>& r) noexcept {
+  auto p = reinterpret_cast<T*>(r.get());
+  return SharedPtr<T>(r, p);
+}
 
 }  // namespace valkyrie::kernel
 
