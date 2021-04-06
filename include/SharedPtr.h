@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_SHARED_PTR_H_
 #define VALKYRIE_SHARED_PTR_H_
 
+#include <dev/Console.h>
 #include <Types.h>
 #include <UniquePtr.h>
 
@@ -15,7 +16,7 @@ class SharedPtr {
       : _ctrl(),
         _alias() {}
 
-  // Constructor (from a raw pointer)
+  // Constructor (from a raw pointer of type T)
   explicit
   SharedPtr(T* p)
       : _ctrl(new ControlBlock(p, 1)),
@@ -42,15 +43,13 @@ class SharedPtr {
   ~SharedPtr() { dec_use_count(); }
 
   // Copy constructor
-  SharedPtr(const SharedPtr& other)
-      : _ctrl(other._ctrl),
-        _alias() {
-    inc_use_count();
-  }
+  SharedPtr(const SharedPtr& other) { *this = other; }
 
   // Copy assignment operator
   SharedPtr& operator =(const SharedPtr& other) {
-    reset(other);
+    _ctrl = other._ctrl;
+    _alias = other._alias;
+    inc_use_count();
     return *this;
   }
 
@@ -71,6 +70,11 @@ class SharedPtr {
     return *this;
   }
 
+  // Conversion operator
+  template <typename U>
+  operator SharedPtr<U>() const {
+    return dynamic_pointer_cast<U>(*this);
+  }
 
   T* operator ->() const { return get(); }
   T& operator *() const { return *get(); }
