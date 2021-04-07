@@ -49,7 +49,7 @@
 
 #include <dev/Console.h>
 #include <dev/IO.h>
-#include <libs/String.h>
+#include <libs/CString.h>
 
 namespace valkyrie::kernel {
 

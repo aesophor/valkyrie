@@ -3,7 +3,7 @@
 
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
-#include <libs/String.h>
+#include <libs/CString.h>
 
 #define CPIO_MAGIC     "070701"
 #define CPIO_MAGIC_LEN 6
@@ -15,6 +15,7 @@ CPIOArchive::CPIOArchive(const size_t base_addr)
     : _base_addr(reinterpret_cast<const char*>(base_addr)) {}
 
 
+/*
 void CPIOArchive::parse() const {
   const char* ptr = _base_addr;
   DirectoryEntry dentry;
@@ -26,6 +27,25 @@ void CPIOArchive::parse() const {
     ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
     while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
   }
+}
+*/
+
+const char* CPIOArchive::get_entry_content(const char* pathname) const {
+  const char* ptr = _base_addr;
+  DirectoryEntry dentry;
+
+  while ((dentry = DirectoryEntry(ptr))) {
+    printf("%s \t = %d\n", dentry.pathname, dentry.content_len);
+
+    if (!strcmp(pathname, dentry.pathname)) {
+      return dentry.content;
+    }
+
+    // Advance ptr until it reaches the next header.
+    ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
+    while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
+  }
+  return nullptr;
 }
 
 
