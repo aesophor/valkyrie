@@ -71,7 +71,7 @@ void Shell::run() {
 
       ELF elf(Kernel::get_instance()->get_initramfs().read(_buf, &filesize));
       void* entry_point = elf.get_entry_point();
-      ExceptionManager::get_instance()->switch_to_exception_level(0, entry_point);
+      ExceptionManager::get_instance()->switch_to_exception_level(0, entry_point, 0x20000);
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
