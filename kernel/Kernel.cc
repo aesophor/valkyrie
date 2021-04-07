@@ -17,17 +17,14 @@ Kernel* Kernel::get_instance() {
 Kernel::Kernel()
     : _mini_uart(),
       _mailbox(),
-      _initrd_cpio(CPIO_BASE),
       _exception_manager(*ExceptionManager::get_instance()),
-      _memory_manager(*MemoryManager::get_instance()) {}
+      _memory_manager(*MemoryManager::get_instance()),
+      _initramfs() {}
 
 
 void Kernel::run() {
   print_banner();
   print_hardware_info();
-
-  printk("initializing initramfs at 0x%x\n", CPIO_BASE);
-  //_initrd_cpio.parse();
 
   printk("switching to supervisor mode...\n");
   _exception_manager.switch_to_exception_level(1);

@@ -1,17 +1,17 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_CPIO_H_
-#define VALKYRIE_CPIO_H_
+#ifndef VALKYRIE_CPIO_ARCHIVE_H_
+#define VALKYRIE_CPIO_ARCHIVE_H_
 
 #include <Types.h>
 
-#define CPIO_BASE 0x8000000
+#define CPIO_ARCHIVE_ADDR 0x8000000
 
 namespace valkyrie::kernel {
 
-class CPIO {
+class CPIOArchive {
  public:
-  explicit CPIO(const size_t base_addr);
-  ~CPIO() = default;
+  explicit CPIOArchive(const size_t base_addr);
+  ~CPIOArchive() = default;
 
   void parse() const;
 
@@ -39,7 +39,7 @@ class CPIO {
 
     operator bool() const;
 
-    const CPIO::Header* header;
+    const CPIOArchive::Header* header;
     const char* pathname;
     const char* content;
     size_t pathname_len;
@@ -51,4 +51,4 @@ class CPIO {
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_CPIO_H_
+#endif  // VALKYRIE_CPIO_ARCHIVE_H_
