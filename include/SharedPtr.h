@@ -11,7 +11,7 @@ namespace valkyrie::kernel {
 template <typename T>
 class SharedPtr {
  public:
-  // Default Constructor
+  // Default constructor
   SharedPtr()
       : _ctrl(),
         _alias() {}

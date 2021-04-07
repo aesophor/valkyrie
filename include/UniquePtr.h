@@ -10,7 +10,7 @@ namespace valkyrie::kernel {
 template <typename T>
 class UniquePtr {
  public:
-  // Default Constructor
+  // Default constructor
   UniquePtr() : _p() {}
 
   // Constructor
