@@ -76,6 +76,8 @@ class SharedPtr {
     return dynamic_pointer_cast<U>(*this);
   }
 
+  void operator delete(void* p) = delete;
+  void operator delete[](void* p) = delete;
   T* operator ->() const { return get(); }
   T& operator *() const { return *get(); }
   operator bool() const { return get(); }
@@ -146,9 +148,28 @@ class SharedPtr<T[]> : private SharedPtr<T> {
   using SharedPtr<T>::SharedPtr;
   using SharedPtr<T>::operator=;
 
+  // Move constructor
+  SharedPtr(SharedPtr&& other) noexcept {
+    *this = move(other);
+  }
+
+  // Move assignment operator
+  SharedPtr& operator =(SharedPtr&& other) noexcept {
+    if (is_valid()) {
+      dec_use_count();
+    }
+    _ctrl = other._ctrl;
+    _alias = other._alias;
+    other._ctrl = nullptr;
+    other._alias = nullptr;
+    return *this;
+  }
+
   ~SharedPtr() { dec_use_count(); }
 
   T& operator [](size_t i) { return get()[i]; }
+  using SharedPtr<T>::operator delete;
+  using SharedPtr<T>::operator delete[];
   using SharedPtr<T>::operator ->;
   using SharedPtr<T>::operator *;
   using SharedPtr<T>::operator bool;
@@ -176,7 +197,9 @@ class SharedPtr<T[]> : private SharedPtr<T> {
     }
   }
 
+
   using SharedPtr<T>::_ctrl;
+  using SharedPtr<T>::_alias;
 };
 
 
