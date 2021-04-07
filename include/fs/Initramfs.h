@@ -11,6 +11,8 @@ class Initramfs {
   Initramfs();
   ~Initramfs() = default;
 
+  const char* read(const char* pathname, size_t* size) const;
+
  private:
   CPIOArchive _archive;
 };

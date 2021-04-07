@@ -22,6 +22,18 @@ void* memset(void* dest, uint8_t val, size_t n) {
   return dest;
 }
 
+int memcmp(const void* ptr1, const void* ptr2, size_t num) {
+  const uint8_t* p1 = reinterpret_cast<const uint8_t*>(ptr1);
+  const uint8_t* p2 = reinterpret_cast<const uint8_t*>(ptr2);
+
+  while (num-- > 0) {
+    if (*p1++ != *p2++) {
+      return p1[-1] < p2[-1] ? -1 : 1;
+    }
+  }
+  return 0;
+}
+
 
 size_t strlen(const char* s) {
   size_t len = 0;

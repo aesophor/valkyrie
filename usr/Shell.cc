@@ -2,6 +2,7 @@
 #include <usr/Shell.h>
 
 #include <dev/Console.h>
+#include <fs/ELF.h>
 #include <kernel/Kernel.h>
 #include <kernel/Power.h>
 #include <libs/CString.h>
@@ -62,6 +63,15 @@ void Shell::run() {
 
     } else if (!strcmp(_buf, "slob_info")) {
       MemoryManager::get_instance()->dump_slob_allocator_info();
+
+    } else if (!strcmp(_buf, "run")) {
+      printf("filename: ");
+      gets(_buf);
+      size_t filesize = 0;
+
+      ELF elf(Kernel::get_instance()->get_initramfs().read(_buf, &filesize));
+      void* entry_point = elf.get_entry_point();
+      ExceptionManager::get_instance()->switch_to_exception_level(0, entry_point);
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");

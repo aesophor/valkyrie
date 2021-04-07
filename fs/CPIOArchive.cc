@@ -15,22 +15,7 @@ CPIOArchive::CPIOArchive(const size_t base_addr)
     : _base_addr(reinterpret_cast<const char*>(base_addr)) {}
 
 
-/*
-void CPIOArchive::parse() const {
-  const char* ptr = _base_addr;
-  DirectoryEntry dentry;
-
-  while ((dentry = DirectoryEntry(ptr))) {
-    printf("%s \t = %d\n", dentry.pathname, dentry.content_len);
-
-    // Advance ptr until it reaches the next header.
-    ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
-    while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
-  }
-}
-*/
-
-const char* CPIOArchive::get_entry_content(const char* pathname) const {
+const char* CPIOArchive::get_entry_content(const char* pathname, size_t* size) const {
   const char* ptr = _base_addr;
   DirectoryEntry dentry;
 
@@ -38,6 +23,9 @@ const char* CPIOArchive::get_entry_content(const char* pathname) const {
     printf("%s \t = %d\n", dentry.pathname, dentry.content_len);
 
     if (!strcmp(pathname, dentry.pathname)) {
+      if (size) {
+        *size = dentry.content_len;
+      }
       return dentry.content;
     }
 

@@ -13,7 +13,7 @@ class CPIOArchive {
   explicit CPIOArchive(const size_t base_addr);
   ~CPIOArchive() = default;
 
-  void parse() const;
+  const char* get_entry_content(const char* pathname, size_t* size) const;
 
  private:
   struct [[gnu::packed]] Header final {
