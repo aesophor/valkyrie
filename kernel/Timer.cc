@@ -16,6 +16,7 @@
 // Reference:
 // [1] https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab4.html
 // [2] https://lowenware.com/blog/osdev/aarch64-gic-and-timer-interrupt/
+// [3] https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2836/QA7_rev3.4.pdf
 
 #include <kernel/Timer.h>
 
