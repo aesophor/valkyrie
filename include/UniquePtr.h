@@ -27,7 +27,9 @@ class UniquePtr {
   UniquePtr& operator =(const UniquePtr&) = delete;
 
   // Move constructor
-  UniquePtr(UniquePtr&& other) noexcept : _p(other.release()) {}
+  UniquePtr(UniquePtr&& other) noexcept {
+    *this = move(other);
+  }
 
   // Move assignment operator
   UniquePtr& operator =(UniquePtr&& other) noexcept {
@@ -35,7 +37,8 @@ class UniquePtr {
     return *this;
   }
 
-
+  void operator delete(void* p) = delete;
+  void operator delete[](void* p) = delete;
   T* operator ->() const { return get(); }
   T& operator *() const { return *get(); }
   operator bool() const { return get(); }
@@ -73,9 +76,22 @@ class UniquePtr<T[]> : private UniquePtr<T> {
   using UniquePtr<T>::UniquePtr;
   using UniquePtr<T>::operator=;
 
+  // Move constructor
+  UniquePtr(UniquePtr&& other) noexcept {
+    *this = move(other);
+  }
+
+  // Move assignment operator
+  UniquePtr& operator =(UniquePtr&& other) noexcept {
+    reset(other.release());
+    return *this;
+  }
+
   ~UniquePtr() { reset(); }
 
   T& operator [](size_t i) { return get()[i]; }
+  using UniquePtr<T>::operator delete;
+  using UniquePtr<T>::operator delete[];
   using UniquePtr<T>::operator ->;
   using UniquePtr<T>::operator *;
   using UniquePtr<T>::operator bool;
