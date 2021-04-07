@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <fs/CPIO.h>
+#include <fs/CPIOArchive.h>
 
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
@@ -11,26 +11,26 @@
 
 namespace valkyrie::kernel {
 
-CPIO::CPIO(const size_t base_addr)
+CPIOArchive::CPIOArchive(const size_t base_addr)
     : _base_addr(reinterpret_cast<const char*>(base_addr)) {}
 
 
-void CPIO::parse() const {
+void CPIOArchive::parse() const {
   const char* ptr = _base_addr;
   DirectoryEntry dentry;
 
   while ((dentry = DirectoryEntry(ptr))) {
-    printf("%s \t = %s\n", dentry.pathname, dentry.content);
+    printf("%s \t = %d\n", dentry.pathname, dentry.content_len);
 
     // Advance ptr until it reaches the next header.
-    ptr += sizeof(CPIO::Header) + dentry.pathname_len + dentry.content_len;
+    ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
     while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
   }
 }
 
 
-CPIO::DirectoryEntry::DirectoryEntry(const char* ptr)
-    : header(reinterpret_cast<const CPIO::Header*>(ptr)) {
+CPIOArchive::DirectoryEntry::DirectoryEntry(const char* ptr)
+    : header(reinterpret_cast<const CPIOArchive::Header*>(ptr)) {
   char buf[16];
 
   // Obtain pathname size from the header.
@@ -44,14 +44,14 @@ CPIO::DirectoryEntry::DirectoryEntry(const char* ptr)
   content_len = atoi(buf, 16);
 
   // Update pathname and content pointers.
-  pathname = (pathname_len) ? ptr + sizeof(CPIO::Header) : 0;
-  content = (content_len) ? ptr + sizeof(CPIO::Header) + pathname_len : 0;
+  pathname = (pathname_len) ? ptr + sizeof(CPIOArchive::Header) : 0;
+  content = (content_len) ? ptr + sizeof(CPIOArchive::Header) + pathname_len : 0;
 
   // Advance content pointer.
   while (content_len && !*content) ++content;
 }
 
-CPIO::DirectoryEntry::operator bool() const {
+CPIOArchive::DirectoryEntry::operator bool() const {
   return strcmp(pathname, CPIO_TRAILER);
 }
 

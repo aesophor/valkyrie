@@ -5,7 +5,7 @@
 #include <dev/Console.h>
 #include <dev/Mailbox.h>
 #include <dev/MiniUART.h>
-#include <fs/CPIO.h>
+#include <fs/Initramfs.h>
 #include <kernel/ExceptionManager.h>
 #include <mm/MemoryManager.h>
 
@@ -29,9 +29,9 @@ class Kernel {
 
   MiniUART _mini_uart;
   Mailbox _mailbox;
-  CPIO _initrd_cpio;
   ExceptionManager& _exception_manager;
   MemoryManager& _memory_manager;
+  Initramfs _initramfs;
 };
 
 
