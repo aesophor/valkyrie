@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_STRING_H_
-#define VALKYRIE_STRING_H_
+#ifndef VALKYRIE_C_STRING_H_
+#define VALKYRIE_C_STRING_H_
 
 #include <Types.h>
 
@@ -24,4 +24,4 @@ int atoi(const char* str, const int base = 10);
 
 }
 
-#endif  // VALKYRIE_STRING_H_
+#endif  // VALKYRIE_C_STRING_H_
