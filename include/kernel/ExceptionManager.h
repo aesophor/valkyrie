@@ -42,6 +42,7 @@ class ExceptionManager final {
 
   uint8_t get_exception_level() const;
   void switch_to_exception_level(const uint8_t level,
+                                 void* ret_addr = nullptr,
                                  const size_t new_sp = 0);
 
   ARMCoreTimer& get_arm_core_timer();

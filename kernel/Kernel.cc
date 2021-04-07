@@ -3,6 +3,8 @@
 
 #include <Memory.h>
 #include <dev/Console.h>
+#include <fs/ELF.h>
+#include <proc/Scheduler.h>
 #include <usr/Shell.h>
 
 extern "C" [[noreturn]] void _halt(void);
@@ -29,8 +31,8 @@ void Kernel::run() {
   printk("switching to supervisor mode...\n");
   _exception_manager.switch_to_exception_level(1);
 
-  printk("switching to user mode... (≧▽ ≦)\n");
-  _exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
+  //printk("switching to user mode... (≧▽ ≦)\n");
+  //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
   auto shell = make_shared<Shell>();
@@ -56,6 +58,11 @@ void Kernel::print_hardware_info() {
   printk("board revision: 0x%x\n", board_revision);
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
+}
+
+
+Initramfs& Kernel::get_initramfs() {
+  return _initramfs;
 }
 
 }  // namespace valkyrie::kernel

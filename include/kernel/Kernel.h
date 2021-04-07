@@ -21,6 +21,8 @@ class Kernel {
   template <typename... Args>
   [[noreturn]] static void panic(const char* fmt, Args&&... args);
 
+  Initramfs& get_initramfs();
+
  private:
   Kernel();
 

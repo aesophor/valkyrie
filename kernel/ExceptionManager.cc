@@ -80,11 +80,12 @@ uint8_t ExceptionManager::get_exception_level() const {
 }
 
 void ExceptionManager::switch_to_exception_level(const uint8_t level,
+                                                 void* ret_addr,
                                                  const size_t new_sp) {
   uint64_t spsr;
+  void* return_address = (ret_addr) ? ret_addr : &&out;
   void* saved_stack_pointer;
 
-  //asm volatile("mov %0, lr" : "=r" (saved_return_address));
   asm volatile("mov %0, sp" : "=r" (saved_stack_pointer));
 
   switch (level) {
@@ -97,7 +98,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       spsr |= (0b1111 << 6);  // DAIF masked
       asm volatile("msr SPSR_EL2, %0" :: "r" (spsr));
       // Setup ELR_EL2
-      asm volatile("msr ELR_EL2, %0" :: "r" (&&out));
+      asm volatile("msr ELR_EL2, %0" :: "r" (return_address));
       break;
 
     case 0:
@@ -106,7 +107,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       // Setup SPSR_EL1 (Saved Processor Status Register)
       asm volatile("msr SPSR_EL1, %0" :: "r" (0));
       // Setup ELR_EL1
-      asm volatile("msr ELR_EL1, %0" :: "r" (&&out));
+      asm volatile("msr ELR_EL1, %0" :: "r" (return_address));
       break;
 
     default:
