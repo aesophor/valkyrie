@@ -4,7 +4,7 @@
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
 #include <kernel/Power.h>
-#include <libs/String.h>
+#include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {
