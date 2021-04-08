@@ -59,10 +59,10 @@ void Shell::run() {
       kfree(ptr);
 
     } else if (!strcmp(_buf, "buddy_info")) {
-      MemoryManager::get_instance()->dump_page_frame_allocator_info();
+      MemoryManager::get_instance().dump_page_frame_allocator_info();
 
     } else if (!strcmp(_buf, "slob_info")) {
-      MemoryManager::get_instance()->dump_slob_allocator_info();
+      MemoryManager::get_instance().dump_slob_allocator_info();
 
     } else if (!strcmp(_buf, "run")) {
       printf("filename: ");
@@ -71,7 +71,7 @@ void Shell::run() {
 
       ELF elf(Kernel::get_instance()->get_initramfs().read(_buf, &filesize));
       void* entry_point = elf.get_entry_point();
-      ExceptionManager::get_instance()->switch_to_exception_level(0, entry_point, 0x20000);
+      ExceptionManager::get_instance().switch_to_exception_level(0, entry_point, 0x20000);
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");

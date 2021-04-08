@@ -17,10 +17,10 @@ Kernel* Kernel::get_instance() {
 }
 
 Kernel::Kernel()
-    : _mini_uart(),
-      _mailbox(),
-      _exception_manager(*ExceptionManager::get_instance()),
-      _memory_manager(*MemoryManager::get_instance()),
+    : _exception_manager(ExceptionManager::get_instance()),
+      _memory_manager(MemoryManager::get_instance()),
+      _mini_uart(MiniUART::get_instance()),
+      _mailbox(Mailbox::get_instance()),
       _initramfs() {}
 
 
@@ -30,6 +30,7 @@ void Kernel::run() {
 
   printk("switching to supervisor mode...\n");
   _exception_manager.switch_to_exception_level(1);
+  _exception_manager.enable();
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);

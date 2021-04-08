@@ -53,7 +53,16 @@
 
 namespace valkyrie::kernel {
 
-MiniUART::MiniUART() {
+MiniUART& MiniUART::get_instance() {
+  static MiniUART instance;
+  return instance;
+}
+
+MiniUART::MiniUART()
+    : _read_buffer_bytes_pending(),
+      _write_buffer_bytes_pending(),
+      _read_buffer(),
+      _write_buffer() {
   // Configure GPFSEL1 register to set both gpio14 and gpio15 to use ALT5.
   uint32_t reg = io::get<uint32_t>(GPFSEL1);
   reg &= ~(0b111 << 12);     // clear the 12~15th bits (gpio14)
@@ -73,7 +82,7 @@ MiniUART::MiniUART() {
   // Enable mini UART.
   io::put<uint32_t>(AUX_ENABLES, 1);        // enable mini UART and access to mini UART registers
   io::put<uint32_t>(AUX_MU_CNTL_REG, 0);    // disable tx and rx during configuration
-  io::put<uint32_t>(AUX_MU_IER_REG, 0);     // disable interrupts
+  io::put<uint32_t>(AUX_MU_IER_REG, 0b10);  // enable tx interrupts
   io::put<uint32_t>(AUX_MU_LCR_REG, 3);     // sets the data size to 8 bit
   io::put<uint32_t>(AUX_MU_MCR_REG, 0);     // disable auto flow control
   io::put<uint32_t>(AUX_MU_BAUD_REG, 270);  // set baud rate to 115200
@@ -85,14 +94,29 @@ MiniUART::MiniUART() {
 }
 
 
+void MiniUART::enable_interrupts() const {
+  // Enable mini UART interrupt routing
+  io::put<uint32_t>(0x3f00b210, 1 << 29);
+}
+
+void MiniUART::disable_interrupts() const {
+  // Disable mini UART interrupt routing
+  io::put<uint32_t>(0x3f00b21c, 1 << 29);
+}
+
+
 uint8_t MiniUART::recv() {
   while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 1));
   return io::get<uint8_t>(AUX_MU_IO_REG);
 }
 
 void MiniUART::send(const uint8_t byte) {
-  while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 0x20));
-  io::put<uint8_t>(AUX_MU_IO_REG, byte);
+  // Write the byte to the _write_buffer.
+  _write_buffer[_write_buffer_bytes_pending++] = byte;
+
+  // Let mini UART interrupt the CPU when it becomes available,
+  // and then we do the actual writing.
+  enable_interrupts();
 }
 
 
@@ -140,6 +164,21 @@ void MiniUART::puts(const char* s, bool newline) {
   if (newline) {
     putchar('\n');
   }
+}
+
+
+void MiniUART::handle_rx_irq() {
+  for (int i = 0; i < _read_buffer_bytes_pending; i++) {
+
+  }
+}
+
+void MiniUART::handle_tx_irq() {
+  for (int i = 0; i < _write_buffer_bytes_pending; i++) {
+    while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 0x20));
+    io::put<uint8_t>(AUX_MU_IO_REG, _write_buffer[i]);
+  }
+  _write_buffer_bytes_pending = 0;
 }
 
 }  // namespace valkyrie::kernel

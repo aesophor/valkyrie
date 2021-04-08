@@ -3,9 +3,9 @@
 
 namespace valkyrie::kernel {
 
-MemoryManager* MemoryManager::get_instance() {
+MemoryManager& MemoryManager::get_instance() {
   static MemoryManager instance;
-  return &instance;
+  return instance;
 }
 
 MemoryManager::MemoryManager()

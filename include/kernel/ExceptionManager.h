@@ -25,7 +25,7 @@ namespace valkyrie::kernel {
 
 class ExceptionManager final {
  public:
-  static ExceptionManager* get_instance();
+  static ExceptionManager& get_instance();
   ~ExceptionManager() = default;
 
   void enable();

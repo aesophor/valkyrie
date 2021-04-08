@@ -8,12 +8,12 @@ namespace valkyrie::kernel {
 
 void sys_timer_irq_enable() {
   printk("ARM core timer enabled.\n");
-  ExceptionManager::get_instance()->get_arm_core_timer().enable();
+  ExceptionManager::get_instance().get_arm_core_timer().enable();
 }
 
 void sys_timer_irq_disable() {
   printk("ARM core timer disabled.\n");
-  ExceptionManager::get_instance()->get_arm_core_timer().disable();
+  ExceptionManager::get_instance().get_arm_core_timer().disable();
 }
 
 }  // namespace valkyrie::kernel
