@@ -21,13 +21,15 @@ namespace valkyrie::kernel {
 
 class Mailbox final {
  public:
-  Mailbox();
+  static Mailbox& get_instance();
   ~Mailbox() = default;
 
   uint32_t get_board_revision();
   Pair<uint32_t, uint32_t> get_vc_memory();  // base address, size
 
  private:
+  Mailbox();
+
   void call();
 
   // Because only upper 28 bits of message address could be passed,

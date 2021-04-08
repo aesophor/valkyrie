@@ -11,7 +11,7 @@
 // The bus addresses for peripherals are set up to map onto the peripheral
 // bus address range starting at 0x7E000000. Thus a peripheral advertised here
 // at bus address 0x7Ennnnnn is available at physical address 0x3Fnnnnnn.
-#define AUX_ENABLES     (MMIO_BASE + 0X215004)
+#define AUX_ENABLES     (MMIO_BASE + 0x215004)
 #define AUX_MU_IO_REG   (MMIO_BASE + 0x215040)
 #define AUX_MU_IER_REG  (MMIO_BASE + 0x215044)
 #define AUX_MU_IIR_REG  (MMIO_BASE + 0x215048)
@@ -33,12 +33,18 @@
 #define GPFSEL_ALT4   0b011
 #define GPFSEL_ALT5   0b010
 
+#define READ_BUFFER_SIZE  512
+#define WRITE_BUFFER_SIZE 512
+
 namespace valkyrie::kernel {
 
 class MiniUART {
  public:
-  MiniUART();
+  static MiniUART& get_instance();
   ~MiniUART() = default;
+
+  void enable_interrupts() const;
+  void disable_interrupts() const;
 
   uint8_t recv();
   void send(const uint8_t byte);
@@ -48,6 +54,18 @@ class MiniUART {
 
   void gets(char* s);
   void puts(const char* s, bool newline = true);
+
+  void handle_tx_irq();
+  void handle_rx_irq();
+
+ private:
+  MiniUART();
+
+  int _read_buffer_bytes_pending;
+  int _write_buffer_bytes_pending;
+
+  uint8_t _read_buffer[READ_BUFFER_SIZE];
+  uint8_t _write_buffer[WRITE_BUFFER_SIZE];
 };
 
 }  // namespace valkyrie::kernel

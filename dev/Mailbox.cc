@@ -11,6 +11,11 @@
 
 namespace valkyrie::kernel {
 
+Mailbox& Mailbox::get_instance() {
+  static Mailbox instance;
+  return instance;
+}
+
 Mailbox::Mailbox() : _msg() {}
 
 

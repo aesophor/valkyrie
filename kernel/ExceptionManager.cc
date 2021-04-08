@@ -9,9 +9,9 @@ extern "C" void* evt;
 
 namespace valkyrie::kernel {
 
-ExceptionManager* ExceptionManager::get_instance() {
+ExceptionManager& ExceptionManager::get_instance() {
   static ExceptionManager instance;
-  return &instance;
+  return instance;
 }
 
 ExceptionManager::ExceptionManager() : _arm_core_timer() {
@@ -67,6 +67,19 @@ void ExceptionManager::handle_exception(const size_t number,
 }
 
 void ExceptionManager::handle_irq() {
+  if ((io::get<uint32_t>(IRQ_BASIC_PENDING) & (1 << 8)) &&
+      (io::get<uint32_t>(IRQ_PENDING_1) & (1 << 29))) {
+
+    if (io::get<uint32_t>(AUX_MU_IIR_REG) & (0b010)) {
+      MiniUART::get_instance().handle_tx_irq();
+    } else if (io::get<uint32_t>(AUX_MU_IIR_REG) & (0b100)) {
+      MiniUART::get_instance().handle_rx_irq();
+    }
+
+    MiniUART::get_instance().disable_interrupts();
+    return;
+  }
+
   _arm_core_timer.handle();
   printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
 }

@@ -29,10 +29,10 @@ class Kernel {
   void print_banner();
   void print_hardware_info();
 
-  MiniUART _mini_uart;
-  Mailbox _mailbox;
   ExceptionManager& _exception_manager;
   MemoryManager& _memory_manager;
+  MiniUART& _mini_uart;
+  Mailbox& _mailbox;
   Initramfs _initramfs;
 };
 
@@ -56,7 +56,7 @@ template <typename... Args>
   printf(fmt, args...);
   console::clear_color();
 
-  ExceptionManager::get_instance()->disable();
+  ExceptionManager::get_instance().disable();
   _halt();
 }
 
