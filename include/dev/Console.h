@@ -45,10 +45,9 @@ void printk(const char* fmt, Args&&... args) {
 
 extern "C" {
 
-char _recv();
 char getchar();
-void putchar(const char c);
 void gets(char* s);
+void putchar(const char c);
 void puts(const char* s, bool newline = true);
 
 }

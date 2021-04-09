@@ -43,24 +43,39 @@ class MiniUART {
   static MiniUART& get_instance();
   ~MiniUART() = default;
 
-  void enable_interrupts() const;
-  void disable_interrupts() const;
-
-  uint8_t recv();
-  void send(const uint8_t byte);
-
   char getchar();
-  void putchar(const char c);
-
   void gets(char* s);
+  void putchar(const char c);
   void puts(const char* s, bool newline = true);
 
+  void enable_interrupts() const;
+  void disable_interrupts() const;
   void handle_tx_irq();
   void handle_rx_irq();
+
+  bool is_buffer_enabled() const;
+  void set_buffer_enabled(bool enabled);
 
  private:
   MiniUART();
 
+  // Synchronized I/O
+  uint8_t recv();
+  void send(const uint8_t byte);
+  char getchar_sync();
+  void gets_sync(char* s);
+  void putchar_sync(const char c);
+  void puts_sync(const char* s, bool newline = true);
+
+  // Asynchronized I/O
+  void flush_write_buffer();
+  char getchar_async();
+  void gets_async(char* s);
+  void putchar_async(const char c);
+  void puts_async(const char* s, bool newline = true);
+
+
+  bool _is_buffer_enabled;
   int _read_buffer_bytes_pending;
   int _write_buffer_bytes_pending;
 

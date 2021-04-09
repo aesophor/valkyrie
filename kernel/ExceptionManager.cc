@@ -67,12 +67,15 @@ void ExceptionManager::handle_exception(const size_t number,
 }
 
 void ExceptionManager::handle_irq() {
+  // If one or more bits set in pending register 1, and
+  // the pending interrupt is AUX_INT
   if ((io::get<uint32_t>(IRQ_BASIC_PENDING) & (1 << 8)) &&
       (io::get<uint32_t>(IRQ_PENDING_1) & (1 << 29))) {
 
-    if (io::get<uint32_t>(AUX_MU_IIR_REG) & (0b010)) {
+    if ((io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b01) {
       MiniUART::get_instance().handle_tx_irq();
-    } else if (io::get<uint32_t>(AUX_MU_IIR_REG) & (0b100)) {
+
+    } if ((io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b10) {
       MiniUART::get_instance().handle_rx_irq();
     }
 
