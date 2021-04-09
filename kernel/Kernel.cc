@@ -25,10 +25,12 @@ Kernel::Kernel()
 
 
 void Kernel::run() {
+  _mini_uart.set_buffer_enabled(true);
+
   print_banner();
   print_hardware_info();
 
-  printk("switching to supervisor mode...\n");
+  printk("switching to supervisor mode... (≧▽ ≦)\n");
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable();
 

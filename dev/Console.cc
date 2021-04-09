@@ -7,7 +7,7 @@ valkyrie::kernel::MiniUART* mini_uart;
 
 // Required by tfp_printf()
 void _putchar(void*, char c) {
-  ::mini_uart->putchar(c);
+  putchar(c);
 }
 
 }  // namespace
@@ -33,20 +33,16 @@ void clear_color() {
 
 extern "C" {
 
-char _recv() {
-  return ::mini_uart->recv();
-}
-
 char getchar() {
   return ::mini_uart->getchar();
 }
 
-void putchar(const char c) {
-  ::mini_uart->putchar(c);
-}
-
 void gets(char* s) {
   ::mini_uart->gets(s);
+}
+
+void putchar(const char c) {
+  ::mini_uart->putchar(c);
 }
 
 void puts(const char* s, bool newline) {
