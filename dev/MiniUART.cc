@@ -141,9 +141,7 @@ void MiniUART::gets_sync(char* s) {
     if (c == BACKSPACE) {
       if (s > begin) {
         *s-- = 0;
-        putchar_sync('\b');
-        putchar_sync(' ');
-        putchar_sync('\b');
+        puts_sync("\b \b", /*newline=*/false);
       }
     } else {
       *s++ = c;
@@ -188,13 +186,14 @@ void MiniUART::handle_rx_irq() {
   if (byte == BACKSPACE) {
     if (_read_buffer_bytes_pending > 0) {
       _read_buffer_bytes_pending--;
+      puts_async("\b \b", /*newline=*/false);
     }
   } else {
     byte = (byte == '\r') ? '\n' : byte;
     _read_buffer[_read_buffer_bytes_pending++] = byte;
+    putchar_async(byte);
   }
 
-  putchar_async(byte);
 
   /*
   printf("[");
@@ -225,7 +224,7 @@ char MiniUART::getchar_async() {
 
   char c = _read_buffer[0];
   _read_buffer_bytes_pending--;
-  return 0;
+  return c;
 }
 
 void MiniUART::gets_async(char* s) {
