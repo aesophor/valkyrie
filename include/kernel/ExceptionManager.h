@@ -16,10 +16,13 @@
 #define DISABLE_IRQS_2     (MMIO_BASE + 0x0000B220)
 #define DISABLE_BASIC_IRQS (MMIO_BASE + 0x0000B224)
 
+#define IRQ_PENDING_1_HAS_PENDING_IRQ (1 << 8)
+
 #define SYSTEM_TIMER_IRQ_0 (1 << 0)
 #define SYSTEM_TIMER_IRQ_1 (1 << 1)
 #define SYSTEM_TIMER_IRQ_2 (1 << 2)
 #define SYSTEM_TIMER_IRQ_3 (1 << 3)
+#define MINI_UART_IRQ      (1 << 29)
 
 namespace valkyrie::kernel {
 
