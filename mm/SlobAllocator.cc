@@ -111,7 +111,7 @@ void SlobAllocator::deallocate(void* p) {
     // The next one is a regular freed chunk.
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
-    chunk->next = next_chunk->next;
+    chunk->next = reinterpret_cast<Slob*>(next_chunk_addr + next_chunk_size);
     chunk->index = get_bin_index(chunk_size);
     chunk->next->set_prev_chunk_size(chunk_size);
   }

@@ -26,7 +26,7 @@ class SlobAllocator {
 
  private:
   struct Slob final {
-    Slob* next;
+    Slob* next;  // only reliable if current chunk is free!
     int32_t index;
     int32_t prev_chunk_size;
 
