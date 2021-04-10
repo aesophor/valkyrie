@@ -37,6 +37,15 @@ class UniquePtr {
     return *this;
   }
 
+  // Conversion operator
+  template <typename U>
+  operator UniquePtr<U>() {
+    if (dynamic_cast<U*>(_p)) {
+      return UniquePtr<U>(release());
+    }
+    return UniquePtr<U>();
+  }
+
   void operator delete(void* p) = delete;
   void operator delete[](void* p) = delete;
   T* operator ->() const { return get(); }
