@@ -2,7 +2,6 @@
 #ifndef VALKYRIE_STRING_H_
 #define VALKYRIE_STRING_H_
 
-#include <kernel/Kernel.h>
 #include <UniquePtr.h>
 #include <libs/CString.h>
 
