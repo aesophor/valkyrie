@@ -67,24 +67,12 @@ void ExceptionManager::handle_exception(const size_t number,
 }
 
 void ExceptionManager::handle_irq() {
-  // If one or more bits set in pending register 1, and
-  // the pending interrupt is AUX_INT
-  if ((io::get<uint32_t>(IRQ_BASIC_PENDING) & (1 << 8)) &&
-      (io::get<uint32_t>(IRQ_PENDING_1) & (1 << 29))) {
-
-    if ((io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b01) {
-      MiniUART::get_instance().handle_tx_irq();
-
-    } if ((io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b10) {
-      MiniUART::get_instance().handle_rx_irq();
-    }
-
-    MiniUART::get_instance().disable_interrupts();
-    return;
+  if (MiniUART::get_instance().has_pending_irq()) {
+    MiniUART::get_instance().handle_irq();
+  } else {
+    _arm_core_timer.handle();
+    printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
   }
-
-  _arm_core_timer.handle();
-  printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
 }
 
 
