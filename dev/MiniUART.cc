@@ -105,7 +105,7 @@ char MiniUART::getchar() {
 }
 
 void MiniUART::gets(char* s) {
-  (_is_read_buffer_enabled) ? gets_sync(s) : gets_sync(s);
+  (_is_read_buffer_enabled) ? gets_async(s) : gets_sync(s);
 }
 
 void MiniUART::putchar(const char c) {
@@ -174,22 +174,22 @@ void MiniUART::puts_sync(const char* s, bool newline) {
 
 void MiniUART::enable_interrupts() const {
   // Enable mini UART interrupt routing
-  io::put<uint32_t>(0x3f00b210, 1 << 29);
+  io::put<uint32_t>(ENABLE_IRQS_1, MINI_UART_IRQ);
 }
 
 void MiniUART::disable_interrupts() const {
   // Disable mini UART interrupt routing
-  io::put<uint32_t>(0x3f00b21c, 1 << 29);
+  io::put<uint32_t>(DISABLE_IRQS_1, MINI_UART_IRQ);
 }
 
 bool MiniUART::has_pending_irq() const {
-  return io::get<uint32_t>(IRQ_BASIC_PENDING) & (1 << 8) &&
-         io::get<uint32_t>(IRQ_PENDING_1) & (1 << 29);
+  return io::get<uint32_t>(IRQ_BASIC_PENDING) & IRQ_PENDING_1_HAS_PENDING_IRQ &&
+         io::get<uint32_t>(IRQ_PENDING_1) & MINI_UART_IRQ;
 }
 
 void MiniUART::handle_irq() {
-  bool has_pending_tx_irq = io::get<uint32_t>(AUX_MU_IIR_REG) >> 1 & 0b01;
-  bool has_pending_rx_irq = io::get<uint32_t>(AUX_MU_IIR_REG) >> 1 & 0b10;
+  bool has_pending_tx_irq = (io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b01;
+  bool has_pending_rx_irq = (io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b10;
 
   if (has_pending_tx_irq) {
     handle_tx_irq();
@@ -263,7 +263,7 @@ void MiniUART::putchar_async(const char c) {
 
   // Let mini UART interrupt the CPU when it becomes available,
   // and then we do the actual writing.
-  flush_write_buffer();
+  enable_interrupts();
 }
 
 void MiniUART::puts_async(const char* s, bool newline) {
