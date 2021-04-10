@@ -43,7 +43,7 @@ class Function<ReturnType(Args...)> {
   class Callable {
    public:
     virtual ~Callable() = default;
-    virtual ReturnType invoke(Args... args) {}  // FIXME: use pure virtual
+    virtual ReturnType invoke(Args... args) = 0;
   };
 
   template <typename T>
