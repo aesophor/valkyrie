@@ -49,6 +49,7 @@
 
 #include <dev/Console.h>
 #include <dev/IO.h>
+#include <kernel/ExceptionManager.h>
 #include <libs/CString.h>
 
 #define BACKSPACE 0x7f
@@ -61,7 +62,8 @@ MiniUART& MiniUART::get_instance() {
 }
 
 MiniUART::MiniUART()
-    : _is_buffer_enabled(),
+    : _is_read_buffer_enabled(),
+      _is_write_buffer_enabled(),
       _read_buffer_bytes_pending(),
       _write_buffer_bytes_pending(),
       _read_buffer(),
@@ -99,19 +101,19 @@ MiniUART::MiniUART()
 
 
 char MiniUART::getchar() {
-  return (_is_buffer_enabled) ? getchar_async() : getchar_sync();
+  return (_is_read_buffer_enabled) ? getchar_sync() : getchar_sync();
 }
 
 void MiniUART::gets(char* s) {
-  (_is_buffer_enabled) ? gets_async(s) : gets_sync(s);
+  (_is_read_buffer_enabled) ? gets_sync(s) : gets_sync(s);
 }
 
 void MiniUART::putchar(const char c) {
-  (_is_buffer_enabled) ? putchar_async(c) : putchar_sync(c);
+  (_is_write_buffer_enabled) ? putchar_async(c) : putchar_sync(c);
 }
 
 void MiniUART::puts(const char* s, bool newline) {
-  (_is_buffer_enabled) ? puts_async(s, newline) : puts_sync(s, newline);
+  (_is_write_buffer_enabled) ? puts_async(s, newline) : puts_sync(s, newline);
 }
 
 
@@ -180,6 +182,30 @@ void MiniUART::disable_interrupts() const {
   io::put<uint32_t>(0x3f00b21c, 1 << 29);
 }
 
+bool MiniUART::has_pending_irq() const {
+  return io::get<uint32_t>(IRQ_BASIC_PENDING) & (1 << 8) &&
+         io::get<uint32_t>(IRQ_PENDING_1) & (1 << 29);
+}
+
+void MiniUART::handle_irq() {
+  bool has_pending_tx_irq = io::get<uint32_t>(AUX_MU_IIR_REG) >> 1 & 0b01;
+  bool has_pending_rx_irq = io::get<uint32_t>(AUX_MU_IIR_REG) >> 1 & 0b10;
+
+  if (has_pending_tx_irq) {
+    handle_tx_irq();
+  }
+  if (has_pending_rx_irq) {
+    handle_rx_irq();
+  }
+
+  disable_interrupts();
+}
+
+
+void MiniUART::handle_tx_irq() {
+  flush_write_buffer();
+}
+
 void MiniUART::handle_rx_irq() {
   auto byte = io::get<uint8_t>(AUX_MU_IO_REG);
 
@@ -194,7 +220,6 @@ void MiniUART::handle_rx_irq() {
     putchar_async(byte);
   }
 
-
   /*
   printf("[");
   for (int i = 0; i < _read_buffer_bytes_pending; i++) {
@@ -202,10 +227,6 @@ void MiniUART::handle_rx_irq() {
   }
   printf("] (%d)\n", _read_buffer_bytes_pending);
   */
-}
-
-void MiniUART::handle_tx_irq() {
-  flush_write_buffer();
 }
 
 void MiniUART::flush_write_buffer() {
@@ -253,9 +274,7 @@ void MiniUART::putchar_async(const char c) {
 
   // Let mini UART interrupt the CPU when it becomes available,
   // and then we do the actual writing.
-  //if (byte == '\n') {
-  enable_interrupts();
-  //}
+  flush_write_buffer();
 }
 
 void MiniUART::puts_async(const char* s, bool newline) {
@@ -269,12 +288,12 @@ void MiniUART::puts_async(const char* s, bool newline) {
 
 
 
-bool MiniUART::is_buffer_enabled() const {
-  return _is_buffer_enabled;
+void MiniUART::set_read_buffer_enabled(bool enabled) {
+  _is_read_buffer_enabled = enabled;
 }
 
-void MiniUART::set_buffer_enabled(bool enabled) {
-  _is_buffer_enabled = enabled;
+void MiniUART::set_write_buffer_enabled(bool enabled) {
+  _is_write_buffer_enabled = enabled;
 }
 
 }  // namespace valkyrie::kernel
