@@ -101,7 +101,7 @@ MiniUART::MiniUART()
 
 
 char MiniUART::getchar() {
-  return (_is_read_buffer_enabled) ? getchar_sync() : getchar_sync();
+  return getchar_sync();
 }
 
 void MiniUART::gets(char* s) {
@@ -236,17 +236,6 @@ void MiniUART::flush_write_buffer() {
   _write_buffer_bytes_pending = 0;
 }
 
-char MiniUART::getchar_async() {
-  enable_interrupts();
-
-  while (!_read_buffer_bytes_pending) {
-    enable_interrupts();
-  }
-
-  char c = _read_buffer[0];
-  _read_buffer_bytes_pending--;
-  return c;
-}
 
 void MiniUART::gets_async(char* s) {
   enable_interrupts();
