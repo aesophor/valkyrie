@@ -4,6 +4,7 @@
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
+#include <kernel/TimerMultiplexer.h>
 
 extern "C" void* evt;
 
@@ -14,7 +15,7 @@ ExceptionManager& ExceptionManager::get_instance() {
   return instance;
 }
 
-ExceptionManager::ExceptionManager() : _arm_core_timer() {
+ExceptionManager::ExceptionManager() {
   // Install the address of exception vector table to VBAR_EL1.
   asm volatile("msr VBAR_EL1, %0" :: "r"(&evt));
 }
@@ -70,8 +71,7 @@ void ExceptionManager::handle_irq() {
   if (MiniUART::get_instance().has_pending_irq()) {
     MiniUART::get_instance().handle_irq();
   } else {
-    _arm_core_timer.handle();
-    printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
+    TimerMultiplexer::get_instance().tick();
   }
 }
 
@@ -128,10 +128,6 @@ out:
   }
 }
 
-
-ARMCoreTimer& ExceptionManager::get_arm_core_timer() {
-  return _arm_core_timer;
-}
 
 ExceptionManager::Exception ExceptionManager::get_current_exception() {
   Exception ex;

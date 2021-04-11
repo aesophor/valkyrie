@@ -11,15 +11,17 @@ class ARMCoreTimer {
   ARMCoreTimer();
   ~ARMCoreTimer() = default;
 
+  bool is_enabled() const;
   void enable();
   void disable();
 
-  void handle();
+  void tick();
   void arrange_next_timer_irq_after(const uint32_t second);
 
   uint32_t get_jiffies() const;
 
  private:
+  bool _is_enabled;
   uint32_t _interval;
   uint32_t _jiffies;
 };

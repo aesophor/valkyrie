@@ -3,7 +3,6 @@
 #define VALKYRIE_EXCEPTION_MANAGER_H_
 
 #include <dev/IO.h>
-#include <kernel/Timer.h>
 
 #define IRQ_BASIC_PENDING  (MMIO_BASE + 0x0000B200)
 #define IRQ_PENDING_1      (MMIO_BASE + 0x0000B204)
@@ -48,8 +47,6 @@ class ExceptionManager final {
                                  void* ret_addr = nullptr,
                                  const size_t new_sp = 0);
 
-  ARMCoreTimer& get_arm_core_timer();
-
  private:
   ExceptionManager();
 
@@ -60,8 +57,6 @@ class ExceptionManager final {
   };
 
   Exception get_current_exception();
- 
-  ARMCoreTimer _arm_core_timer;
 };
 
 }  // namespace valkyrie::kernel
