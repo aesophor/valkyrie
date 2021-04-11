@@ -2,9 +2,7 @@
 #ifndef VALKYRIE_FUNCTIONAL_H_
 #define VALKYRIE_FUNCTIONAL_H_
 
-#include <Compiler.h>
 #include <Memory.h>
-#include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 
@@ -31,9 +29,6 @@ class Function<ReturnType(Args...)> {
   }
 
   ReturnType operator ()(Args... args) const {
-    if (unlikely(!_callable)) {
-      Kernel::panic("Unable to invoke _callable (nullptr)\n");
-    }
     return _callable->invoke(args...);
   }
 
