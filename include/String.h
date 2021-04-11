@@ -47,6 +47,10 @@ class String {
 
   char& operator [](size_t i) { return _s[i]; }
 
+  bool operator ==(const String& other) const {
+    return !strcmp(c_str(), other.c_str());
+  }
+
   String operator +(const String& other) const {
     String ret;
     ret._s = make_unique<char[]>(size() + other.size() + 1);
