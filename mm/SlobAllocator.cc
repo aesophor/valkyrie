@@ -46,7 +46,6 @@ void* SlobAllocator::allocate(size_t requested_size) {
   // from a larger free chunk.
   for (; index < NUM_OF_BINS; index++) {
     if (_bins[index]) {
-      printf("found a larger chunk at _bins[%d]\n", index);
       victim = split_chunk(_bins[index], requested_size);
       goto out;
     }
