@@ -38,9 +38,9 @@ Kernel* Kernel::get_instance() {
 
 Kernel::Kernel()
     : _exception_manager(ExceptionManager::get_instance()),
-      _timer_multiplexer(TimerMultiplexer::get_instance()),
       _memory_manager(MemoryManager::get_instance()),
       _mini_uart(MiniUART::get_instance()),
+      _timer_multiplexer(TimerMultiplexer::get_instance()),
       _mailbox(Mailbox::get_instance()),
       _initramfs() {}
 

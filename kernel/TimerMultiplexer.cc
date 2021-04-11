@@ -19,13 +19,19 @@ void TimerMultiplexer::tick() {
   _arm_core_timer.tick();
   printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
 
-  for (int i = 0; i < _events.size(); i++) {
+  for (size_t i = 0; i < _events.size(); i++) {
     auto& ev = _events[i];
     --ev.timeout;
 
     if (ev.timeout == 0) {
       printk("event triggered: %s\n", ev.message.c_str());
+      _events.erase(i--);
     }
+  }
+
+  if (_events.empty()) {
+    _arm_core_timer.disable();
+    _events.clear();
   }
 }
 

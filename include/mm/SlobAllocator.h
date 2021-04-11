@@ -54,7 +54,7 @@ class SlobAllocator {
   int get_bin_index(size_t size);
   size_t get_chunk_size(const int index) const;
 
-  size_t sanitize_size(size_t size);
+  size_t normalize_size(size_t size);
   size_t round_up_to_multiple_of_16(size_t x);
 
 

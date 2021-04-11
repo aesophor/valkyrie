@@ -60,7 +60,7 @@ class Vector {
   }
 
   void remove(T val) {
-    for (int i = 0; i < _size; i++) {
+    for (size_t i = 0; i < _size; i++) {
       if (_data[i] == val) {
         erase(i);
         return;
@@ -91,6 +91,7 @@ class Vector {
   }
 
   void clear() {
+    _data.reset();
     _size = 0;
     _capacity = DEFAULT_SIZE;
   }

@@ -4,6 +4,7 @@
 
 #include <mm/PageFrameAllocator.h>
 #include <mm/SlobAllocator.h>
+#include <mm/AddressSanitizer.h>
 
 namespace valkyrie::kernel {
 
@@ -23,6 +24,7 @@ class MemoryManager {
 
   PageFrameAllocator _page_frame_allocator;
   SlobAllocator _slob_allocator;
+  AddressSanitizer _asan;
 };
 
 }  // namespace valkyrie::kernel

@@ -22,7 +22,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
     return nullptr;
   }
 
-  requested_size = sanitize_size(requested_size + sizeof(Slob));
+  requested_size = normalize_size(requested_size + sizeof(Slob));
   int index = get_bin_index(requested_size);
 
   Slob* victim = nullptr;
@@ -76,13 +76,13 @@ void SlobAllocator::deallocate(void* p) {
   size_t mid_chunk_addr = reinterpret_cast<size_t>(mid_chunk);
   size_t mid_chunk_size = get_chunk_size(mid_chunk->index);
 
-  size_t next_chunk_addr = mid_chunk_addr + get_chunk_size(mid_chunk->index);
-  Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
-  size_t next_chunk_size = get_chunk_size(next_chunk->index);
-
   size_t prev_chunk_addr = mid_chunk_addr - mid_chunk->get_prev_chunk_size();
   Slob* prev_chunk = reinterpret_cast<Slob*>(prev_chunk_addr);
   size_t prev_chunk_size = mid_chunk->get_prev_chunk_size();
+
+  size_t next_chunk_addr = mid_chunk_addr + get_chunk_size(mid_chunk->index);
+  Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
+  size_t next_chunk_size = get_chunk_size(next_chunk->index);
 
   // Final chunk pointer and size (after being merged)
   Slob* chunk = mid_chunk;
@@ -101,18 +101,27 @@ void SlobAllocator::deallocate(void* p) {
     chunk = prev_chunk;
   }
 
+  printf("prev_chunk = 0x%x, next_chunk = 0x%x, _top_chunk = 0x%x\n", prev_chunk, next_chunk, _top_chunk);
+
   // Maybe merge this chunk with its next one.
   if (next_chunk == _top_chunk) {
     // The next one is the top chunk.
     _top_chunk = chunk;
     return;
-  } else if (!next_chunk->is_allocated()) {
+  } if (!next_chunk->is_allocated()) {
     // The next one is a regular freed chunk.
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
     chunk->next = reinterpret_cast<Slob*>(next_chunk_addr + next_chunk_size);
     chunk->index = get_bin_index(chunk_size);
     chunk->next->set_prev_chunk_size(chunk_size);
+
+    // Check again if the next chunk is the top chunk after merging.
+    size_t chunk_addr = reinterpret_cast<size_t>(chunk);
+    if (chunk_addr + chunk_size == reinterpret_cast<size_t>(_top_chunk)) {
+      _top_chunk = chunk;
+      return;
+    }
   }
 
   // Put the merged chunk to the bin.
@@ -328,7 +337,7 @@ size_t SlobAllocator::get_chunk_size(const int index) const {
 }
 
 
-size_t SlobAllocator::sanitize_size(size_t size) {
+size_t SlobAllocator::normalize_size(size_t size) {
   return round_up_to_multiple_of_16(max(size, CHUNK_SMALLEST_SIZE));
 }
 
