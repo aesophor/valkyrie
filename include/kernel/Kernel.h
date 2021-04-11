@@ -31,9 +31,9 @@ class Kernel {
   void print_hardware_info();
 
   ExceptionManager& _exception_manager;
-  TimerMultiplexer& _timer_multiplexer;
   MemoryManager& _memory_manager;
   MiniUART& _mini_uart;
+  TimerMultiplexer& _timer_multiplexer;
   Mailbox& _mailbox;
   Initramfs _initramfs;
 };

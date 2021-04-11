@@ -33,7 +33,7 @@ void* PageFrameAllocator::allocate(size_t requested_size) {
 
   // For each allocation request x, add the block header size to x and
   // raise that value to a power of 2 s.t. x >= the original requested_size.
-  requested_size = sanitize_size(requested_size + sizeof(Block));
+  requested_size = normalize_size(requested_size + sizeof(Block));
   int order = size_to_order(requested_size);
 
   if (unlikely(order >= MAX_ORDER)) {
@@ -265,7 +265,7 @@ PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
 }
 
 
-size_t PageFrameAllocator::sanitize_size(size_t size) {
+size_t PageFrameAllocator::normalize_size(size_t size) {
   return round_up_to_pow_of_2(size);
 }
 

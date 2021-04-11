@@ -1,6 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/MemoryManager.h>
 
+#include <kernel/Kernel.h>
+
 namespace valkyrie::kernel {
 
 MemoryManager& MemoryManager::get_instance() {
@@ -10,7 +12,8 @@ MemoryManager& MemoryManager::get_instance() {
 
 MemoryManager::MemoryManager()
     : _page_frame_allocator(),
-      _slob_allocator(&_page_frame_allocator) {}
+      _slob_allocator(&_page_frame_allocator),
+      _asan() {}
 
 
 void* MemoryManager::kmalloc(size_t size) {
@@ -20,7 +23,10 @@ void* MemoryManager::kmalloc(size_t size) {
       SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
     return _page_frame_allocator.allocate(size);
   } else {
-    return _slob_allocator.allocate(size);
+    auto ret = _slob_allocator.allocate(size);
+    printf("allocated %d bytes -> 0x%x\n", size, ret);
+    _asan.mark_allocated(ret);
+    return ret;
   }
 }
 
@@ -31,7 +37,9 @@ void MemoryManager::kfree(void* p) {
   if (addr % PAGE_SIZE == 0) {
     _page_frame_allocator.deallocate(p);
   } else {
+    _asan.mark_free_chk(p);
     _slob_allocator.deallocate(p);
+    printf("freeing 0x%x\n", p);
   }
 }
 
