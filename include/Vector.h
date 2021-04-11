@@ -15,7 +15,7 @@ class Vector {
  public:
   // Constructor
   Vector(int init_capacity = DEFAULT_SIZE)
-    : _data(make_unique<int[]>(init_capacity)),
+    : _data(make_unique<T[]>(init_capacity)),
       _size(),
       _capacity(init_capacity) {}
 
@@ -23,6 +23,11 @@ class Vector {
   ~Vector() = default;
 
   // Copy constructor
+  
+
+  T& operator [](size_t i) {
+    return _data[i];
+  }
 
   void push_back(T val) { insert(_size, val); }
   void push_front(T val) { insert(0, val); }
@@ -80,9 +85,6 @@ class Vector {
     int i = 0;
     for (; i < (int) _size; i++) {
       new_data[i] = _data[i];
-    }
-    for (; i < (int) new_capacity; i++) {
-      new_data[i] = 0;
     }
 
     _data = move(new_data);

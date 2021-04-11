@@ -1,7 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
+#include <Functional.h>
 #include <Memory.h>
+#include <String.h>
+#include <Vector.h>
 #include <dev/Console.h>
 #include <fs/ELF.h>
 #include <proc/Scheduler.h>
@@ -11,6 +14,23 @@ extern "C" [[noreturn]] void _halt(void);
 
 namespace valkyrie::kernel {
 
+class Base {
+ public:
+  Base() { printf("Base::Base()\n"); }
+  virtual ~Base() { printf("Base::~Base()\n"); }
+
+  virtual void func() { printf("Base::func()\n"); }
+};
+
+class Derived : public Base {
+ public:
+  Derived() : Base() { printf("Derived::Derived()\n"); }
+  virtual ~Derived() { printf("Derived::~Derived()\n"); }
+
+  virtual void func() override { printf("Derived::func()\n"); }
+};
+
+
 Kernel* Kernel::get_instance() {
   static Kernel instance;
   return &instance;
@@ -18,6 +38,7 @@ Kernel* Kernel::get_instance() {
 
 Kernel::Kernel()
     : _exception_manager(ExceptionManager::get_instance()),
+      _timer_multiplexer(TimerMultiplexer::get_instance()),
       _memory_manager(MemoryManager::get_instance()),
       _mini_uart(MiniUART::get_instance()),
       _mailbox(Mailbox::get_instance()),
@@ -35,12 +56,36 @@ void Kernel::run() {
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable();
 
+  /*
+  {
+    Function<int (int, int)> f = [](int a, int b) -> int { return a + b; };
+    printk("lambda: %d\n", f(2, 5));
+  }
+  */
+
+  /*
+  {
+    String s1 = "fuck";
+    String s2 = "wow";
+
+    s1 = s1 + s2 + s1 + s2 + s1 + "omg";
+    s2 = s1;
+    //s2 = move(s1);
+
+    //String s2 = s1 + "omg";
+    //String s2 = move(s1);
+    //s2[1] = 'a';
+    printf("s1 (0x%x) = %s\n", s1.c_str(), s1.c_str());
+    printf("s2 (0x%x) = %s\n", s2.c_str(), s2.c_str());
+  }
+  */
+
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
-  auto shell = make_shared<Shell>();
-  shell->run();
+  //auto shell = make_shared<Shell>();
+  Shell().run();
 
   printf("you shouldn't have reached here :(\n");
   _halt();

@@ -21,33 +21,49 @@
 #include <kernel/Timer.h>
 
 #define CORE0_TIMER_IRQ_CTRL       0x40000040
-#define DEFAULT_TIMER_IRQ_INTERVAL 2  /* in seconds */
+#define DEFAULT_TIMER_IRQ_INTERVAL 1  /* in seconds */
 
 namespace valkyrie::kernel {
 
 ARMCoreTimer::ARMCoreTimer()
-    : _interval(DEFAULT_TIMER_IRQ_INTERVAL),
+    : _is_enabled(),
+      _interval(DEFAULT_TIMER_IRQ_INTERVAL),
       _jiffies() {}
 
 
+bool ARMCoreTimer::is_enabled() const {
+  return _is_enabled;
+}
+
 void ARMCoreTimer::enable() {
+  if (_is_enabled) {
+    return;
+  }
+
   // Enable ARM Core Timer.
   asm volatile("msr CNTP_CTL_EL0, %0" :: "r"(1));
   // Unmask timer interrupt.
   asm volatile("str %0, [%1]" :: "r"(0b0010), "r"(CORE0_TIMER_IRQ_CTRL));
 
   arrange_next_timer_irq_after(_interval);
+  _is_enabled = true;
 }
 
 void ARMCoreTimer::disable() {
+  if (!_is_enabled) {
+    return;
+  }
+
   // Disable ARM Core Timer.
   asm volatile("msr CNTP_CTL_EL0, %0" :: "r"(0));
   // Mask timer interrupt.
   asm volatile("str %0, [%1]" :: "r"(0b0000), "r"(CORE0_TIMER_IRQ_CTRL));
+
+  _is_enabled = false;
 }
 
 
-void ARMCoreTimer::handle() {
+void ARMCoreTimer::tick() {
   arrange_next_timer_irq_after(_interval);
   ++_jiffies;
 }

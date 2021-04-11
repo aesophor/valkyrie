@@ -5,6 +5,7 @@
 #include <fs/ELF.h>
 #include <kernel/Kernel.h>
 #include <kernel/Power.h>
+#include <kernel/TimerMultiplexer.h>
 #include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
@@ -72,6 +73,15 @@ void Shell::run() {
       ELF elf(Kernel::get_instance()->get_initramfs().read(_buf, &filesize));
       void* entry_point = elf.get_entry_point();
       ExceptionManager::get_instance().switch_to_exception_level(0, entry_point, 0x20000);
+
+    } else if (!strcmp(_buf, "set_timeout")) {
+      printf("message: ");
+      gets(_buf);
+      String msg = _buf;
+      printf("timeout: ");
+      gets(_buf);
+      
+      TimerMultiplexer::get_instance().add_timer(msg, atoi(_buf));
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");

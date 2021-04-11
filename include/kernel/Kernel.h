@@ -7,6 +7,7 @@
 #include <dev/MiniUART.h>
 #include <fs/Initramfs.h>
 #include <kernel/ExceptionManager.h>
+#include <kernel/TimerMultiplexer.h>
 #include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {
@@ -30,6 +31,7 @@ class Kernel {
   void print_hardware_info();
 
   ExceptionManager& _exception_manager;
+  TimerMultiplexer& _timer_multiplexer;
   MemoryManager& _memory_manager;
   MiniUART& _mini_uart;
   Mailbox& _mailbox;
