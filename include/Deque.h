@@ -64,7 +64,7 @@ class Deque {
     push_back<T>(val);
   }
 
-  template <typename U = T>
+  template <typename U>
   void push_back(U&& val) {
     insert(_size, forward<U>(val));
   }
@@ -73,7 +73,7 @@ class Deque {
     push_front<T>(val);
   }
 
-  template <typename U = T>
+  template <typename U>
   void push_front(U&& val) {
     insert(0, forward<U>(val));
   }
