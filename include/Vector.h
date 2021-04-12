@@ -23,7 +23,37 @@ class Vector {
   ~Vector() = default;
 
   // Copy constructor
-  
+  Vector(const Vector& other) {
+    *this = other;
+  }
+
+  // Copy assignment operator
+  Vector& operator =(const Vector& other) {
+    // Resize and copy the data over.
+    resize(other._capacity);
+    for (size_t i = 0; i < other._size; i++) {
+      _data[i] = other.at(i);
+    }
+    _size = other._size;
+    _capacity = other._capacity;
+    return *this;
+  }
+
+  // Move constructor
+  Vector(Vector&& other) {
+    *this = move(other);
+  }
+
+  // Move assignment operator
+  Vector& operator =(Vector&& other) {
+    _data = move(other._data);
+    _size = other._size;
+    _capacity = other._capacity;
+
+    other.clear();
+    return *this;
+  }
+
 
   T& operator [](size_t i) {
     return _data[i];
@@ -99,9 +129,10 @@ class Vector {
   size_t size() const { return _size; }
   size_t capacity() const { return _capacity; }
   bool empty() const { return _size == 0; }
-  T at(int index) { return _data[index]; }
-  T front() const { return at(0); }
-  T back() const { return at(_size - 1); }
+
+  const T& at(int index) const { return _data.get()[index]; }
+  const T& front() const { return at(0); }
+  const T& back() const { return at(_size - 1); }
 
  private:
   UniquePtr<T[]> _data;
