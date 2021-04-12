@@ -39,8 +39,12 @@ void ExceptionManager::handle_exception(const size_t number,
                                         const size_t arg6) {
   printk("system call = 0x%x\n", number);
 
+  uint64_t spsr_el1;
+  asm volatile("mrs %0, SPSR_EL1" : "=r"(spsr_el1));
+
   const Exception ex = get_current_exception();
   printk("Current exception lvl: %d\n", get_exception_level());
+  printk("Saved Program Status Register: 0x%x\n", spsr_el1);
   printk("Exception return address: 0x%x\n", ex.ret_addr);
   printk("Exception class (EC): 0x%x\n", ex.ec);
   printk("Instruction specific syndrome (ISS): 0x%x\n", ex.iss);
