@@ -24,7 +24,6 @@ void* MemoryManager::kmalloc(size_t size) {
     return _page_frame_allocator.allocate(size);
   } else {
     auto ret = _slob_allocator.allocate(size);
-    printf("allocated %d bytes -> 0x%x\n", size, ret);
     _asan.mark_allocated(ret);
     return ret;
   }
@@ -39,7 +38,6 @@ void MemoryManager::kfree(void* p) {
   } else {
     _asan.mark_free_chk(p);
     _slob_allocator.deallocate(p);
-    printf("freeing 0x%x\n", p);
   }
 }
 

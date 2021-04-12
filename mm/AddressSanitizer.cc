@@ -22,9 +22,14 @@ bool AddressSanitizer::mark_free_chk(void *p) {
 
 void AddressSanitizer::mark_allocated(void* p) {
   for (int i = 0; i < 1000; i++) {
+    if (_allocated_pointers[i] == p) {
+      Kernel::panic("*** kasan: pointer 0x%x is already allocated...\n", p);
+    }
+  }
+
+  for (int i = 0; i < 1000; i++) {
     if (!_allocated_pointers[i]) {
       _allocated_pointers[i] = p;
-      show();
       return;
     }
   }

@@ -101,8 +101,6 @@ void SlobAllocator::deallocate(void* p) {
     chunk = prev_chunk;
   }
 
-  printf("prev_chunk = 0x%x, next_chunk = 0x%x, _top_chunk = 0x%x\n", prev_chunk, next_chunk, _top_chunk);
-
   // Maybe merge this chunk with its next one.
   if (next_chunk == _top_chunk) {
     // The next one is the top chunk.
@@ -115,13 +113,6 @@ void SlobAllocator::deallocate(void* p) {
     chunk->next = reinterpret_cast<Slob*>(next_chunk_addr + next_chunk_size);
     chunk->index = get_bin_index(chunk_size);
     chunk->next->set_prev_chunk_size(chunk_size);
-
-    // Check again if the next chunk is the top chunk after merging.
-    size_t chunk_addr = reinterpret_cast<size_t>(chunk);
-    if (chunk_addr + chunk_size == reinterpret_cast<size_t>(_top_chunk)) {
-      _top_chunk = chunk;
-      return;
-    }
   }
 
   // Put the merged chunk to the bin.
@@ -226,6 +217,12 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
     Kernel::panic("kernel heap corrupted (invalid chunk->index: %d)\n", chunk->index);
   }
 
+  if (unlikely(target_size > get_chunk_size(chunk->index))) {
+    Kernel::panic("kernel heap corrupted"
+                  "(unable to split %d bytes from a %d byte chunk)",
+                  target_size, get_chunk_size(chunk->index));
+  }
+
   bin_del_head(chunk);
 
   // Update chunk headers
@@ -239,6 +236,15 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
     remainder->index = get_bin_index(remainder_size);
     remainder->prev_chunk_size = target_size;
     remainder->set_allocated(false);
+
+    // If the chunk after `chunk` isn't the top chunk,
+    // then we need to update that chunk's prev_size.
+    size_t next_chunk_addr = reinterpret_cast<size_t>(chunk) + get_chunk_size(chunk->index);
+    Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
+
+    if (next_chunk != _top_chunk) {
+      next_chunk->set_prev_chunk_size(remainder_size);
+    }
 
     // Put the remainder chunk to the corresponding bin.
     bin_add_head(remainder);

@@ -46,8 +46,8 @@ Kernel::Kernel()
 
 
 void Kernel::run() {
-  _mini_uart.set_read_buffer_enabled(true);
-  _mini_uart.set_write_buffer_enabled(true);
+  //_mini_uart.set_read_buffer_enabled(true);
+  //_mini_uart.set_write_buffer_enabled(true);
 
   print_banner();
   print_hardware_info();
