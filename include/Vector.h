@@ -29,28 +29,28 @@ class Vector {
     return _data[i];
   }
 
-  void push_back(T val) { insert(_size, val); }
-  void push_front(T val) { insert(0, val); }
+  void push_back(T&& val) { insert(_size, forward<T>(val)); }
+  void push_front(T&& val) { insert(0, forward<T>(val)); }
   void pop_back() { erase(_size - 1); }
   void pop_front() { erase(0); }
 
   // Insert val at the specified index, shifting
   // the remaining elements to the right.
-  void insert(int index, T val) {
+  void insert(int index, T&& val) {
     if (_size == _capacity) {
       resize(_capacity * 2);
     }
 
     for (int i = _size; i > index; i--) {
-      _data[i] = _data[i - 1];
+      _data[i] = forward<T>(_data[i - 1]);
     }
-    _data[index] = val;
+    _data[index] = forward<T>(val);
     _size++;
   }
 
   void erase(int index) {
     for (int i = index; i < (int) _size - 1; i++) {
-      _data[i] = _data[i + 1];
+      _data[i] = move(_data[i + 1]);
     }
     _size--;
 
@@ -59,7 +59,7 @@ class Vector {
     }
   }
 
-  void remove(T val) {
+  void remove(const T& val) {
     for (size_t i = 0; i < _size; i++) {
       if (_data[i] == val) {
         erase(i);
@@ -68,7 +68,7 @@ class Vector {
     }
   }
 
-  int find(T val) {
+  int find(const T& val) {
     // Linear search
     for (int i = 0; i < _size; i++) {
       if (_data[i] == val) {
@@ -82,9 +82,9 @@ class Vector {
     new_capacity = max(DEFAULT_SIZE, new_capacity);
     UniquePtr<T[]> new_data = make_unique<T[]>(new_capacity);
 
-    int i = 0;
-    for (; i < (int) _size; i++) {
-      new_data[i] = _data[i];
+    size_t i = 0;
+    for (; i < _size; i++) {
+      new_data[i] = move(_data[i]);
     }
 
     _data = move(new_data);
