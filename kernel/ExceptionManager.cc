@@ -113,7 +113,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       // Setup EL0 stack
       asm volatile("msr SP_EL0, %0" :: "r" (saved_stack_pointer));
       // Setup SPSR_EL1 (Saved Processor Status Register)
-      asm volatile("msr SPSR_EL1, %0" :: "r" (0));
+      asm volatile("msr SPSR_EL1, %0" :: "r" (0x3c0));
       // Setup ELR_EL1
       asm volatile("msr ELR_EL1, %0" :: "r" (return_address));
       break;
