@@ -82,7 +82,7 @@ void Shell::run() {
       gets(_buf);
       
       auto callback = [msg]() { printk("%s\n", msg.c_str()); };
-      TimerMultiplexer::get_instance().add_timer(move(callback), atoi(_buf));
+      TimerMultiplexer::get_instance().add_timer(callback, atoi(_buf));
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");
