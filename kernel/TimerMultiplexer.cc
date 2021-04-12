@@ -24,7 +24,7 @@ void TimerMultiplexer::tick() {
     --ev.timeout;
 
     if (ev.timeout == 0) {
-      printk("event triggered: %s\n", ev.message.c_str());
+      ev.callback();
       _events.erase(i--);
     }
   }
@@ -35,10 +35,11 @@ void TimerMultiplexer::tick() {
   }
 }
 
-void TimerMultiplexer::add_timer(const String& message,
+void TimerMultiplexer::add_timer(Event::Callback callback,
                                  const uint32_t timeout) {
   printk("event registered. it will be triggered after %d secs\n", timeout);
-  _events.push_back({message, timeout});
+
+  _events.push_back({callback, timeout});
   _arm_core_timer.enable();
 }
 

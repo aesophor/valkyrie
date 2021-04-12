@@ -2,8 +2,8 @@
 #include <mm/SlobAllocator.h>
 
 #include <Algorithm.h>
-#include <Compiler.h>
 #include <dev/Console.h>
+#include <kernel/Compiler.h>
 #include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {

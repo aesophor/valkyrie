@@ -2,7 +2,8 @@
 #ifndef VALKYRIE_TIMER_MULTIPLEXER_H_
 #define VALKYRIE_TIMER_MULTIPLEXER_H_
 
-//#include <Functional.h>
+#include <Functional.h>
+#include <Memory.h>
 #include <String.h>
 #include <Vector.h>
 #include <kernel/Timer.h>
@@ -19,14 +20,14 @@ class TimerMultiplexer {
   ~TimerMultiplexer() = default;
 
   struct Event {
-    //Function<void(Arguments)> callback;
-    String message;
+    using Callback = Function<void ()>;
+    Callback callback;
     uint32_t timeout;
   };
 
   void tick();
 
-  void add_timer(const String& message,
+  void add_timer(Event::Callback callback,
                  const uint32_t timeout);
 
   ARMCoreTimer& get_arm_core_timer();
