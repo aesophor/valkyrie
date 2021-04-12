@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_VECTOR_H_
-#define VALKYRIE_VECTOR_H_
+#ifndef VALKYRIE_DEQUE_H_
+#define VALKYRIE_DEQUE_H_
 
 #include <Algorithm.h>
 #include <Memory.h>
@@ -11,24 +11,24 @@
 namespace valkyrie::kernel {
 
 template <typename T>
-class Vector {
+class Deque {
  public:
   // Constructor
-  Vector(int init_capacity = DEFAULT_SIZE)
+  Deque(int init_capacity = DEFAULT_SIZE)
     : _data(make_unique<T[]>(init_capacity)),
       _size(),
       _capacity(init_capacity) {}
 
   // Destructor
-  ~Vector() = default;
+  ~Deque() = default;
 
   // Copy constructor
-  Vector(const Vector& other) {
+  Deque(const Deque& other) {
     *this = other;
   }
 
   // Copy assignment operator
-  Vector& operator =(const Vector& other) {
+  Deque& operator =(const Deque& other) {
     // Resize and copy the data over.
     resize(other._capacity);
     for (size_t i = 0; i < other._size; i++) {
@@ -40,12 +40,12 @@ class Vector {
   }
 
   // Move constructor
-  Vector(Vector&& other) {
+  Deque(Deque&& other) {
     *this = move(other);
   }
 
   // Move assignment operator
-  Vector& operator =(Vector&& other) {
+  Deque& operator =(Deque&& other) {
     _data = move(other._data);
     _size = other._size;
     _capacity = other._capacity;
@@ -142,4 +142,4 @@ class Vector {
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_VECTOR_H_
+#endif  // VALKYRIE_DEQUE_H_

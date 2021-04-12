@@ -3,6 +3,7 @@
 #define VALKYRIE_EXCEPTION_MANAGER_H_
 
 #include <dev/IO.h>
+#include <kernel/TaskletScheduler.h>
 
 #define IRQ_BASIC_PENDING  (MMIO_BASE + 0x0000B200)
 #define IRQ_PENDING_1      (MMIO_BASE + 0x0000B204)
@@ -57,6 +58,8 @@ class ExceptionManager final {
   };
 
   Exception get_current_exception();
+
+  TaskletScheduler _tasklet_scheduler;
 };
 
 }  // namespace valkyrie::kernel

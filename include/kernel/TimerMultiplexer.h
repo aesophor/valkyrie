@@ -2,10 +2,8 @@
 #ifndef VALKYRIE_TIMER_MULTIPLEXER_H_
 #define VALKYRIE_TIMER_MULTIPLEXER_H_
 
+#include <Deque.h>
 #include <Functional.h>
-#include <Memory.h>
-#include <String.h>
-#include <Vector.h>
 #include <kernel/Timer.h>
 
 namespace valkyrie::kernel {
@@ -21,6 +19,7 @@ class TimerMultiplexer {
 
   struct Event {
     using Callback = Function<void ()>;
+
     Callback callback;
     uint32_t timeout;
   };
@@ -36,7 +35,7 @@ class TimerMultiplexer {
   explicit TimerMultiplexer();
 
   ARMCoreTimer _arm_core_timer;
-  Vector<Event> _events;
+  Deque<Event> _events;
 };
 
 }  // namespace valkyrie::kernel

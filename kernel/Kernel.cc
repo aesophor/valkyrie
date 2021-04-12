@@ -1,10 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
+#include <Deque.h>
 #include <Functional.h>
 #include <Memory.h>
 #include <String.h>
-#include <Vector.h>
 #include <dev/Console.h>
 #include <fs/ELF.h>
 #include <proc/Scheduler.h>
@@ -47,7 +47,7 @@ Kernel::Kernel()
 
 void Kernel::run() {
   //_mini_uart.set_read_buffer_enabled(true);
-  //_mini_uart.set_write_buffer_enabled(true);
+  _mini_uart.set_write_buffer_enabled(true);
 
   print_banner();
   print_hardware_info();
@@ -65,8 +65,8 @@ void Kernel::run() {
   */
 
   {
-  Vector<int> v1;
-  Vector<int> v2;
+  Deque<int> v1;
+  Deque<int> v2;
 
   v1.push_back(3);
   v1.push_back(5);
