@@ -55,15 +55,15 @@ void ExceptionManager::handle_exception(const size_t number,
 
     case 0b11000:
       Kernel::panic("Trapped MSR, MRS, or System instruction execution\n");
-      break;
 
     case 0b011001:
       Kernel::panic("Trapped access to SVE functionality\n");
-      break;
+
+    case 0b100101:
+      Kernel::panic("Data Abort taken without a change in Exception level (invalid data access)\n");
 
     default:
       Kernel::panic("Unknown exception: EC=%d, ISS=%d\n", ex.ec, ex.iss);
-      break;
   }
 }
 
