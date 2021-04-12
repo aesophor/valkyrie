@@ -6,7 +6,7 @@
 using valkyrie::kernel::Kernel;
 
 extern "C" void __cxa_pure_virtual(void) {
-  Kernel::panic("__cxa_pure_virtual invoked\n");
+  Kernel::panic("__cxa_pure_virtual invoked (possibly due to use-after-free)\n");
 }
 
 extern "C" void __cxa_atexit(void) {
