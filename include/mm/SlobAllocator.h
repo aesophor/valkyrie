@@ -30,6 +30,7 @@ class SlobAllocator {
     int32_t index;
     int32_t prev_chunk_size;
 
+    size_t get_chunk_size() const;
     int32_t get_prev_chunk_size() const;
     void set_prev_chunk_size(const int32_t size);
 
@@ -52,8 +53,6 @@ class SlobAllocator {
   void bin_del_entry(Slob* chunk);
 
   int get_bin_index(size_t size);
-  size_t get_chunk_size(const int index) const;
-
   size_t normalize_size(size_t size);
   size_t round_up_to_multiple_of_16(size_t x);
 

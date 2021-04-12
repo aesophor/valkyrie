@@ -37,7 +37,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
 
   // Search larger free chunks from the unsorted bin.
   for (Slob* chunk = _unsorted_bin; chunk; chunk = chunk->next) {
-    if (get_chunk_size(chunk->index) >= requested_size) {
+    if (chunk->get_chunk_size() >= requested_size) {
       victim = split_chunk(chunk, requested_size);
       goto out;
     }
@@ -75,15 +75,15 @@ void SlobAllocator::deallocate(void* p) {
 
   Slob* mid_chunk = reinterpret_cast<Slob*>(p) - 1;  // 1 is for the header
   size_t mid_chunk_addr = reinterpret_cast<size_t>(mid_chunk);
-  size_t mid_chunk_size = get_chunk_size(mid_chunk->index);
+  size_t mid_chunk_size = mid_chunk->get_chunk_size();
 
   size_t prev_chunk_addr = mid_chunk_addr - mid_chunk->get_prev_chunk_size();
   Slob* prev_chunk = reinterpret_cast<Slob*>(prev_chunk_addr);
   size_t prev_chunk_size = mid_chunk->get_prev_chunk_size();
 
-  size_t next_chunk_addr = mid_chunk_addr + get_chunk_size(mid_chunk->index);
+  size_t next_chunk_addr = mid_chunk_addr + mid_chunk->get_chunk_size();
   Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
-  size_t next_chunk_size = get_chunk_size(next_chunk->index);
+  size_t next_chunk_size = next_chunk->get_chunk_size();
 
   // Final chunk pointer and size (after being merged)
   Slob* chunk = mid_chunk;
@@ -127,10 +127,10 @@ void SlobAllocator::dump_slob_info() const {
   Slob* ptr = nullptr;
 
   for (int i = 0; i < NUM_OF_BINS; i++) {
-    printf("_bins[%d] (%d): ", i, get_chunk_size(i));
+    printf("_bins[%d] (%d): ", i, CHUNK_SMALLEST_SIZE + CHUNK_SIZE_GAP * i);
     ptr = _bins[i];
     while (ptr) {
-      printf("[%d 0x%x] -> ", get_chunk_size(ptr->index), ptr);
+      printf("[%d 0x%x] -> ", ptr->get_chunk_size(), ptr);
       ptr = ptr->next;
     }
     printf("(null)\n");
@@ -139,7 +139,7 @@ void SlobAllocator::dump_slob_info() const {
   printf("_unsorted_bin: ");
   ptr = _unsorted_bin;
   while (ptr) {
-    printf("[%d 0x%x] -> ", get_chunk_size(ptr->index), ptr);
+    printf("[%d 0x%x] -> ", ptr->get_chunk_size(), ptr);
     ptr = ptr->next;
   }
   printf("(null)\n");
@@ -217,16 +217,16 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
     Kernel::panic("kernel heap corrupted (invalid chunk->index: %d)\n", chunk->index);
   }
 
-  if (unlikely(target_size > get_chunk_size(chunk->index))) {
+  if (unlikely(target_size > chunk->get_chunk_size())) {
     Kernel::panic("kernel heap corrupted"
                   "(unable to split %d bytes from a %d byte chunk)",
-                  target_size, get_chunk_size(chunk->index));
+                  target_size, chunk->get_chunk_size());
   }
 
   bin_del_head(chunk);
 
   // Update chunk headers
-  size_t remainder_size = get_chunk_size(chunk->index) - target_size;
+  size_t remainder_size = chunk->get_chunk_size() - target_size;
 
   if (likely(remainder_size > 0)) {
     size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
@@ -242,7 +242,7 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
 
     // If the chunk after `chunk` isn't the top chunk,
     // then we need to update that chunk's prev_size.
-    size_t next_chunk_addr = reinterpret_cast<size_t>(chunk) + get_chunk_size(chunk->index);
+    size_t next_chunk_addr = reinterpret_cast<size_t>(chunk) + chunk->get_chunk_size();
     Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
 
     if (next_chunk != _top_chunk) {
@@ -338,11 +338,6 @@ int SlobAllocator::get_bin_index(size_t size) {
   return (size - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP;
 }
 
-size_t SlobAllocator::get_chunk_size(const int index) const {
-  return CHUNK_SMALLEST_SIZE + index * CHUNK_SIZE_GAP;
-}
-
-
 size_t SlobAllocator::normalize_size(size_t size) {
   return round_up_to_multiple_of_16(max(size, CHUNK_SMALLEST_SIZE));
 }
@@ -355,6 +350,10 @@ size_t SlobAllocator::round_up_to_multiple_of_16(size_t x) {
   return result;
 }
 
+
+size_t SlobAllocator::Slob::get_chunk_size() const {
+  return CHUNK_SMALLEST_SIZE + index * CHUNK_SIZE_GAP;
+}
 
 int32_t SlobAllocator::Slob::get_prev_chunk_size() const {
   return prev_chunk_size & ~1;
