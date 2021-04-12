@@ -16,29 +16,54 @@ class Function<ReturnType(Args...)> {
   Function() : _callable() {}
   ~Function() = default;
 
-  // Constructor
+  // Constructor from aribtrary type T where
+  // T::operator() is defined.
   template <typename T>
-  Function(const T& t)
-      : _callable(make_unique<CallableImpl<T>>(t)) {}
+  Function(const T& t) {
+    *this = t;
+  }
 
-  // Copy assignment operator
   template <typename T>
   Function& operator =(const T& t) {
-    _callable = make_unique<CallableImpl<T>>(t);
+    _callable = make_shared<CallableImpl<T>>(t);
     return *this;
   }
 
+  // Copy constructor
+  Function(const Function& other) {
+    *this = other;
+  }
+
+  // Copy assignment operator
+  Function& operator =(const Function& other) {
+    _callable = other._callable;
+    return *this;
+  }
+
+  // Move constructor
+  Function(Function&& other) noexcept {
+    *this = move(other);
+  }
+
+  // Move assignment operator
+  Function& operator =(Function&& other) noexcept {
+    _callable = move(other._callable);
+    return *this;
+  }
+
+
   ReturnType operator ()(Args... args) const {
-    return _callable->invoke(args...);
+    return _callable->call(args...);
   }
 
   operator bool() const { return _callable; }
 
 
+ private:
   class Callable {
    public:
     virtual ~Callable() = default;
-    virtual ReturnType invoke(Args... args) = 0;
+    virtual ReturnType call(Args... args) = 0;
   };
 
   template <typename T>
@@ -47,7 +72,7 @@ class Function<ReturnType(Args...)> {
     explicit CallableImpl(const T& t) : _t(t) {}
     virtual ~CallableImpl() = default;
 
-    virtual ReturnType invoke(Args... args) override {
+    virtual ReturnType call(Args... args) override {
       return _t(args...);
     }
 
@@ -55,8 +80,7 @@ class Function<ReturnType(Args...)> {
     T _t;
   };
 
- private:
-  UniquePtr<Callable> _callable;
+  SharedPtr<Callable> _callable;
 };
 
 }  // namespace valkyrie::kernel

@@ -56,6 +56,7 @@ void Kernel::run() {
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable();
 
+
   /*
   {
     Function<int (int, int)> f = [](int a, int b) -> int { return a + b; };
