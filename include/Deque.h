@@ -59,22 +59,49 @@ class Deque {
     return _data[i];
   }
 
-  void push_back(T&& val) { insert(_size, forward<T>(val)); }
-  void push_front(T&& val) { insert(0, forward<T>(val)); }
-  void pop_back() { erase(_size - 1); }
-  void pop_front() { erase(0); }
+
+  void push_back(const T& val) {
+    push_back<T>(val);
+  }
+
+  template <typename U = T>
+  void push_back(U&& val) {
+    insert(_size, forward<U>(val));
+  }
+
+  void push_front(const T& val) {
+    push_front<T>(val);
+  }
+
+  template <typename U = T>
+  void push_front(U&& val) {
+    insert(0, forward<U>(val));
+  }
+
+  void pop_back() {
+    erase(_size - 1);
+  }
+
+  void pop_front() {
+    erase(0);
+  }
 
   // Insert val at the specified index, shifting
   // the remaining elements to the right.
-  void insert(int index, T&& val) {
+  void insert(int index, const T& val) {
+    insert<T>(index, val);
+  }
+
+  template <typename U>
+  void insert(int index, U&& val) {
     if (_size == _capacity) {
       resize(_capacity * 2);
     }
 
     for (int i = _size; i > index; i--) {
-      _data[i] = forward<T>(_data[i - 1]);
+      _data[i] = forward<U>(_data[i - 1]);
     }
-    _data[index] = forward<T>(val);
+    _data[index] = forward<U>(val);
     _size++;
   }
 
