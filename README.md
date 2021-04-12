@@ -1,4 +1,6 @@
-## Overview
+## NYCU, Operating System Capstone, Spring 2021
+
+Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
