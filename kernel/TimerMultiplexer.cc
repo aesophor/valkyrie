@@ -29,11 +29,11 @@ void TimerMultiplexer::tick() {
       ev.callback();
       _events.erase(i--);
     }
-  }
 
-  if (_events.empty()) {
-    _arm_core_timer.disable();
-    _events.clear();
+    if (_events.empty()) {
+      _arm_core_timer.disable();
+      _events.clear();
+    }
   }
 }
 
