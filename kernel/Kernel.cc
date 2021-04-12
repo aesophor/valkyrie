@@ -64,6 +64,30 @@ void Kernel::run() {
   }
   */
 
+  {
+  Vector<int> v1;
+  Vector<int> v2;
+
+  v1.push_back(3);
+  v1.push_back(5);
+  v1.push_back(7);
+
+  v2 = move(v1);
+
+  printf("v1 = [");
+  for (int i = 0; i < (int) v1.size(); i++) {
+    printf("%d ", v1[i]);
+  }
+  printf("]\n");
+
+  printf("v2 = [");
+  for (int i = 0; i < (int) v2.size(); i++) {
+    printf("%d ", v2[i]);
+  }
+  printf("]\n");
+  }
+
+
   /*
   {
     String s1 = "fuck";

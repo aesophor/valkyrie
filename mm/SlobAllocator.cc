@@ -13,6 +13,7 @@ SlobAllocator::SlobAllocator(PageFrameAllocator* page_frame_allocator)
       _page_frame_allocatable_begin(),
       _top_chunk(),
       _page_frame_allocatable_end(),
+      _top_chunk_prev_chunk_size(),
       _bins(),
       _unsorted_bin() {}
 
@@ -105,6 +106,7 @@ void SlobAllocator::deallocate(void* p) {
   if (next_chunk == _top_chunk) {
     // The next one is the top chunk.
     _top_chunk = chunk;
+    _top_chunk_prev_chunk_size = chunk->get_prev_chunk_size();
     return;
   } if (!next_chunk->is_allocated()) {
     // The next one is a regular freed chunk.
@@ -176,8 +178,6 @@ bool SlobAllocator::is_first_chunk_in_page_frame(const Slob* chunk) const {
 }
 
 SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) {
-  static int32_t prev_chunk_size = 0;
-
   if (!requested_size) {
     return nullptr;
   }
@@ -185,12 +185,12 @@ SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) 
   Slob* chunk = reinterpret_cast<Slob*>(_top_chunk);
   chunk->next = nullptr;
   chunk->index = get_bin_index(requested_size);
-  chunk->prev_chunk_size = prev_chunk_size;
+  chunk->prev_chunk_size = _top_chunk_prev_chunk_size;
   chunk->set_allocated(true);
 
-  prev_chunk_size = requested_size;
-
   _top_chunk = reinterpret_cast<char*>(_top_chunk) + requested_size;
+  _top_chunk_prev_chunk_size = requested_size;
+
   return chunk;
 }
 
@@ -237,6 +237,9 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
     remainder->prev_chunk_size = target_size;
     remainder->set_allocated(false);
 
+    // Put the remainder chunk to the corresponding bin.
+    bin_add_head(remainder);
+
     // If the chunk after `chunk` isn't the top chunk,
     // then we need to update that chunk's prev_size.
     size_t next_chunk_addr = reinterpret_cast<size_t>(chunk) + get_chunk_size(chunk->index);
@@ -245,9 +248,6 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
     if (next_chunk != _top_chunk) {
       next_chunk->set_prev_chunk_size(remainder_size);
     }
-
-    // Put the remainder chunk to the corresponding bin.
-    bin_add_head(remainder);
   }
 
   chunk->next = nullptr;

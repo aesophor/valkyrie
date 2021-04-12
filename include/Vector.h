@@ -121,7 +121,7 @@ class Vector {
   }
 
   void clear() {
-    _data.reset();
+    _data = make_unique<T[]>(DEFAULT_SIZE);
     _size = 0;
     _capacity = DEFAULT_SIZE;
   }

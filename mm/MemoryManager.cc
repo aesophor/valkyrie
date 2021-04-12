@@ -1,8 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/MemoryManager.h>
 
-#include <kernel/Kernel.h>
-
 namespace valkyrie::kernel {
 
 MemoryManager& MemoryManager::get_instance() {

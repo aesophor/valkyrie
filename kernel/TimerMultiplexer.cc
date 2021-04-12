@@ -17,7 +17,9 @@ TimerMultiplexer::TimerMultiplexer()
 
 void TimerMultiplexer::tick() {
   _arm_core_timer.tick();
-  printk("ARM core timer interrupt: jiffies = %d\n", _arm_core_timer.get_jiffies());
+
+  printk("ARM core timer interrupt: jiffies = %d\n",
+         _arm_core_timer.get_jiffies());
 
   for (size_t i = 0; i < _events.size(); i++) {
     auto& ev = _events[i];
@@ -39,7 +41,7 @@ void TimerMultiplexer::add_timer(Event::Callback callback,
                                  const uint32_t timeout) {
   printk("event registered. it will be triggered after %d secs\n", timeout);
 
-  _events.push_back({callback, timeout});
+  _events.push_back({move(callback), timeout});
   _arm_core_timer.enable();
 }
 
