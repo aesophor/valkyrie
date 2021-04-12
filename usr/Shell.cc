@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <usr/Shell.h>
 
+#include <String.h>
 #include <dev/Console.h>
 #include <fs/ELF.h>
 #include <kernel/Kernel.h>

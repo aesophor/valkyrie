@@ -15,7 +15,8 @@ ExceptionManager& ExceptionManager::get_instance() {
   return instance;
 }
 
-ExceptionManager::ExceptionManager() {
+ExceptionManager::ExceptionManager()
+    : _tasklet_scheduler() {
   // Install the address of exception vector table to VBAR_EL1.
   asm volatile("msr VBAR_EL1, %0" :: "r"(&evt));
 }
@@ -74,8 +75,18 @@ void ExceptionManager::handle_exception(const size_t number,
 void ExceptionManager::handle_irq() {
   if (MiniUART::get_instance().has_pending_irq()) {
     MiniUART::get_instance().handle_irq();
+
+    // Schedule deferred work here.
+    MiniUART::get_instance().set_write_buffer_enabled(false);
+
+    auto deferred_work = []() { printk("hi\n"); };
+    Tasklet t(deferred_work);
+    _tasklet_scheduler.schedule(move(t));
   } else {
     TimerMultiplexer::get_instance().tick();
+
+    // Do all the unfinished deferred work.
+    _tasklet_scheduler.do_all();
   }
 }
 
