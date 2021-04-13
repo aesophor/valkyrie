@@ -59,18 +59,9 @@ class Deque {
     return _data[i];
   }
 
-
-  void push_back(const T& val) {
-    push_back<T>(val);
-  }
-
   template <typename U>
   void push_back(U&& val) {
     insert(_size, forward<U>(val));
-  }
-
-  void push_front(const T& val) {
-    push_front<T>(val);
   }
 
   template <typename U>
@@ -88,10 +79,6 @@ class Deque {
 
   // Insert val at the specified index, shifting
   // the remaining elements to the right.
-  void insert(int index, const T& val) {
-    insert<T>(index, val);
-  }
-
   template <typename U>
   void insert(int index, U&& val) {
     if (_size == _capacity) {

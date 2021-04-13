@@ -8,8 +8,8 @@ namespace valkyrie::kernel {
 TaskletScheduler::TaskletScheduler() : _tasklet_queue() {}
 
 
-void TaskletScheduler::schedule(Tasklet&& tasklet) {
-  _tasklet_queue.push_back(forward<Tasklet>(tasklet));
+void TaskletScheduler::schedule(Tasklet tasklet) {
+  _tasklet_queue.push_back(move(tasklet));
   printk("added a tasklet to the queue.\n");
 }
 

@@ -12,7 +12,7 @@ class TaskletScheduler {
   TaskletScheduler();
   ~TaskletScheduler() = default;
 
-  void schedule(Tasklet&& tasklet);
+  void schedule(Tasklet tasklet);
   void do_all();
 
  private:

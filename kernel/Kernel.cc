@@ -56,35 +56,40 @@ void Kernel::run() {
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable();
 
-
-  /*
+ 
+  Function<void ()> fout;
   {
-    Function<int (int, int)> f = [](int a, int b) -> int { return a + b; };
-    printk("lambda: %d\n", f(2, 5));
+    String s = "hi";
+
+    Function<void ()> f = [s]() { printf("%s\n", s.c_str()); };
+    f();
+
+    fout = f;
   }
-  */
+  fout();
+
 
   {
-  Deque<int> v1;
-  Deque<int> v2;
+    Deque<int> v1;
+    Deque<int> v2;
 
-  v1.push_back(3);
-  v1.push_back(5);
-  v1.push_back(7);
+    v1.push_back(3);
+    v1.push_back(5);
+    v1.push_back(7);
 
-  v2 = move(v1);
+    v2 = move(v1);
 
-  printf("v1 = [");
-  for (int i = 0; i < (int) v1.size(); i++) {
-    printf("%d ", v1[i]);
-  }
-  printf("]\n");
+    printf("v1 = [");
+    for (int i = 0; i < (int) v1.size(); i++) {
+      printf("%d ", v1[i]);
+    }
+    printf("]\n");
 
-  printf("v2 = [");
-  for (int i = 0; i < (int) v2.size(); i++) {
-    printf("%d ", v2[i]);
-  }
-  printf("]\n");
+    printf("v2 = [");
+    for (int i = 0; i < (int) v2.size(); i++) {
+      printf("%d ", v2[i]);
+    }
+    printf("]\n");
   }
 
 
