@@ -47,7 +47,7 @@ Kernel::Kernel()
 
 void Kernel::run() {
   //_mini_uart.set_read_buffer_enabled(true);
-  _mini_uart.set_write_buffer_enabled(true);
+  //_mini_uart.set_write_buffer_enabled(true);
 
   print_banner();
   print_hardware_info();
@@ -56,65 +56,10 @@ void Kernel::run() {
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable();
 
- 
-  Function<void ()> fout;
-  {
-    String s = "hi";
-
-    Function<void ()> f = [s]() { printf("%s\n", s.c_str()); };
-    f();
-
-    fout = f;
-  }
-  fout();
-
-
-  {
-    Deque<int> v1;
-    Deque<int> v2;
-
-    v1.push_back(3);
-    v1.push_back(5);
-    v1.push_back(7);
-
-    v2 = move(v1);
-
-    printf("v1 = [");
-    for (int i = 0; i < (int) v1.size(); i++) {
-      printf("%d ", v1[i]);
-    }
-    printf("]\n");
-
-    printf("v2 = [");
-    for (int i = 0; i < (int) v2.size(); i++) {
-      printf("%d ", v2[i]);
-    }
-    printf("]\n");
-  }
-
-
-  /*
-  {
-    String s1 = "fuck";
-    String s2 = "wow";
-
-    s1 = s1 + s2 + s1 + s2 + s1 + "omg";
-    s2 = s1;
-    //s2 = move(s1);
-
-    //String s2 = s1 + "omg";
-    //String s2 = move(s1);
-    //s2[1] = 'a';
-    printf("s1 (0x%x) = %s\n", s1.c_str(), s1.c_str());
-    printf("s2 (0x%x) = %s\n", s2.c_str(), s2.c_str());
-  }
-  */
-
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
-  //auto shell = make_shared<Shell>();
   Shell().run();
 
   printf("you shouldn't have reached here :(\n");
