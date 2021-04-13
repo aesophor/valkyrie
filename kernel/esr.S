@@ -3,7 +3,7 @@
 // esr.S - Exception Service Routine
 
 .macro save_cpu_context
-  sub	sp, sp, 256
+  sub	sp, sp, 272
   stp	x0, x1, [sp, 16 * 0]
   stp	x2, x3, [sp, 16 * 1]
   stp	x4, x5, [sp, 16 * 2]
@@ -19,7 +19,12 @@
   stp	x24, x25, [sp, 16 * 12]
   stp	x26, x27, [sp, 16 * 13]
   stp	x28, x29, [sp, 16 * 14]
-  str	x30, [sp, 16 * 15] 
+  // Begin saving SPSR_EL1 and ELR_EL1
+  mrs x28, SPSR_EL1
+  mrs x29, ELR_EL1
+  stp x28, x29, [sp, 16 * 15]
+  // End saving SPSR_EL1 and ELR_EL1
+  str	x30, [sp, 16 * 16] 
 .endm
 
 .macro restore_cpu_context
@@ -37,9 +42,14 @@
   ldp	x22, x23, [sp, 16 * 11]
   ldp	x24, x25, [sp, 16 * 12]
   ldp	x26, x27, [sp, 16 * 13]
+  // Begin restoring SPSR_EL1 and ELR_EL1
+  ldp x28, x29, [sp, 16 * 15]
+  msr SPSR_EL1, x28
+  msr ELR_EL1, x29
+  // End restoring SPSR_EL1 and ELR_EL1
   ldp	x28, x29, [sp, 16 * 14]
-  ldr	x30, [sp, 16 * 15] 
-  add	sp, sp, 256
+  ldr	x30, [sp, 16 * 16] 
+  add	sp, sp, 272
 .endm
 
 
