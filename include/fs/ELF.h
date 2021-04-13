@@ -10,12 +10,9 @@ namespace valkyrie::kernel {
 
 class ELF {
  public:
-  ELF(const char* addr);
+  ELF(const char* addr, const size_t size);
   ~ELF() = default;
 
-  void* get_entry_point() const;
-
- private:
   struct [[gnu::packed]] Header final {
     unsigned char e_ident[EI_NIDENT];  // Magic number and other info
     uint16_t e_type;                   // Object file type
@@ -33,8 +30,8 @@ class ELF {
     uint16_t e_shstrndx;               // Section header string table index
   };
 
+ public:
   const Header* _header;
-  void* _entry_point;
 };
 
 

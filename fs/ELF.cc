@@ -9,9 +9,8 @@
 
 namespace valkyrie::kernel {
 
-ELF::ELF(const char* addr)
-    : _header(reinterpret_cast<const ELF::Header*>(addr)),
-      _entry_point(reinterpret_cast<void*>(_header->e_entry)) {
+ELF::ELF(const char* addr, const size_t size)
+    : _header(reinterpret_cast<const ELF::Header*>(addr)) {
   if (memcmp(_header->e_ident, ELF_MAGIC, ELF_MAGIC_LEN)) {
     printf("Not ELF!!!\n");
     return;
@@ -19,13 +18,6 @@ ELF::ELF(const char* addr)
 
   printf("sizeof(ELF::Header) = %d\n", sizeof(Header));
   printf("entry point: 0x%x\n", _header->e_entry);
-}
-
-
-void* ELF::get_entry_point() const {
-  size_t elf_base = reinterpret_cast<size_t>(_header);
-  size_t offset = sizeof(ELF::Header);
-  return reinterpret_cast<void*>(elf_base + offset);
 }
 
 }  // namespace valkyrie::kernel
