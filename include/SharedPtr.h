@@ -2,7 +2,6 @@
 #ifndef VALKYRIE_SHARED_PTR_H_
 #define VALKYRIE_SHARED_PTR_H_
 
-#include <dev/Console.h>
 #include <Types.h>
 #include <UniquePtr.h>
 
@@ -104,7 +103,7 @@ class SharedPtr {
 
  protected:
   bool is_valid() const {
-    return _ctrl && _ctrl->use_count >= 0;
+    return _ctrl && _ctrl->use_count > 0;
   }
 
   void inc_use_count() {

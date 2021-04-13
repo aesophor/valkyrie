@@ -14,11 +14,32 @@ class Tasklet {
   ~Tasklet() = default;
 
   template <typename T>
-  Tasklet(T&& t) : _handler(forward<T>(t)) {}
+  Tasklet(T t) : _handler(t) {}
 
-  void handle() {
-    _handler();
+  // Copy ctor
+  Tasklet(const Tasklet& other) {
+    *this = other;
   }
+
+  // Copy assignment operator
+  Tasklet& operator =(const Tasklet& other) {
+    _handler = other._handler;
+    return *this;
+  }
+
+  // Move constructor
+  Tasklet(Tasklet&& other) {
+    *this = move(other);
+  }
+
+  // Move assignment operator
+  Tasklet& operator =(Tasklet&& other) {
+    _handler = move(other._handler);
+    return *this;
+  }
+
+
+  void handle() { _handler(); }
 
  private:
   Handler _handler;

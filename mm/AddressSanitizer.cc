@@ -12,6 +12,7 @@ bool AddressSanitizer::mark_free_chk(void *p) {
   for (int i = 0; i < 1000; i++) {
     if (p == _allocated_pointers[i]) {
       _allocated_pointers[i] = nullptr;
+      //show();
       return true;
     }
   }
@@ -30,6 +31,7 @@ void AddressSanitizer::mark_allocated(void* p) {
   for (int i = 0; i < 1000; i++) {
     if (!_allocated_pointers[i]) {
       _allocated_pointers[i] = p;
+      //show();
       return;
     }
   }

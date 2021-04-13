@@ -78,10 +78,9 @@ void ExceptionManager::handle_irq() {
 
     // Schedule deferred work here.
     MiniUART::get_instance().set_write_buffer_enabled(false);
+    _tasklet_scheduler.schedule([]() {});
+    _tasklet_scheduler.schedule([]() {});
 
-    auto deferred_work = []() { printk("hi\n"); };
-    Tasklet t(deferred_work);
-    _tasklet_scheduler.schedule(move(t));
   } else {
     TimerMultiplexer::get_instance().tick();
 
