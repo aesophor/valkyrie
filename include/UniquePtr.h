@@ -18,7 +18,9 @@ class UniquePtr {
   UniquePtr(T* p) : _p(p) {}
 
   // Destructor
-  ~UniquePtr() { reset(); }
+  ~UniquePtr() {
+    reset();
+  }
 
   // Copy constructor
   UniquePtr(const UniquePtr&) = delete;
@@ -96,7 +98,9 @@ class UniquePtr<T[]> : private UniquePtr<T> {
     return *this;
   }
 
-  ~UniquePtr() { reset(); }
+  ~UniquePtr() {
+    reset();
+  }
 
   T& operator [](size_t i) { return get()[i]; }
   using UniquePtr<T>::operator delete;

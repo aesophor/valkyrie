@@ -28,8 +28,9 @@ class SharedPtr {
         _alias() {}
 
   // Aliasing Constructor
-  // It allows us to construct a new SharedPtr instance that shares
-  // ownership with another SharedPtr `r`, but with a different pointer value.
+  // It allows us to construct a new SharedPtr instance
+  // that shares ownership with another SharedPtr `r`,
+  // but with a different pointer value.
   template <typename U> friend class SharedPtr;
   template <typename U>
   SharedPtr(const SharedPtr<U>& r, T* ptr)
@@ -39,10 +40,14 @@ class SharedPtr {
   }
 
   // Destructor
-  ~SharedPtr() { dec_use_count(); }
+  ~SharedPtr() {
+    dec_use_count();
+  }
 
   // Copy constructor
-  SharedPtr(const SharedPtr& other) { *this = other; }
+  SharedPtr(const SharedPtr& other) {
+    *this = other;
+  }
 
   // Copy assignment operator
   SharedPtr& operator =(const SharedPtr& other) {
@@ -164,7 +169,9 @@ class SharedPtr<T[]> : private SharedPtr<T> {
     return *this;
   }
 
-  ~SharedPtr() { dec_use_count(); }
+  ~SharedPtr() {
+    dec_use_count();
+  }
 
   T& operator [](size_t i) { return get()[i]; }
   using SharedPtr<T>::operator delete;
@@ -236,6 +243,7 @@ SharedPtr<T> static_pointer_cast(const SharedPtr<U>& r) noexcept {
 
 template <typename T, typename U>
 SharedPtr<T> dynamic_pointer_cast(const SharedPtr<U>& r) noexcept {
+  // NOTE: Downcast is impossible due to -fno-rtti
   if (auto p = dynamic_cast<T*>(r.get())) {
     return SharedPtr<T>(r, p);
   }
