@@ -69,11 +69,22 @@ void Shell::run() {
     } else if (!strcmp(_buf, "run")) {
       printf("filename: ");
       gets(_buf);
+      String filename = _buf;
+ 
       size_t filesize = 0;
+      const char* base = Kernel::get_instance()->get_initramfs().read(_buf, &filesize);
+      ELF elf(base, filesize);
+      printf("filesize = %d\n", filesize);
 
-      ELF elf(Kernel::get_instance()->get_initramfs().read(_buf, &filesize));
-      void* entry_point = elf.get_entry_point();
-      ExceptionManager::get_instance().switch_to_exception_level(0, entry_point, 0x20000);
+      printf("address to load program at: ");
+      gets(_buf);
+      size_t dest_addr = atoi(_buf, 16);
+      void* dest = reinterpret_cast<void*>(dest_addr);
+      void* entry = reinterpret_cast<void*>(dest_addr + sizeof(ELF::Header));
+      memcpy(dest, base, filesize);
+
+      printf("branching to 0x%x\n", dest);
+      ExceptionManager::get_instance().switch_to_exception_level(0, entry, 0x20000);
 
     } else if (!strcmp(_buf, "set_timeout")) {
       printf("message: ");
