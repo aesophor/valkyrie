@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_FUNCTIONAL_H_
 #define VALKYRIE_FUNCTIONAL_H_
 
+#include <dev/Console.h>
 #include <Memory.h>
 
 namespace valkyrie::kernel {
@@ -19,12 +20,12 @@ class Function<ReturnType(Args...)> {
   // Constructor from aribtrary type T where
   // T::operator() is defined.
   template <typename T>
-  Function(const T& t) {
+  Function(T t) {
     *this = t;
   }
-
+  
   template <typename T>
-  Function& operator =(const T& t) {
+  Function& operator =(T t) {
     _callable = make_shared<CallableImpl<T>>(t);
     return *this;
   }
@@ -56,7 +57,9 @@ class Function<ReturnType(Args...)> {
     return _callable->call(args...);
   }
 
-  operator bool() const { return _callable; }
+  operator bool() const {
+    return _callable;
+  }
 
 
  private:
