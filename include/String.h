@@ -22,25 +22,23 @@ class String {
   ~String() = default;
 
   // Copy constructor
-  String(const String& other) {
-    *this = other;
+  String(const String& r) {
+    *this = r;
   }
 
   // Copy assignment operator
-  String& operator =(const String& other) {
-    _s = make_unique<char[]>(other.size() + 1);
-    strcpy(_s.get(), other._s.get());
+  String& operator =(const String& r) {
+    _s = make_unique<char[]>(r.size() + 1);
+    strcpy(_s.get(), r._s.get());
     return *this;
   }
   
   // Move constructor
-  String(String&& other) {
-    *this = move(other);
-  }
+  String(String&& r) noexcept : _s(move(r._s)) {}
  
   // Move assignment operator
-  String& operator =(String&& other) noexcept {
-    _s = move(other._s);
+  String& operator =(String&& r) noexcept {
+    _s = move(r._s);
     return *this;
   }
 

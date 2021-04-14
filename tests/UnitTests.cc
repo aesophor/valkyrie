@@ -25,6 +25,30 @@ class Derived : public Base {
 
 
 void __run_unit_tests() {
+  {
+    Deque<UniquePtr<Derived>> q;
+    auto d = make_unique<Derived>();
+    q.push_back(move(d));
+
+    printf("[");
+    for (int i = 0; i < q.size(); i++) {
+      printf("0x%x ", q.at(i).get());
+    }
+    printf("]\n");
+
+    d = move(q[0]);
+    q.erase(0);
+
+    printf("[");
+    for (int i = 0; i < q.size(); i++) {
+      printf("0x%x ", q.at(i).get());
+    }
+    printf("]\n");
+
+  }
+
+
+  /*
   Function<void ()> fout;
   {
     String s = "hi";
@@ -38,12 +62,19 @@ void __run_unit_tests() {
 
 
   {
-    Deque<int> v1;
-    Deque<int> v2;
+    printf("O M G\n");
+    Deque<Derived> v1;
+    Deque<Derived> v2;
 
-    v1.push_back(3);
-    v1.push_back(5);
-    v1.push_back(7);
+    v1.push_back(Derived {});
+    v1.push_back(Derived {});
+    v1.push_back(Derived {});
+
+    printf("v1 = [");
+    for (int i = 0; i < (int) v1.size(); i++) {
+      printf("%d ", v1[i]);
+    }
+    printf("]\n");
 
     v2 = move(v1);
 
@@ -73,6 +104,7 @@ void __run_unit_tests() {
     printf("s1 (0x%x) = %s\n", s1.c_str(), s1.c_str());
     printf("s2 (0x%x) = %s\n", s2.c_str(), s2.c_str());
   }
+  */
 }
 
 }  // namespace valkyrie::kernel

@@ -10,22 +10,28 @@
 
 #include <kernel/TaskletScheduler.h>
 
-#include <kernel/Kernel.h>
+#include <dev/Console.h>
 
 namespace valkyrie::kernel {
 
 TaskletScheduler::TaskletScheduler() : _tasklet_queue() {}
 
 
-void TaskletScheduler::schedule(Tasklet tasklet) {
-  _tasklet_queue.push_back(move(tasklet));
-  printk("added a tasklet to the queue.\n");
+void TaskletScheduler::schedule(UniquePtr<Tasklet> tasklet) {
+  if (_tasklet_queue.full()) {
+    printk("tasklet queue is full. calling do_all()...\n");
+    do_all();
+  }
+
+  _tasklet_queue.push(move(tasklet));
+  printk("added a tasklet to the queue\n");
 }
 
 void TaskletScheduler::do_all() {
   for (size_t i = 0; i < _tasklet_queue.size(); i++) {
-    printk("handling tasklet %d\n", i);
-    _tasklet_queue[i].handle();
+    printk("handling tasklet %d ...", i);
+    _tasklet_queue[i]->handle();
+    _tasklet_queue[i].reset();
   }
   _tasklet_queue.clear();
 }

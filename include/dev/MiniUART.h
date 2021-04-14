@@ -55,6 +55,7 @@ class MiniUART {
 
   void set_read_buffer_enabled(bool enabled);
   void set_write_buffer_enabled(bool enabled);
+  void flush_write_buffer();
 
  private:
   MiniUART();
@@ -70,7 +71,7 @@ class MiniUART {
   // Asynchronized I/O
   void handle_tx_irq();
   void handle_rx_irq();
-  void flush_write_buffer();
+
   char getchar_async();
   void gets_async(char* s);
   void putchar_async(const char c);
