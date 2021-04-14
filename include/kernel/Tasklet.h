@@ -13,7 +13,7 @@ class Tasklet {
   Tasklet() = default;
   ~Tasklet() = default;
 
-  template <typename T>
+  template <typename T> requires is_callable<T>
   Tasklet(T&& t) : _handler(forward<T>(t)) {}
 
   // Copy constructor

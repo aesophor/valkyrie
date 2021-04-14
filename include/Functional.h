@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_FUNCTIONAL_H_
 #define VALKYRIE_FUNCTIONAL_H_
 
+#include <Concepts.h>
 #include <Memory.h>
 #include <dev/Console.h>
 #include <kernel/Compiler.h>
@@ -20,12 +21,12 @@ class Function<ReturnType(Args...)> {
 
   // Constructor from aribtrary type T where
   // T::operator() is defined.
-  template <typename T>
+  template <typename T> requires is_callable<T>
   Function(T t) {
     *this = t;
   }
   
-  template <typename T>
+  template <typename T> requires is_callable<T>
   Function& operator =(T t) {
     _callable = make_shared<CallableImpl<T>>(t);
     return *this;
