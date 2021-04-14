@@ -14,6 +14,7 @@ template <typename T>
 class Deque {
  public:
   // Constructor
+  explicit
   Deque(int init_capacity = DEFAULT_SIZE)
     : _data(make_unique<T[]>(init_capacity)),
       _size(),
@@ -122,22 +123,23 @@ class Deque {
     return -1;
   }
 
-  void resize(size_t new_capacity) {
-    new_capacity = max(DEFAULT_SIZE, new_capacity);
-    UniquePtr<T[]> new_data = make_unique<T[]>(new_capacity);
+  void resize(size_t new_capacity, bool migrate_data = true) {
+    _capacity = max(DEFAULT_SIZE, new_capacity);
+    auto new_data = make_unique<T[]>(_capacity);
 
-    size_t i = 0;
-    for (; i < _size; i++) {
-      new_data[i] = move(_data[i]);
+    if (migrate_data) {
+      for (size_t i = 0; i < _size; i++) {
+        new_data[i] = move(_data[i]);
+      }
     }
 
+    _data.reset();
     _data = move(new_data);
   }
 
   void clear() {
-    _data = make_unique<T[]>(DEFAULT_SIZE);
+    resize(DEFAULT_SIZE, /*migrate_data=*/false);
     _size = 0;
-    _capacity = DEFAULT_SIZE;
   }
 
   size_t size() const { return _size; }
