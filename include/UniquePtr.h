@@ -14,6 +14,7 @@ class UniquePtr {
   UniquePtr() : _p() {}
 
   // Constructor
+  explicit
   UniquePtr(T* p) : _p(p) {}
 
   // Destructor
