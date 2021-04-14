@@ -26,7 +26,7 @@ Kernel::Kernel()
 
 void Kernel::run() {
   //_mini_uart.set_read_buffer_enabled(true);
-  //_mini_uart.set_write_buffer_enabled(true);
+  _mini_uart.set_write_buffer_enabled(true);
 
   print_banner();
   print_hardware_info();
@@ -36,7 +36,7 @@ void Kernel::run() {
   _exception_manager.enable();
 
   // Run some unit tests...
-  __run_unit_tests();
+  //__run_unit_tests();
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);

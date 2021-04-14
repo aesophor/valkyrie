@@ -83,7 +83,7 @@ void Shell::run() {
       void* entry = reinterpret_cast<void*>(dest_addr + sizeof(ELF::Header));
       memcpy(dest, base, filesize);
 
-      printf("branching to 0x%x\n", dest);
+      printf("branching to 0x%x\n", entry);
       ExceptionManager::get_instance().switch_to_exception_level(0, entry, 0x20000);
 
     } else if (!strcmp(_buf, "set_timeout")) {
@@ -95,6 +95,10 @@ void Shell::run() {
       
       auto callback = [msg]() { printk("%s\n", msg.c_str()); };
       TimerMultiplexer::get_instance().add_timer(callback, atoi(_buf));
+
+    } else if (!strcmp(_buf, "async_io_dbg")) {
+      MiniUART::get_instance().set_debugging(
+          !MiniUART::get_instance().is_debugging());
 
     } else if (!strcmp(_buf, "panic")) {
       Kernel::panic("panic on demand\n");

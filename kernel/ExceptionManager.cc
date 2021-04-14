@@ -75,23 +75,16 @@ void ExceptionManager::handle_exception(const size_t number,
 void ExceptionManager::handle_irq() {
   if (MiniUART::get_instance().has_pending_irq()) {
     MiniUART::get_instance().handle_irq();
-
-    // Schedule deferred work here.
-
   } else {
-    //MiniUART::get_instance().set_read_buffer_enabled(false);
-    MiniUART::get_instance().set_write_buffer_enabled(false);
     TimerMultiplexer::get_instance().tick();
 
     auto task = []() { printf("ok\n"); };
     _tasklet_scheduler.schedule(task);
 
-    // Do all the unfinished deferred work.
-    //MiniUART::get_instance().set_write_buffer_enabled(false);
+    // Do all the unfinished deferred tasks
+    // with interrupts enabled.
+    enable();
     _tasklet_scheduler.finish_all();
-
-    //MiniUART::get_instance().set_read_buffer_enabled(true);
-    MiniUART::get_instance().set_write_buffer_enabled(true);
   }
 }
 
