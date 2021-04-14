@@ -14,7 +14,7 @@ class Tasklet {
   ~Tasklet() = default;
 
   template <typename T>
-  Tasklet(T t) : _handler(t) {}
+  Tasklet(T&& t) : _handler(forward<T>(t)) {}
 
   // Copy ctor
   Tasklet(const Tasklet& r) : _handler(r._handler) {}
