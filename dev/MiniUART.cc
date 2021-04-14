@@ -62,7 +62,8 @@ MiniUART& MiniUART::get_instance() {
 }
 
 MiniUART::MiniUART()
-    : _is_read_buffer_enabled(),
+    : _is_debugging(),
+      _is_read_buffer_enabled(),
       _is_write_buffer_enabled(),
       _read_buffer_bytes_pending(),
       _write_buffer_bytes_pending(),
@@ -220,13 +221,13 @@ void MiniUART::handle_rx_irq() {
     putchar_async(byte);
   }
 
-  /*
-  printf("[");
-  for (int i = 0; i < _read_buffer_bytes_pending; i++) {
-    printf("0x%x,", _read_buffer[i]);
+  if (_is_debugging) {
+    printf("[");
+    for (int i = 0; i < _read_buffer_bytes_pending; i++) {
+      printf("0x%x,", _read_buffer[i]);
+    }
+    printf("] (%d)\n", _read_buffer_bytes_pending);
   }
-  printf("] (%d)\n", _read_buffer_bytes_pending);
-  */
 }
 
 void MiniUART::flush_write_buffer() {
@@ -276,6 +277,13 @@ void MiniUART::puts_async(const char* s, bool newline) {
 }
 
 
+bool MiniUART::is_debugging() const {
+  return _is_debugging;
+}
+
+void MiniUART::set_debugging(bool debugging) {
+  _is_debugging = debugging;
+}
 
 void MiniUART::set_read_buffer_enabled(bool enabled) {
   _is_read_buffer_enabled = enabled;

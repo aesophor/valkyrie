@@ -53,14 +53,15 @@ class MiniUART {
   bool has_pending_irq() const;
   void handle_irq();
 
+  bool is_debugging() const;
+  void set_debugging(bool debugging);
   void set_read_buffer_enabled(bool enabled);
   void set_write_buffer_enabled(bool enabled);
-  void flush_write_buffer();
 
  private:
   MiniUART();
 
-  // Synchronized I/O
+  // Synchronous I/O
   uint8_t recv();
   void send(const uint8_t byte);
   char getchar_sync();
@@ -68,16 +69,17 @@ class MiniUART {
   void putchar_sync(const char c);
   void puts_sync(const char* s, bool newline = true);
 
-  // Asynchronized I/O
+  // Asynchronous I/O
   void handle_tx_irq();
   void handle_rx_irq();
-
+  void flush_write_buffer();
   char getchar_async();
   void gets_async(char* s);
   void putchar_async(const char c);
   void puts_async(const char* s, bool newline = true);
 
 
+  bool _is_debugging;
   bool _is_read_buffer_enabled;
   bool _is_write_buffer_enabled;
 
