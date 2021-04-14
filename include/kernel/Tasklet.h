@@ -17,29 +17,27 @@ class Tasklet {
   Tasklet(T t) : _handler(t) {}
 
   // Copy ctor
-  Tasklet(const Tasklet& other) {
-    *this = other;
-  }
+  Tasklet(const Tasklet& r) : _handler(r._handler) {}
 
   // Copy assignment operator
-  Tasklet& operator =(const Tasklet& other) {
-    _handler = other._handler;
+  Tasklet& operator =(const Tasklet& r) {
+    _handler = r._handler;
     return *this;
   }
 
   // Move constructor
-  Tasklet(Tasklet&& other) {
-    *this = move(other);
-  }
+  Tasklet(Tasklet&& r) : _handler(move(r._handler)) {}
 
   // Move assignment operator
-  Tasklet& operator =(Tasklet&& other) {
-    _handler = move(other._handler);
+  Tasklet& operator =(Tasklet&& r) {
+    _handler = move(r._handler);
     return *this;
   }
 
 
-  void handle() { _handler(); }
+  void handle() {
+    _handler();
+  }
 
  private:
   Handler _handler;
