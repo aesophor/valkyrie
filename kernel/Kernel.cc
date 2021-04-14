@@ -44,7 +44,7 @@ void Kernel::run() {
   // Lab1 SimpleShell
   Shell().run();
 
-  printf("you shouldn't have reached here :(\n");
+  printk("you shouldn't have reached here :(\n");
   _halt();
 }
 
