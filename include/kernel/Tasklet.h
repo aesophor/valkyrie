@@ -16,7 +16,7 @@ class Tasklet {
   template <typename T>
   Tasklet(T&& t) : _handler(forward<T>(t)) {}
 
-  // Copy ctor
+  // Copy constructor
   Tasklet(const Tasklet& r) : _handler(r._handler) {}
 
   // Copy assignment operator
