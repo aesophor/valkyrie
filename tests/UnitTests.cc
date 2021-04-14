@@ -31,7 +31,7 @@ void __run_unit_tests() {
     q.push_back(move(d));
 
     printf("[");
-    for (int i = 0; i < q.size(); i++) {
+    for (size_t i = 0; i < q.size(); i++) {
       printf("0x%x ", q.at(i).get());
     }
     printf("]\n");
@@ -40,7 +40,7 @@ void __run_unit_tests() {
     q.erase(0);
 
     printf("[");
-    for (int i = 0; i < q.size(); i++) {
+    for (size_t i = 0; i < q.size(); i++) {
       printf("0x%x ", q.at(i).get());
     }
     printf("]\n");
@@ -48,7 +48,6 @@ void __run_unit_tests() {
   }
 
 
-  /*
   Function<void ()> fout;
   {
     String s = "hi";
@@ -56,11 +55,12 @@ void __run_unit_tests() {
     Function<void ()> f = [s]() { printf("%s\n", s.c_str()); };
     f();
 
-    fout = f;
+    fout = move(f);
   }
   fout();
 
 
+  /*
   {
     printf("O M G\n");
     Deque<Derived> v1;

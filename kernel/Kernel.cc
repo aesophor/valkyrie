@@ -36,7 +36,7 @@ void Kernel::run() {
   _exception_manager.enable();
 
   // Run some unit tests...
-  //__run_unit_tests();
+  __run_unit_tests();
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);

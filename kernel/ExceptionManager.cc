@@ -81,16 +81,14 @@ void ExceptionManager::handle_irq() {
   } else {
     //MiniUART::get_instance().set_read_buffer_enabled(false);
     MiniUART::get_instance().set_write_buffer_enabled(false);
-
     TimerMultiplexer::get_instance().tick();
 
-
-    auto tasklet = make_unique<Tasklet>([]() { printf("ok\n"); });
-    _tasklet_scheduler.schedule(move(tasklet));
+    auto task = []() { printf("ok\n"); };
+    _tasklet_scheduler.schedule(task);
 
     // Do all the unfinished deferred work.
     //MiniUART::get_instance().set_write_buffer_enabled(false);
-    _tasklet_scheduler.do_all();
+    _tasklet_scheduler.finish_all();
 
     //MiniUART::get_instance().set_read_buffer_enabled(true);
     MiniUART::get_instance().set_write_buffer_enabled(true);

@@ -3,6 +3,8 @@
 #define VALKYRIE_FUNCTIONAL_H_
 
 #include <Memory.h>
+#include <dev/Console.h>
+#include <kernel/Compiler.h>
 
 namespace valkyrie::kernel {
 
@@ -53,6 +55,13 @@ class Function<ReturnType(Args...)> {
 
 
   ReturnType operator ()(Args... args) const {
+    // Check if `_callable` is nullptr.
+    // If it is, then we'll print a warning message
+    // and there should be a data abort exception, which
+    // causes the kernel to panic.
+    if (unlikely(!_callable)) {
+      printk("ERROR: invoking a Function which holds (0x%x)", this);
+    }
     return _callable->call(args...);
   }
 
