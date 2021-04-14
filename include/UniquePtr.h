@@ -28,9 +28,7 @@ class UniquePtr {
   UniquePtr& operator =(const UniquePtr&) = delete;
 
   // Move constructor
-  UniquePtr(UniquePtr&& r) noexcept {
-    _p = r.release();
-  }
+  UniquePtr(UniquePtr&& r) noexcept : _p(r.release()){}
 
   // Move assignment operator
   UniquePtr& operator =(UniquePtr&& r) noexcept {
