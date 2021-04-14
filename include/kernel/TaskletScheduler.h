@@ -2,7 +2,8 @@
 #ifndef VALKYRIE_TASKLET_SCHEDULER_H_
 #define VALKYRIE_TASKLET_SCHEDULER_H_
 
-#include <Deque.h>
+#include <Memory.h>
+#include <RingBuffer.h>
 #include <kernel/Tasklet.h>
 
 namespace valkyrie::kernel {
@@ -12,11 +13,11 @@ class TaskletScheduler {
   TaskletScheduler();
   ~TaskletScheduler() = default;
 
-  void schedule(Tasklet tasklet);
+  void schedule(UniquePtr<Tasklet> tasklet);
   void do_all();
 
  private:
-  Deque<Tasklet> _tasklet_queue;
+  RingBuffer<UniquePtr<Tasklet>> _tasklet_queue;
 };
 
 }  // namespace valkyrie::kernel

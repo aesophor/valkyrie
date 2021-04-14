@@ -30,9 +30,9 @@ class Kernel {
   void print_banner();
   void print_hardware_info();
 
-  ExceptionManager& _exception_manager;
-  MemoryManager& _memory_manager;
   MiniUART& _mini_uart;
+  MemoryManager& _memory_manager;
+  ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
   Mailbox& _mailbox;
   Initramfs _initramfs;
@@ -43,14 +43,21 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char* fmt, Args&&... args) {
+  uint64_t stack_pointer;
+  asm volatile("mov %0, sp" : "=r" (stack_pointer));
+
   console::clear_color();
   printk("");
   console::set_color(console::Color::RED, /*bold=*/true);
   printf("Kernel panic: ");
   console::set_color(console::Color::YELLOW);
   printf(fmt, args...);
-
   console::clear_color();
+
+  printk("SP = 0x%x\n", stack_pointer);
+
+  MemoryManager::get_instance().dump_slob_allocator_info();
+
   printk("");
   console::set_color(console::Color::RED, /*bold=*/true);
   printf("---[ end Kernel panic: ");

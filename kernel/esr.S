@@ -2,8 +2,10 @@
 //
 // esr.S - Exception Service Routine
 
+#define REGISTER_SAVE_LOAD_BYTES 272
+
 .macro save_cpu_context
-  sub	sp, sp, 272
+  sub	sp, sp, REGISTER_SAVE_LOAD_BYTES
   stp	x0, x1, [sp, 16 * 0]
   stp	x2, x3, [sp, 16 * 1]
   stp	x4, x5, [sp, 16 * 2]
@@ -49,7 +51,7 @@
   // End restoring SPSR_EL1 and ELR_EL1
   ldp	x28, x29, [sp, 16 * 14]
   ldr	x30, [sp, 16 * 16] 
-  add	sp, sp, 272
+  add	sp, sp, REGISTER_SAVE_LOAD_BYTES
 .endm
 
 

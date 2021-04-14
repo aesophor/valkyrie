@@ -77,20 +77,23 @@ void ExceptionManager::handle_irq() {
     MiniUART::get_instance().handle_irq();
 
     // Schedule deferred work here.
-    /*
-    MiniUART::get_instance().set_read_buffer_enabled(false);
-    MiniUART::get_instance().set_write_buffer_enabled(false);
-    _tasklet_scheduler.schedule([]() {});
-    _tasklet_scheduler.schedule([]() {});
-    MiniUART::get_instance().set_read_buffer_enabled(true);
-    MiniUART::get_instance().set_write_buffer_enabled(true);
-    */
 
   } else {
+    //MiniUART::get_instance().set_read_buffer_enabled(false);
+    MiniUART::get_instance().set_write_buffer_enabled(false);
+
     TimerMultiplexer::get_instance().tick();
 
+
+    auto tasklet = make_unique<Tasklet>([]() { printf("ok\n"); });
+    _tasklet_scheduler.schedule(move(tasklet));
+
     // Do all the unfinished deferred work.
-    //_tasklet_scheduler.do_all();
+    //MiniUART::get_instance().set_write_buffer_enabled(false);
+    _tasklet_scheduler.do_all();
+
+    //MiniUART::get_instance().set_read_buffer_enabled(true);
+    MiniUART::get_instance().set_write_buffer_enabled(true);
   }
 }
 
