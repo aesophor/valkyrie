@@ -1,12 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
-#include <Deque.h>
-#include <Functional.h>
-#include <Memory.h>
-#include <String.h>
-#include <dev/Console.h>
-#include <fs/ELF.h>
 #include <proc/Scheduler.h>
 #include <usr/Shell.h>
 
@@ -14,22 +8,7 @@ extern "C" [[noreturn]] void _halt(void);
 
 namespace valkyrie::kernel {
 
-class Base {
- public:
-  Base() { printf("Base::Base()\n"); }
-  virtual ~Base() { printf("Base::~Base()\n"); }
-
-  virtual void func() { printf("Base::func()\n"); }
-};
-
-class Derived : public Base {
- public:
-  Derived() : Base() { printf("Derived::Derived()\n"); }
-  virtual ~Derived() { printf("Derived::~Derived()\n"); }
-
-  virtual void func() override { printf("Derived::func()\n"); }
-};
-
+extern void __run_unit_tests();
 
 Kernel* Kernel::get_instance() {
   static Kernel instance;
@@ -55,6 +34,9 @@ void Kernel::run() {
   printk("switching to supervisor mode... (≧▽ ≦)\n");
   _exception_manager.switch_to_exception_level(1);
   _exception_manager.enable();
+
+  // Run some unit tests...
+  //__run_unit_tests();
 
   //printk("switching to user mode... (≧▽ ≦)\n");
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
