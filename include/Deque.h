@@ -147,8 +147,8 @@ class Deque {
   bool empty() const { return _size == 0; }
 
   const T& at(int index) const { return _data.get()[index]; }
-  const T& front() const { return at(0); }
-  const T& back() const { return at(_size - 1); }
+  T& front() { return _data[0]; }
+  T& back() { return _data[_size - 1]; }
 
  private:
   UniquePtr<T[]> _data;
