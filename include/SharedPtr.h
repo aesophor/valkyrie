@@ -33,9 +33,9 @@ class SharedPtr {
   // but with a different pointer value.
   template <typename U> friend class SharedPtr;
   template <typename U>
-  SharedPtr(const SharedPtr<U>& r, T* ptr)
+  SharedPtr(const SharedPtr<U>& r, T* alias_ptr)
       : _ctrl(reinterpret_cast<ControlBlock*>(r._ctrl)),
-        _alias(ptr) {
+        _alias(alias_ptr) {
     inc_use_count();
   }
 
@@ -45,32 +45,35 @@ class SharedPtr {
   }
 
   // Copy constructor
-  SharedPtr(const SharedPtr& other) {
-    *this = other;
+  SharedPtr(const SharedPtr& r) {
+    *this = r;
   }
 
   // Copy assignment operator
-  SharedPtr& operator =(const SharedPtr& other) {
-    _ctrl = other._ctrl;
-    _alias = other._alias;
+  SharedPtr& operator =(const SharedPtr& r) {
+    _ctrl = r._ctrl;
+    _alias = r._alias;
     inc_use_count();
     return *this;
   }
 
   // Move constructor
-  SharedPtr(SharedPtr&& other) noexcept {
-    *this = move(other);
+  SharedPtr(SharedPtr&& r) noexcept
+      : _ctrl(r._ctrl),
+        _alias(r._alias) {
+    r._ctrl = nullptr;
+    r._alias = nullptr;
   }
 
   // Move assignment operator
-  SharedPtr& operator =(SharedPtr&& other) noexcept {
+  SharedPtr& operator =(SharedPtr&& r) noexcept {
     if (is_valid()) {
       dec_use_count();
     }
-    _ctrl = other._ctrl;
-    _alias = other._alias;
-    other._ctrl = nullptr;
-    other._alias = nullptr;
+    _ctrl = r._ctrl;
+    _alias = r._alias;
+    r._ctrl = nullptr;
+    r._alias = nullptr;
     return *this;
   }
 
@@ -80,8 +83,6 @@ class SharedPtr {
     return dynamic_pointer_cast<U>(*this);
   }
 
-  void operator delete(void* p) = delete;
-  void operator delete[](void* p) = delete;
   T* operator ->() const { return get(); }
   T& operator *() const { return *get(); }
   operator bool() const { return get(); }
@@ -174,8 +175,6 @@ class SharedPtr<T[]> : private SharedPtr<T> {
   }
 
   T& operator [](size_t i) { return get()[i]; }
-  using SharedPtr<T>::operator delete;
-  using SharedPtr<T>::operator delete[];
   using SharedPtr<T>::operator ->;
   using SharedPtr<T>::operator *;
   using SharedPtr<T>::operator bool;
