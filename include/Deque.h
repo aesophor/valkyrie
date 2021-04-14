@@ -24,34 +24,34 @@ class Deque {
   ~Deque() = default;
 
   // Copy constructor
-  Deque(const Deque& other) {
-    *this = other;
+  Deque(const Deque& r) {
+    *this = r;
   }
 
   // Copy assignment operator
-  Deque& operator =(const Deque& other) {
+  Deque& operator =(const Deque& r) {
     // Resize and copy the data over.
-    resize(other._capacity);
-    for (size_t i = 0; i < other._size; i++) {
-      _data[i] = other.at(i);
+    resize(r._capacity);
+    for (size_t i = 0; i < r._size; i++) {
+      _data[i] = r.at(i);
     }
-    _size = other._size;
-    _capacity = other._capacity;
+    _size = r._size;
+    _capacity = r._capacity;
     return *this;
   }
 
   // Move constructor
-  Deque(Deque&& other) {
-    *this = move(other);
+  Deque(Deque&& r) {
+    *this = move(r);
   }
 
   // Move assignment operator
-  Deque& operator =(Deque&& other) {
-    _data = move(other._data);
-    _size = other._size;
-    _capacity = other._capacity;
+  Deque& operator =(Deque&& r) {
+    _data = move(r._data);
+    _size = r._size;
+    _capacity = r._capacity;
 
-    other.clear();
+    r.clear();
     return *this;
   }
 
