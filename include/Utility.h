@@ -14,32 +14,6 @@ struct Pair {
 
 
 template <typename T>
-struct _RemoveExtent { using Type = T; };
- 
-template <typename T>
-struct _RemoveExtent<T[]> { using Type = T; };
- 
-template <typename T, size_t N>
-struct _RemoveExtent<T[N]> { using Type = T; };
-
-template <typename T >
-using RemoveExtent = typename _RemoveExtent<T>::Type;
-
-
-template <typename T>
-struct _RemoveReference { using Type = T; };
-
-template <typename T>
-struct _RemoveReference<T&> { using Type = T; };
-
-template <typename T>
-struct _RemoveReference<T&&> { using Type = T; };
-
-template <typename T>
-using RemoveReference = typename _RemoveReference<T>::Type;
-
-
-template <typename T>
 constexpr RemoveReference<T>&& move(T&& t) {
   return static_cast<RemoveReference<T>&&>(t);
 }
@@ -53,7 +27,6 @@ template <typename T>
 constexpr T&& forward(RemoveReference<T>&& t) {
   return static_cast<T&&>(t);
 }
-
 
 template <typename T>
 constexpr void swap(T& t1, T& t2) {
