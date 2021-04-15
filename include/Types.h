@@ -19,4 +19,36 @@ using int8_t = char;
 
 using size_t = unsigned long;
 
+
+
+// Template metaprogramming... here we go...
+namespace valkyrie::kernel {
+
+template <typename T>
+struct _RemoveExtent { using Type = T; };
+
+template <typename T>
+struct _RemoveExtent<T[]> { using Type = T; };
+
+template <typename T, size_t N>
+struct _RemoveExtent<T[N]> { using Type = T; };
+
+template <typename T >
+using RemoveExtent = typename _RemoveExtent<T>::Type;
+
+
+template <typename T>
+struct _RemoveReference { using Type = T; };
+
+template <typename T>
+struct _RemoveReference<T&> { using Type = T; };
+
+template <typename T>
+struct _RemoveReference<T&&> { using Type = T; };
+
+template <typename T>
+using RemoveReference = typename _RemoveReference<T>::Type;
+
+}  // namespace valkyrie::kernel
+
 #endif  // VALKYRIE_TYPES_H_
