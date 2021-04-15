@@ -10,11 +10,15 @@ class Tasklet {
  public:
   using Handler = Function<void ()>;
 
-  Tasklet() = default;
-  ~Tasklet() = default;
-
+  // Universal reference constructor
+  //
+  // forwards any T as either lvalue or rvalue reference
+  // where T::operator() is defined.
   template <typename T> requires is_callable<T>
   Tasklet(T&& t) : _handler(forward<T>(t)) {}
+
+  // Destructor
+  ~Tasklet() = default;
 
   // Copy constructor
   Tasklet(const Tasklet& r) : _handler(r._handler) {}

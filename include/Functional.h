@@ -16,7 +16,10 @@ class Function;
 template <typename ReturnType, typename... Args>
 class Function<ReturnType(Args...)> {
  public:
+  // Default constructor
   Function() : _callable() {}
+
+  // Destructor
   ~Function() = default;
 
   // Constructor from aribtrary type T where
