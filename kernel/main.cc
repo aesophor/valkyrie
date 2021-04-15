@@ -12,5 +12,5 @@ extern "C" [[noreturn]] void kmain(void) {
     (*ctor)();
   }
 
-  valkyrie::kernel::Kernel::get_instance()->run();
+  valkyrie::kernel::Kernel::get_instance().run();
 }

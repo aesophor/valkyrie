@@ -24,7 +24,9 @@ class Mailbox final {
   static Mailbox& get_instance();
   ~Mailbox() = default;
 
+  uint32_t get_board_model();
   uint32_t get_board_revision();
+  Pair<uint32_t, uint32_t> get_arm_memory();  // base address, size
   Pair<uint32_t, uint32_t> get_vc_memory();  // base address, size
 
  private:

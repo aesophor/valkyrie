@@ -14,7 +14,7 @@ namespace valkyrie::kernel {
 
 class Kernel {
  public:
-  static Kernel* get_instance();
+  static Kernel& get_instance();
   ~Kernel() = default;
 
   [[noreturn]] void run();
