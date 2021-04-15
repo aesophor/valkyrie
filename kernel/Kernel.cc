@@ -10,9 +10,9 @@ namespace valkyrie::kernel {
 
 extern void __run_unit_tests();
 
-Kernel* Kernel::get_instance() {
+Kernel& Kernel::get_instance() {
   static Kernel instance;
-  return &instance;
+  return instance;
 }
 
 Kernel::Kernel()
@@ -59,9 +59,11 @@ void Kernel::print_banner() {
 
 void Kernel::print_hardware_info() {
   const auto board_revision = _mailbox.get_board_revision();
+  const auto arm_memory_info = _mailbox.get_arm_memory();
   const auto vc_memory_info = _mailbox.get_vc_memory();
 
-  printk("board revision: 0x%x\n", board_revision);
+  printk("Hardware: Raspberry Pi 3B+ (revision: %x)\n", board_revision);
+  printk("ARM memory size: 0x%x\n", arm_memory_info.second);
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
 }
