@@ -17,7 +17,6 @@ ELF::ELF(const char* addr, const size_t size)
   }
 
   printf("sizeof(ELF::Header) = %d\n", sizeof(Header));
-  printf("entry point: 0x%x\n", _header->e_entry);
 }
 
 }  // namespace valkyrie::kernel

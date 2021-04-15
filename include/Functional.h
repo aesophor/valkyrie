@@ -24,12 +24,12 @@ class Function<ReturnType(Args...)> {
 
   // Constructor from aribtrary type T where
   // T::operator() is defined.
-  template <typename T> requires is_callable<T>
+  template <Callable T>
   Function(T t) {
     *this = t;
   }
   
-  template <typename T> requires is_callable<T>
+  template <Callable T>
   Function& operator =(T t) {
     _callable = make_shared<CallableImpl<T>>(t);
     return *this;
@@ -75,14 +75,14 @@ class Function<ReturnType(Args...)> {
 
 
  private:
-  class Callable {
+  class CallableIface {
    public:
-    virtual ~Callable() = default;
+    virtual ~CallableIface() = default;
     virtual ReturnType call(Args... args) = 0;
   };
 
   template <typename T>
-  class CallableImpl : public Callable {
+  class CallableImpl : public CallableIface {
    public:
     explicit CallableImpl(const T& t) : _t(t) {}
     virtual ~CallableImpl() = default;
@@ -95,7 +95,7 @@ class Function<ReturnType(Args...)> {
     T _t;
   };
 
-  SharedPtr<Callable> _callable;
+  SharedPtr<CallableIface> _callable;
 };
 
 }  // namespace valkyrie::kernel

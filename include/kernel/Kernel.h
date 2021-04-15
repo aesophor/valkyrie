@@ -30,11 +30,11 @@ class Kernel {
   void print_banner();
   void print_hardware_info();
 
+  Mailbox& _mailbox;
   MiniUART& _mini_uart;
   MemoryManager& _memory_manager;
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
-  Mailbox& _mailbox;
   Initramfs _initramfs;
 };
 
