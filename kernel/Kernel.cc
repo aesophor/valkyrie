@@ -16,17 +16,17 @@ Kernel* Kernel::get_instance() {
 }
 
 Kernel::Kernel()
-    : _mini_uart(MiniUART::get_instance()),
+    : _mailbox(Mailbox::get_instance()),
+      _mini_uart(MiniUART::get_instance()),
       _memory_manager(MemoryManager::get_instance()),
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
-      _mailbox(Mailbox::get_instance()),
       _initramfs() {}
 
 
 void Kernel::run() {
   //_mini_uart.set_read_buffer_enabled(true);
-  _mini_uart.set_write_buffer_enabled(true);
+  //_mini_uart.set_write_buffer_enabled(true);
 
   print_banner();
   print_hardware_info();

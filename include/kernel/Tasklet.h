@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_TASKLET_H_
 #define VALKYRIE_TASKLET_H_
 
+#include <Concepts.h>
 #include <Functional.h>
 
 namespace valkyrie::kernel {
@@ -14,7 +15,7 @@ class Tasklet {
   //
   // forwards any T as either lvalue or rvalue reference
   // where T::operator() is defined.
-  template <typename T> requires is_callable<T>
+  template <Callable T>
   Tasklet(T&& t) : _handler(forward<T>(t)) {}
 
   // Destructor

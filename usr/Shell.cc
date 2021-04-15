@@ -96,6 +96,16 @@ void Shell::run() {
       auto callback = [msg]() { printk("%s\n", msg.c_str()); };
       TimerMultiplexer::get_instance().add_timer(callback, atoi(_buf));
 
+    } else if (!strcmp(_buf, "async_io_enable")) {
+      printf("async I/O enabled\n");
+      MiniUART::get_instance().set_read_buffer_enabled(true);
+      MiniUART::get_instance().set_write_buffer_enabled(true);
+
+    } else if (!strcmp(_buf, "async_io_disable")) {
+      printf("async I/O disabled\n");
+      MiniUART::get_instance().set_read_buffer_enabled(false);
+      MiniUART::get_instance().set_write_buffer_enabled(false);
+
     } else if (!strcmp(_buf, "async_io_dbg")) {
       MiniUART::get_instance().set_debugging(
           !MiniUART::get_instance().is_debugging());
