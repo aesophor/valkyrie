@@ -98,17 +98,21 @@ uint8_t ExceptionManager::get_exception_level() const {
 
 void ExceptionManager::switch_to_exception_level(const uint8_t level,
                                                  void* ret_addr,
-                                                 const size_t new_sp) {
+                                                 void* new_sp) {
   uint64_t spsr;
   void* return_address = (ret_addr) ? ret_addr : &&out;
-  void* saved_stack_pointer;
+  void* stack_pointer = (new_sp) ? new_sp : nullptr;
 
-  asm volatile("mov %0, sp" : "=r" (saved_stack_pointer));
+  // If the user hasn't specified `new_sp` (which means it is nullptr),
+  // then we will use the current SP as the new SP after `eret`.
+  if (!stack_pointer) {
+    asm volatile("mov %0, sp" : "=r" (stack_pointer));
+  }
 
   switch (level) {
     case 1:
       // Setup EL1 stack
-      asm volatile("msr SP_EL1, %0" :: "r" (saved_stack_pointer));
+      asm volatile("msr SP_EL1, %0" :: "r" (stack_pointer));
       // Setup SPSR_EL2 (Saved Processor Status Register)
       spsr  = (1 << 0);       // use SP_ELx, not SP_EL0
       spsr |= (1 << 2);       // exception was taken from EL1
@@ -120,7 +124,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
 
     case 0:
       // Setup EL0 stack
-      asm volatile("msr SP_EL0, %0" :: "r" (saved_stack_pointer));
+      asm volatile("msr SP_EL0, %0" :: "r" (stack_pointer));
       // Setup SPSR_EL1 (Saved Processor Status Register)
       asm volatile("msr SPSR_EL1, %0" :: "r" (0x3c0));
       // Setup ELR_EL1
@@ -135,10 +139,8 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
   asm volatile("eret");
 
 out:
-  // Maybe set the new stack
-  if (new_sp) {
-    asm volatile("mov sp, %0" :: "r" (new_sp));
-  }
+  // Do nothing.
+  ;
 }
 
 

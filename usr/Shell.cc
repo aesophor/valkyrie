@@ -84,7 +84,8 @@ void Shell::run() {
       memcpy(dest, base, filesize);
 
       printf("branching to 0x%x\n", entry);
-      ExceptionManager::get_instance().switch_to_exception_level(0, entry, 0x20000);
+      void* user_sp = reinterpret_cast<void*>(0x20000);
+      ExceptionManager::get_instance().switch_to_exception_level(0, entry, user_sp);
 
     } else if (!strcmp(_buf, "set_timeout")) {
       printf("message: ");
