@@ -51,7 +51,7 @@ _start:
   orr x0, x0, #(1 << 31)
   msr HCR_EL2, x0
 
-  // Transfer control to kmain(), see kernel/main.cc.
+  // Transfer control to kmain(), see boot/main.cc
   bl kmain
 
 .global _halt
