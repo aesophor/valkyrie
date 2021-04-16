@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_RING_BUFFER_H_
 #define VALKYRIE_RING_BUFFER_H_
 
+#include <Iterator.h>
 #include <Memory.h>
 #include <Types.h>
 
@@ -12,6 +13,10 @@ namespace valkyrie::kernel {
 template <typename T>
 class RingBuffer {
  public:
+  using ValueType = T;
+  using ConstIterator = BasicIterator<const RingBuffer, const ValueType>;
+  using Iterator = BasicIterator<RingBuffer, ValueType>;
+
   // Constructor
   explicit
   RingBuffer(int capacity = DEFAULT_CAPACITY)
@@ -67,6 +72,11 @@ class RingBuffer {
     _tail = _head = 0;
     _size = 0;
   }
+
+  Iterator begin() { return Iterator::begin(*this); }
+  Iterator end() { return Iterator::end(*this); }
+  ConstIterator begin() const { return ConstIterator::begin(*this); }
+  ConstIterator end() const { return ConstIterator::end(*this); }
 
   size_t size() const { return _size; }
   size_t capacity() const { return _capacity; }
