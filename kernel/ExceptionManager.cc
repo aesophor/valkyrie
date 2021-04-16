@@ -79,7 +79,7 @@ void ExceptionManager::handle_irq() {
     TimerMultiplexer::get_instance().tick();
 
     auto task = []() { printf("ok\n"); };
-    _tasklet_scheduler.schedule(task);
+    _tasklet_scheduler.add_tasklet(task);
 
     // Do all the unfinished deferred tasks
     // with interrupts enabled.
