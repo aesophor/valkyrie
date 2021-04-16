@@ -25,7 +25,7 @@ class TaskletScheduler {
 
 
   template <typename T>
-  void schedule(T&& handler) {
+  void add_tasklet(T&& handler) {
     if (_tasklet_queue.full()) {
       printk("tasklet queue is full. calling do_all()...\n");
       finish_all();
