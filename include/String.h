@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_STRING_H_
 #define VALKYRIE_STRING_H_
 
+#include <Iterator.h>
 #include <UniquePtr.h>
 #include <libs/CString.h>
 
@@ -9,6 +10,10 @@ namespace valkyrie::kernel {
 
 class String {
  public:
+  using ValueType = char;
+  using ConstIterator = BasicIterator<const String, const ValueType>;
+  using Iterator = BasicIterator<String, ValueType>;
+
   // Default constructor
   String() : _s() {}
 
@@ -58,8 +63,13 @@ class String {
   }
 
 
-  size_t size() const { return (_s) ? strlen(_s.get()) : 0; }
+  Iterator begin() { return Iterator::begin(*this); }
+  Iterator end() { return Iterator::end(*this); }
+  ConstIterator begin() const { return ConstIterator::begin(*this); }
+  ConstIterator end() const { return ConstIterator::end(*this); }
 
+
+  size_t size() const { return (_s) ? strlen(_s.get()) : 0; }
   const char* c_str() const { return _s.get(); }
 
  private:
