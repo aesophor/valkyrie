@@ -1,7 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
-#include <proc/Scheduler.h>
 #include <usr/Shell.h>
 
 extern "C" [[noreturn]] void _halt(void);
@@ -21,6 +20,7 @@ Kernel::Kernel()
       _memory_manager(MemoryManager::get_instance()),
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
+      _task_scheduler(TaskScheduler::get_instance()),
       _initramfs() {}
 
 
@@ -42,7 +42,10 @@ void Kernel::run() {
   //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
 
   // Lab1 SimpleShell
-  Shell().run();
+  //Shell().run();
+  
+  // Lab5 Thread and User Process
+  _task_scheduler.run();
 
   printk("you shouldn't have reached here :(\n");
   _halt();

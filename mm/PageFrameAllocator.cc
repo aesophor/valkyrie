@@ -1,7 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/PageFrameAllocator.h>
 
-#include <Utility.h>
 #include <dev/Console.h>
 #include <kernel/Compiler.h>
 #include <kernel/Kernel.h>

@@ -9,6 +9,7 @@
 #include <kernel/ExceptionManager.h>
 #include <kernel/TimerMultiplexer.h>
 #include <mm/MemoryManager.h>
+#include <proc/TaskScheduler.h>
 
 namespace valkyrie::kernel {
 
@@ -35,6 +36,7 @@ class Kernel {
   MemoryManager& _memory_manager;
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
+  TaskScheduler& _task_scheduler;
   Initramfs _initramfs;
 };
 

@@ -10,11 +10,11 @@
 #include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
-namespace valkyrie::kernel {
+using namespace valkyrie::kernel;
 
-Shell::Shell() : _buf() {}
+void run_shell() {
+  char _buf[256];
 
-void Shell::run() {
   while (true) {
     memset(_buf, 0, sizeof(_buf));
     printf("root# ");
@@ -122,5 +122,3 @@ void Shell::run() {
     }
   }
 }
-
-}  // namespace valkyrie::kernel
