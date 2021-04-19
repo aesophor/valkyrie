@@ -32,20 +32,17 @@ void ExceptionManager::disable() {
 }
 
 
-void ExceptionManager::handle_exception(const size_t number,
-                                        const size_t arg1,
-                                        const size_t arg2,
-                                        const size_t arg3,
-                                        const size_t arg4,
-                                        const size_t arg5,
-                                        const size_t arg6) {
-  printk("system call = 0x%x\n", number);
-
+void ExceptionManager::handle_exception(const size_t x0,
+                                        const size_t x1,
+                                        const size_t x2,
+                                        const size_t x3,
+                                        const size_t x4,
+                                        const size_t x5) {
   uint64_t spsr_el1;
   asm volatile("mrs %0, SPSR_EL1" : "=r"(spsr_el1));
 
-  const Exception ex = get_current_exception();
-  printk("Current exception lvl: %d\n", get_exception_level());
+  const Exception ex = ExceptionManager::get_instance().get_current_exception();
+  //printk("Current exception lvl: %d\n", get_exception_level());
   printk("Saved Program Status Register: 0x%x\n", spsr_el1);
   printk("Exception return address: 0x%x\n", ex.ret_addr);
   printk("Exception class (EC): 0x%x\n", ex.ec);
@@ -55,7 +52,8 @@ void ExceptionManager::handle_exception(const size_t number,
   switch (ex.ec) {
     case 0b10101:  // SVC instruction execution in AArch64 state
       if (ex.iss == 0) {
-        syscall(number, arg1, arg2, arg3, arg4, arg5, arg6);
+        syscall(x0, x1, x2, x3, x4, x5);
+        asm volatile("eret");
       }
       break;
 
