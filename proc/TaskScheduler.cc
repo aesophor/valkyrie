@@ -19,6 +19,10 @@ void exit() {
   TaskScheduler::get_instance().mark_as_zombie(Task::get_current());
 }
 
+int exec(const char* name, char *const argv[]) {
+
+}
+
 void func() {
   for (int i = 0; i < 10; ++i) {
     printf("pid: %d %d\n", Task::get_current().get_pid(), i);
