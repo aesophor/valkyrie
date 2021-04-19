@@ -23,8 +23,6 @@ class Kernel {
   template <typename... Args>
   [[noreturn]] static void panic(const char* fmt, Args&&... args);
 
-  Initramfs& get_initramfs();
-
  private:
   Kernel();
 
@@ -37,7 +35,7 @@ class Kernel {
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
   TaskScheduler& _task_scheduler;
-  Initramfs _initramfs;
+  Initramfs& _initramfs;
 };
 
 

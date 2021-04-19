@@ -21,28 +21,53 @@ class Task {
   };
 
   // Constructor
-  Task(void (*entry_point)());
+  Task(void *entry_point);
 
   // Destructor
-  ~Task() = default;
+  ~Task();
 
-  static Task* get_current();
+  static Task& get_current();
   static void  set_current(const Task* t);
 
-  static void* get_task_n_stack_bottom(const int pid);
-  static void* get_task_n_stack_top(const int pid);
+  void set_state(Task::State state) {
+    _state = state;
+  }
 
   uint32_t get_pid() const;
+
+  int get_time_slice() const {
+    return _time_slice;
+  }
+
+  void reduce_time_slice() {
+    _time_slice -= 1;
+  }
+
 
  private:
   static uint32_t _next_pid;
 
+  struct Context {
+    uint64_t x19;
+    uint64_t x20;
+    uint64_t x21;
+    uint64_t x22;
+    uint64_t x23;
+    uint64_t x24;
+    uint64_t x25;
+    uint64_t x26;
+    uint64_t x27;
+    uint64_t x28;
+    uint64_t fp;
+    uint64_t lr;
+    uint64_t sp;
+    uint64_t pc;
+  } _context;
+
   Task::State _state;
   uint32_t _pid;
-  void (*_entry_point)();
-  void* _stack_top;
-  void* _stack_bottom;
-  void* _stack_pointer;
+  int _time_slice;
+  void* _stack_page;
 };
 
 }  // namespace valkyrie::kernel

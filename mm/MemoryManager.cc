@@ -14,6 +14,10 @@ MemoryManager::MemoryManager()
       _asan() {}
 
 
+void* MemoryManager::get_free_page() {
+  return _page_frame_allocator.allocate_one_page_frame();
+}
+
 void* MemoryManager::kmalloc(size_t size) {
   // FIXME: clean up this shit ... ( ´•̥̥̥ω•̥̥̥` ) 
   if (size +

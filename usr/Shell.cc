@@ -72,7 +72,7 @@ void run_shell() {
       String filename = _buf;
  
       size_t filesize = 0;
-      const char* base = Kernel::get_instance().get_initramfs().read(_buf, &filesize);
+      const char* base = Initramfs::get_instance().read(_buf, &filesize);
       ELF elf(base, filesize);
       printf("filesize = %d\n", filesize);
 

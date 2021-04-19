@@ -3,7 +3,7 @@
 #define VALKYRIE_STRING_H_
 
 #include <Iterator.h>
-#include <UniquePtr.h>
+#include <Memory.h>
 #include <libs/CString.h>
 
 namespace valkyrie::kernel {

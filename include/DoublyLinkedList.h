@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_DOUBLY_LINKED_LIST_H_
 #define VALKYRIE_DOUBLY_LINKED_LIST_H_
 
+#include <Functional.h>
 #include <Memory.h>
 #include <kernel/Compiler.h>
 
@@ -48,6 +49,28 @@ class DoublyLinkedList {
       node = node->next;
     }
     list_del_entry(node);
+  }
+  
+  void remove(const T& val) {
+    Node* node = _head->next;
+    while (node != _head.get()) {
+      if (node->data == val) {
+        list_del_entry(node);
+        return;
+      }
+      node = node->next;
+    }
+  }
+
+  void remove_if(Function<bool (const T&)> predicate) {
+    Node* node = _head->next;
+    while (node != _head.get()) {
+      if (predicate(node->data)) {
+        list_del_entry(node);
+        return;
+      }
+      node = node->next;
+    }
   }
 
   void clear() {
