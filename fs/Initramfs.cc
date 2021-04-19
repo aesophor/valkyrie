@@ -3,6 +3,11 @@
 
 namespace valkyrie::kernel {
 
+Initramfs& Initramfs::get_instance() {
+  static Initramfs instance;
+  return instance;
+}
+
 Initramfs::Initramfs() : _archive(CPIO_ARCHIVE_ADDR) {}
 
 

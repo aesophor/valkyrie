@@ -67,11 +67,11 @@ class BasicIterator {
 
 
   static BasicIterator begin(Container& container) {
-    return { container, 0 };
+    return {container, 0};
   }
 
   static BasicIterator end(Container& container) {
-    return { container, container.size() };
+    return {container, container.size()};
   }
 
 

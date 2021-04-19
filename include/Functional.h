@@ -24,12 +24,12 @@ class Function<ReturnType(Args...)> {
 
   // Constructor from aribtrary type T where
   // T::operator() is defined.
-  template <Callable T>
+  template <typename T>
   Function(T t) {
     *this = t;
   }
   
-  template <Callable T>
+  template <typename T>
   Function& operator =(T t) {
     _callable = make_shared<CallableImpl<T>>(t);
     return *this;

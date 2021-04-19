@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_TASK_SCHEDULER_H_
 #define VALKYRIE_TASK_SCHEDULER_H_
 
-#include <Deque.h>
+#include <DoublyLinkedList.h>
 #include <proc/Task.h>
 
 namespace valkyrie::kernel {
@@ -16,12 +16,16 @@ class TaskScheduler {
   void run();
 
   void enqueue_task(UniquePtr<Task> task);
-  void switch_to(Task* prev, Task* next);
+  void remove_task(Task* task);
+  void mark_as_zombie(Task& task);
+  void schedule();
+  void reap_zombies();
 
  private:
   TaskScheduler();
 
-  Deque<UniquePtr<Task>> _run_queue;
+  DoublyLinkedList<UniquePtr<Task>> _run_queue;
+  DoublyLinkedList<Task*> _zombies;
 };
 
 }  // namespace valkyrie::kernel

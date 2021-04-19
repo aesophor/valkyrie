@@ -1,13 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
-#include <usr/Shell.h>
-
-extern "C" [[noreturn]] void _halt(void);
-
 namespace valkyrie::kernel {
-
-extern void __run_unit_tests();
 
 Kernel& Kernel::get_instance() {
   static Kernel instance;
@@ -21,30 +15,17 @@ Kernel::Kernel()
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
       _task_scheduler(TaskScheduler::get_instance()),
-      _initramfs() {}
+      _initramfs(Initramfs::get_instance()) {}
 
 
 void Kernel::run() {
-  //_mini_uart.set_read_buffer_enabled(true);
-  //_mini_uart.set_write_buffer_enabled(true);
-
   print_banner();
   print_hardware_info();
 
   printk("switching to supervisor mode... (≧▽ ≦)\n");
   _exception_manager.switch_to_exception_level(1);
-  _exception_manager.enable();
 
-  // Run some unit tests...
-  //__run_unit_tests();
-
-  //printk("switching to user mode... (≧▽ ≦)\n");
-  //_exception_manager.switch_to_exception_level(0, /*new_sp=*/0x20000);
-
-  // Lab1 SimpleShell
-  //Shell().run();
-  
-  // Lab5 Thread and User Process
+  printk("starting task scheduler...\n");
   _task_scheduler.run();
 
   printk("you shouldn't have reached here :(\n");
@@ -69,11 +50,6 @@ void Kernel::print_hardware_info() {
   printk("ARM memory size: 0x%x\n", arm_memory_info.second);
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
-}
-
-
-Initramfs& Kernel::get_initramfs() {
-  return _initramfs;
 }
 
 }  // namespace valkyrie::kernel

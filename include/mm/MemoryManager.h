@@ -13,8 +13,10 @@ class MemoryManager {
   static MemoryManager& get_instance();
   ~MemoryManager() = default;
 
+  void* get_free_page();
   void* kmalloc(size_t size);
   void  kfree(void* p);
+
 
   void dump_page_frame_allocator_info() const;
   void dump_slob_allocator_info() const;
@@ -29,6 +31,10 @@ class MemoryManager {
 
 }  // namespace valkyrie::kernel
 
+
+extern "C" inline void* get_free_page() {
+  return valkyrie::kernel::MemoryManager::get_instance().get_free_page();
+}
 
 extern "C" inline void* kmalloc(const size_t requested_size) {
   return valkyrie::kernel::MemoryManager::get_instance().kmalloc(requested_size);

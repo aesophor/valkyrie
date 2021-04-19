@@ -5,6 +5,7 @@
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
 #include <kernel/TimerMultiplexer.h>
+#include <proc/TaskScheduler.h>
 
 extern "C" void* evt;
 
@@ -78,6 +79,16 @@ void ExceptionManager::handle_irq() {
   } else {
     TimerMultiplexer::get_instance().tick();
 
+    /*
+    auto& current = Task::get_current();
+    current.reduce_time_slice();
+
+    if (current.get_time_slice() <= 0) {
+      TaskScheduler::get_instance().schedule();
+    }
+    */
+
+    /*
     auto task = []() { printf("ok\n"); };
     _tasklet_scheduler.add_tasklet(task);
 
@@ -85,6 +96,7 @@ void ExceptionManager::handle_irq() {
     // with interrupts enabled.
     enable();
     _tasklet_scheduler.finish_all();
+    */
   }
 }
 
@@ -126,7 +138,7 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       // Setup EL0 stack
       asm volatile("msr SP_EL0, %0" :: "r" (stack_pointer));
       // Setup SPSR_EL1 (Saved Processor Status Register)
-      asm volatile("msr SPSR_EL1, %0" :: "r" (0x3c0));
+      asm volatile("msr SPSR_EL1, %0" :: "r" (0));
       // Setup ELR_EL1
       asm volatile("msr ELR_EL1, %0" :: "r" (return_address));
       break;
