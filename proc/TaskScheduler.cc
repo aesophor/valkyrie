@@ -5,6 +5,7 @@
 #include <dev/Console.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
+#include <kernel/Syscall.h>
 #include <usr/Shell.h>
 
 extern "C" void switch_to(valkyrie::kernel::Task* prev,
@@ -12,24 +13,14 @@ extern "C" void switch_to(valkyrie::kernel::Task* prev,
 
 namespace valkyrie::kernel {
 
-void exit() {
-  // Mark current thread as zombie process,
-  // remove it from the _run_queue, and
-  // add it to _zombie_list.
-  TaskScheduler::get_instance().mark_as_zombie(Task::get_current());
-}
-
-int exec(const char* name, char *const argv[]) {
-
-}
 
 void func() {
   for (int i = 0; i < 10; ++i) {
-    printf("pid: %d %d\n", Task::get_current().get_pid(), i);
+    printf("pid: %d %d\n", sys_getpid(), i);
     io::delay(1000000);
     TaskScheduler::get_instance().schedule();
   }
-  exit();
+  sys_exit();
 }
 
 void idle() {

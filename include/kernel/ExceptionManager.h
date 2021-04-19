@@ -34,14 +34,13 @@ class ExceptionManager final {
   void enable();
   void disable();
 
-  void handle_exception(const size_t number,
-                        const size_t arg1,
-                        const size_t arg2,
-                        const size_t arg3,
-                        const size_t arg4,
-                        const size_t arg5,
-                        const size_t arg6);
-  void handle_irq();
+  static void handle_exception(const size_t x0,
+                               const size_t x1,
+                               const size_t x2,
+                               const size_t x3,
+                               const size_t x4,
+                               const size_t x5);
+  static void handle_irq();
 
   uint8_t get_exception_level() const;
   void switch_to_exception_level(const uint8_t level,
