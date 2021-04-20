@@ -19,7 +19,12 @@ class DoublyLinkedList {
 
   // Destructor
   ~DoublyLinkedList() {
-    clear();
+    Node* ptr = _head->next;
+    while (ptr != _head.get()) {
+      Node* next = ptr->next;
+      delete ptr;
+      ptr = next;
+    }
   }
 
 
@@ -62,7 +67,7 @@ class DoublyLinkedList {
     }
   }
 
-  void remove_if(Function<bool (const T&)> predicate) {
+  void remove_if(Function<bool (T&)> predicate) {
     Node* node = _head->next;
     while (node != _head.get()) {
       if (predicate(node->data)) {
@@ -74,13 +79,9 @@ class DoublyLinkedList {
   }
 
   void clear() {
-    Node* ptr = _head->next;
-    while (ptr != _head.get()) {
-      Node* next = ptr->next;
-      delete ptr;
-      ptr = next;
+    while (!empty()) {
+      pop_front();
     }
-    _size = 0;
   }
 
 

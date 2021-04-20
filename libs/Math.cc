@@ -38,4 +38,20 @@ int log2(int x) {
   return result;
 }
 
+size_t round_up_to_pow_of_2(size_t x) {
+  size_t result = 1;
+  while (result < x) {
+    result <<= 1;
+  }
+  return result;
+}
+
+size_t round_up_to_multiple_of_16(size_t x) {
+  size_t result = 16;
+  while (result < x) {
+    result += 16;
+  }
+  return result;
+}
+
 }  // namespace valkyrie::kernel

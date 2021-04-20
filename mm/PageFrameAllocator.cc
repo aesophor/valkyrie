@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/PageFrameAllocator.h>
 
+#include <Utility.h>
 #include <dev/Console.h>
 #include <kernel/Compiler.h>
 #include <kernel/Kernel.h>
@@ -266,14 +267,6 @@ PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
 
 size_t PageFrameAllocator::normalize_size(size_t size) {
   return round_up_to_pow_of_2(size);
-}
-
-size_t PageFrameAllocator::round_up_to_pow_of_2(size_t x) {
-  size_t result = 1;
-  while (result < x) {
-    result <<= 1;
-  }
-  return result;
 }
 
 

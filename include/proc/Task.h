@@ -21,10 +21,13 @@ class Task {
   };
 
   // Constructor
-  Task(void *entry_point);
+  Task(void *entry_point, const char* name);
 
   // Destructor
   ~Task();
+
+
+  int exec(void (*func)(), const char* const argv[]);
 
   static Task& get_current();
   static void  set_current(const Task* t);
@@ -41,6 +44,10 @@ class Task {
 
   void reduce_time_slice() {
     _time_slice -= 1;
+  }
+
+  const char* get_name() const {
+    return _name;
   }
 
 
@@ -67,7 +74,9 @@ class Task {
   Task::State _state;
   uint32_t _pid;
   int _time_slice;
+  void* _entry_point;
   void* _stack_page;
+  char _name[16];
 };
 
 }  // namespace valkyrie::kernel

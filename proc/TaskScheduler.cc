@@ -23,6 +23,17 @@ void func() {
   sys_exit();
 }
 
+void omg() {
+  printf("omg\n");
+  sys_exit();
+}
+
+void exec_test() {
+  const char *argv[] = {"omg", "-o", "arg2", nullptr};
+  sys_exec(omg, argv);
+  sys_exit();
+}
+
 void idle() {
   while (true) {
     TaskScheduler::get_instance().reap_zombies();
@@ -41,52 +52,59 @@ TaskScheduler::TaskScheduler()
 
 
 void TaskScheduler::run() {
-  //printk("scheduler: added shell task\n");
-  //enqueue_task(make_unique<Task>(reinterpret_cast<void*>(run_shell)));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle)));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func)));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func)));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func"));
 
   if (_run_queue.empty()) {
-    Kernel::panic("No working init found\n");
+    Kernel::panic("No working init found.\n");
   }
-
   switch_to(nullptr, _run_queue.front().get());
 }
 
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
-  printk("scheduler: added a thread\n");
   _run_queue.push_back(move(task));
+  printk("scheduler: added a thread 0x%x\n", _run_queue.back().get());
 }
 
-void TaskScheduler::remove_task(Task* task) {
-  printk("scheduler: removing thread (pid = %d)\n", task->get_pid());
-  _run_queue.remove_if([task](const auto& t) {
-    return t.get() == task;
+UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
+  printk("scheduler: removing thread 0x%x (pid = %d)\n", &task, task.get_pid());
+
+  UniquePtr<Task> removed_task;
+
+  _run_queue.remove_if([&removed_task, &task](auto& t) {
+    return t.get() == &task &&
+           (removed_task = move(t), true);
   });
+  return removed_task;
 }
 
 void TaskScheduler::mark_as_zombie(Task& task) {
+  printk("marking 0x%x as zombie\n", &task);
   task.set_state(Task::State::ZOMBIE);
-  _zombies.push_back(&task);
+  _zombies.push_back(remove_task(task));
 }
 
 void TaskScheduler::schedule() {
-  // Move the first task in runqueue to the end.
-  auto task = move(_run_queue.front());
-  _run_queue.pop_front();
-  _run_queue.push_back(move(task));
+  if (unlikely(_run_queue.empty())) {
+    Kernel::panic("_run_queue is empty.\n");
+  }
+
+  if (likely(_run_queue.size() > 1)) {
+    // Move the first task in runqueue to the end.
+    auto task = move(_run_queue.front());
+    _run_queue.pop_front();
+    _run_queue.push_back(move(task));
+  }
 
   // Run the next task.
   switch_to(_run_queue.back().get(), _run_queue.front().get());
 }
 
 void TaskScheduler::reap_zombies() {
-  while (!_zombies.empty()) {
-    Task* task = _zombies.front();
-    remove_task(task);
-    _zombies.pop_front();
+  if (!_zombies.empty()) {
+    printk("reaping %d zombies\n", _zombies.size());
+    _zombies.clear();
   }
 }
 
