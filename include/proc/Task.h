@@ -16,7 +16,7 @@ class Task {
     CREATED,
     RUNNABLE,
     WAITING,
-    ZOMBIE,
+    TERMINATED,
     SIZE
   };
 
@@ -28,15 +28,22 @@ class Task {
 
 
   int exec(void (*func)(), const char* const argv[]);
+  void exit();
 
   static Task& get_current();
   static void  set_current(const Task* t);
+
+  Task::State get_state() const {
+    return _state;
+  }
 
   void set_state(Task::State state) {
     _state = state;
   }
 
-  uint32_t get_pid() const;
+  uint32_t get_pid() const {
+    return _pid;
+  }
 
   int get_time_slice() const {
     return _time_slice;

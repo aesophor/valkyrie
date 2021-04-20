@@ -17,8 +17,8 @@ class TaskScheduler {
 
   void enqueue_task(UniquePtr<Task> task);
   UniquePtr<Task> remove_task(const Task& task);
-  void mark_as_zombie(Task& task);
   void schedule();
+  void mark_terminated(Task& task);
   void reap_zombies();
 
  private:

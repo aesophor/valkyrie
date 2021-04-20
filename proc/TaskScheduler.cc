@@ -20,7 +20,9 @@ void func() {
     io::delay(1000000);
     TaskScheduler::get_instance().schedule();
   }
+  printf("thread 0x%x is terminating...\n", &Task::get_current());
   sys_exit();
+  Kernel::panic("NOOO\n");
 }
 
 void omg() {
@@ -53,7 +55,9 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func1"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func2"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func3"));
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
@@ -79,11 +83,6 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
   return removed_task;
 }
 
-void TaskScheduler::mark_as_zombie(Task& task) {
-  printk("marking 0x%x as zombie\n", &task);
-  task.set_state(Task::State::ZOMBIE);
-  _zombies.push_back(remove_task(task));
-}
 
 void TaskScheduler::schedule() {
   if (unlikely(_run_queue.empty())) {
@@ -98,7 +97,12 @@ void TaskScheduler::schedule() {
   }
 
   // Run the next task.
-  switch_to(_run_queue.back().get(), _run_queue.front().get());
+  switch_to(&Task::get_current(), _run_queue.front().get());
+}
+
+void TaskScheduler::mark_terminated(Task& task) {
+  task.set_state(Task::State::TERMINATED);
+  _zombies.push_back(remove_task(task));
 }
 
 void TaskScheduler::reap_zombies() {
