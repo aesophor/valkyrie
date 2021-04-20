@@ -21,13 +21,13 @@ class Task {
   };
 
   // Constructor
-  Task(void *entry_point, const char* name);
+  Task(void* entry_point, const char* name);
 
   // Destructor
   ~Task();
 
 
-  int exec(void (*func)(), const char* const argv[]);
+  int exec(void (*func)(), const char* const _argv[]);
   void exit();
 
   static Task& get_current();

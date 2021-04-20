@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <proc/Task.h>
 
+#include <String.h>
 #include <dev/Console.h>
 #include <libs/CString.h>
 #include <libs/Math.h>
@@ -23,12 +24,12 @@ void Task::set_current(const Task* t) {
 }
 
 
-Task::Task(void *entry_point, const char* name)
+Task::Task(void* entry_point, const char* name)
     : _context(),
       _state(Task::State::CREATED),
       _pid(Task::_next_pid++),
       _time_slice(3),
-      _entry_point(entry_point),
+      _entry_point(reinterpret_cast<void*>(entry_point)),
       _stack_page(get_free_page()),
       _name() {
   _context.lr = reinterpret_cast<uint64_t>(entry_point);
@@ -43,36 +44,45 @@ Task::~Task() {
 }
 
 
-int Task::exec(void (*func)(), const char* const argv[]) {
+int Task::exec(void (*func)(), const char* const _argv[]) {
   // Construct the argv chain.
   size_t sp = reinterpret_cast<size_t>(_stack_page) -
               PageFrameAllocator::get_block_header_size() +
               PAGE_SIZE;
 
   int argc = 0;
-  const char* s = argv[0];
-  char* addresses[argc];
+  const char* s = _argv[0];
 
   while (s) {
-    s = argv[++argc];
+    s = _argv[++argc];
   }
 
+  String argv[argc];
+
+  for (int i = 0; i < argc; i++) {
+    argv[i] = _argv[i];
+  }
+
+  char* addresses[argc];
+
   for (int i = argc - 1; i >= 0; i--) {
-    size_t len = strlen(argv[i]) + 1;
+    size_t len = argv[i].size() + 1;
     len = round_up_to_multiple_of_16(len);
     sp -= len;
     char* s = reinterpret_cast<char*>(sp);
-    strcpy(s, argv[i]);
+    strcpy(s, argv[i].c_str());
     addresses[i] = s;
+    printf("argv[i] = %s\n", s);
   }
 
 
   sp -= round_up_to_multiple_of_16(sizeof(char*) * (argc + 2));
   char** new_argv = reinterpret_cast<char**>(sp);
-  new_argv[0] = new_argv[1];
-  new_argv[1] = addresses[0];
-  new_argv[2] = addresses[1];
-  new_argv[3] = nullptr;
+  //new_argv[0] = new_argv[1];
+  for (int i = 0; i < argc; i++) {
+    new_argv[i] = addresses[i];
+  }
+  new_argv[argc] = nullptr;
 
   sp -= 16;
   int* new_argc = reinterpret_cast<int*>(sp);
@@ -83,7 +93,10 @@ int Task::exec(void (*func)(), const char* const argv[]) {
 
   // Jump to the entry point.
   printf("trying to exec the new program...\n");
-  func();
+  asm volatile("mov x0, %0\n\
+                mov x1, %1\n\
+                mov lr, %2\n\
+                blr lr" :: "r" (argc), "r" (new_argv), "r" (func));
 
   return -1;
 }

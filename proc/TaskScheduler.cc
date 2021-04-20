@@ -25,15 +25,19 @@ void func() {
   Kernel::panic("NOOO\n");
 }
 
-void omg() {
-  printf("omg\n");
+int main(int argc, char** argv) {
+  printf("Argv Test (pid %d), argc = %d, argv = 0x%x\n", sys_getpid(), argc, argv);
+  for (int i = 0; i < argc; ++i) {
+    printf("argv[%d] = %s\n", i, argv[i]);
+  }
   sys_exit();
+  return 0;
 }
 
 void exec_test() {
-  const char *argv[] = {"omg", "-o", "arg2", nullptr};
-  sys_exec(omg, argv);
-  sys_exit();
+  const char *argv[] = {"omg", "-o", "arg2", "damn_my_gg_ininder", nullptr};
+  sys_exec(reinterpret_cast<void (*)()>(main), argv);
+  Kernel::panic("sys_exec faild\n");
 }
 
 void idle() {
@@ -55,9 +59,7 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func1"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func2"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(func), "func3"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(exec_test), "exec_test"));
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
