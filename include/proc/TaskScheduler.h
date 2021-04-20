@@ -16,7 +16,7 @@ class TaskScheduler {
   void run();
 
   void enqueue_task(UniquePtr<Task> task);
-  void remove_task(Task* task);
+  UniquePtr<Task> remove_task(const Task& task);
   void mark_as_zombie(Task& task);
   void schedule();
   void reap_zombies();
@@ -25,7 +25,7 @@ class TaskScheduler {
   TaskScheduler();
 
   DoublyLinkedList<UniquePtr<Task>> _run_queue;
-  DoublyLinkedList<Task*> _zombies;
+  DoublyLinkedList<UniquePtr<Task>> _zombies;
 };
 
 }  // namespace valkyrie::kernel

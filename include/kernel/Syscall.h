@@ -25,7 +25,7 @@ extern const size_t __syscall_table[Syscall::__NR_syscall];
 size_t sys_uart_read(char buf[], size_t size);
 size_t sys_uart_write(const char buf[], size_t size);
 int sys_fork();
-int sys_exec(const char* name, char *const argv[]);
+int sys_exec(void (*func)(), const char *const argv[]);
 void sys_exit();
 int sys_getpid();
 /*

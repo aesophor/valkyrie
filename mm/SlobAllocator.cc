@@ -5,6 +5,7 @@
 #include <dev/Console.h>
 #include <kernel/Compiler.h>
 #include <kernel/Kernel.h>
+#include <libs/Math.h>
 
 namespace valkyrie::kernel {
 
@@ -340,14 +341,6 @@ int SlobAllocator::get_bin_index(size_t size) {
 
 size_t SlobAllocator::normalize_size(size_t size) {
   return round_up_to_multiple_of_16(max(size, CHUNK_SMALLEST_SIZE));
-}
-
-size_t SlobAllocator::round_up_to_multiple_of_16(size_t x) {
-  size_t result = 16;
-  while (result < x) {
-    result += 16;
-  }
-  return result;
 }
 
 

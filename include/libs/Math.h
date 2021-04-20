@@ -9,6 +9,8 @@ namespace valkyrie::kernel {
 int pow(int base, int exponent);
 int sqrt(int x);
 int log2(int x);
+size_t round_up_to_pow_of_2(size_t x);
+size_t round_up_to_multiple_of_16(size_t x);
 
 }  // namespace valkyrie::kernel
 
