@@ -44,17 +44,8 @@ int sys_exec(void (*func)(), const char* const argv[]) {
 }
 
 void sys_exit() {
-  // Mark the current task as a zombie process,
-  // remove it from the runqueue and add it to the zombie list.
-  TaskScheduler::get_instance().mark_as_zombie(Task::get_current());
+  TaskScheduler::get_instance().mark_terminated(Task::get_current());
   TaskScheduler::get_instance().schedule();
-  
-  /*
-  while (true) {
-    printf("88\n");
-    TaskScheduler::get_instance().schedule();
-  }
-  */
 }
 
 int sys_getpid() {

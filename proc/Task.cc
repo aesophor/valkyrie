@@ -88,8 +88,8 @@ int Task::exec(void (*func)(), const char* const argv[]) {
   return -1;
 }
 
-uint32_t Task::get_pid() const {
-  return _pid;
+void Task::exit() {
+  _state = Task::State::TERMINATED;
 }
 
 }  // namespace valkyrie::kernel
