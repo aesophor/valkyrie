@@ -5,6 +5,9 @@
 switch_to:
   cmp x0, #0
   beq _restore
+  
+  cmp x0, x1
+  beq _restore
 
 _save:
   stp x19, x20, [x0, 16 * 0]
