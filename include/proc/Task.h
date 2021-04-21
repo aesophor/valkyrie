@@ -12,6 +12,8 @@ namespace valkyrie::kernel {
 
 class Task {
  public:
+  friend class TaskScheduler;
+
   enum class State {
     CREATED,
     RUNNABLE,
@@ -27,6 +29,7 @@ class Task {
   ~Task();
 
 
+  int fork() const;
   int exec(void (*func)(), const char* const _argv[]);
   void exit();
 
@@ -75,7 +78,6 @@ class Task {
     uint64_t fp;
     uint64_t lr;
     uint64_t sp;
-    uint64_t pc;
   } _context;
 
   Task::State _state;

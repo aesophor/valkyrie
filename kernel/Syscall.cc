@@ -36,7 +36,7 @@ size_t sys_uart_write(const char buf[], size_t size) {
 }
 
 int sys_fork() {
-  return 0;
+  return Task::get_current().fork();
 }
 
 int sys_exec(void (*func)(), const char* const argv[]) {
@@ -44,8 +44,10 @@ int sys_exec(void (*func)(), const char* const argv[]) {
 }
 
 void sys_exit() {
-  TaskScheduler::get_instance().mark_terminated(Task::get_current());
-  TaskScheduler::get_instance().schedule();
+  auto& sched = TaskScheduler::get_instance();
+
+  sched.mark_terminated(Task::get_current());
+  sched.schedule();
 }
 
 int sys_getpid() {
