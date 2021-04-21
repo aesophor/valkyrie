@@ -42,9 +42,18 @@ Task::Task(void* entry_point, const char* name)
                 PageFrameAllocator::get_block_header_size() +
                 PAGE_SIZE;
   strcpy(_name, name);
+  printk("constructed thread 0x%x [%s] (pid = %d)\n",
+      this,
+      _name,
+      _pid);
 }
 
 Task::~Task() {
+  printk("destructing thread 0x%x [%s] (pid = %d)\n",
+      this,
+      _name,
+      _pid);
+
   kfree(_stack_page);
 }
 
@@ -58,36 +67,45 @@ int Task::fork() const {
 
   size_t sp_offset = _context.sp - reinterpret_cast<size_t>(_stack_page);;
 
-  printk("duplicating child task\n");
-  auto child = make_unique<Task>(_entry_point, _name);
+  {
+    printk("duplicating child task\n");
+    auto child = make_unique<Task>(_entry_point, _name);
 
-  // Copy stack page content
-  memcpy(child->_stack_page,
-         _stack_page,
-         PAGE_SIZE - PageFrameAllocator::get_block_header_size());
+    // Copy stack page content
+    printk("memcpy(0x%x, 0x%x, 0x%x)\n", child->_stack_page,
+        _stack_page,
+        PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
-  // Set parent's fork() return value to child's pid.
-  ret = child->_pid;
+    memcpy(child->_stack_page,
+        _stack_page,
+        PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
-  // Copy child's CPU context.
-  child->_context.x19 = _context.x19;
-  child->_context.x20 = _context.x20;
-  child->_context.x21 = _context.x21;
-  child->_context.x22 = _context.x22;
-  child->_context.x23 = _context.x23;
-  child->_context.x24 = _context.x24;
-  child->_context.x25 = _context.x25;
-  child->_context.x26 = _context.x26;
-  child->_context.x27 = _context.x27;
-  child->_context.x28 = _context.x28;
-  child->_context.fp = _context.fp;
-  child->_context.lr = reinterpret_cast<uint64_t>(&&out);
-  child->_context.sp = reinterpret_cast<uint64_t>(child->_stack_page) + sp_offset;
+    // Set parent's fork() return value to child's pid.
+    ret = child->_pid;
 
-  // Enqueue the child task.
-  TaskScheduler::get_instance().enqueue_task(move(child));
+    // Copy child's CPU context.
+    child->_context.x19 = _context.x19;
+    child->_context.x20 = _context.x20;
+    child->_context.x21 = _context.x21;
+    child->_context.x22 = _context.x22;
+    child->_context.x23 = _context.x23;
+    child->_context.x24 = _context.x24;
+    child->_context.x25 = _context.x25;
+    child->_context.x26 = _context.x26;
+    child->_context.x27 = _context.x27;
+    child->_context.x28 = _context.x28;
+    child->_context.fp = _context.fp;
+    child->_context.lr = reinterpret_cast<uint64_t>(&&child_pc);
+    child->_context.sp = reinterpret_cast<uint64_t>(child->_stack_page) + sp_offset;
 
-out:
+    // Enqueue the child task.
+    printk("enque task...\n");
+    TaskScheduler::get_instance().enqueue_task(move(child));
+  }
+
+  // The child will start executing from here.
+child_pc:
+  printk("child ready to return!\n");
   return ret;
 }
 

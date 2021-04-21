@@ -47,15 +47,13 @@ void fork_test() {
   int ret = 0;
   if ((ret = sys_fork()) == 0) { // child
     printf("pid: %d, cnt: %d, ptr: 0x%x\n", sys_getpid(), cnt, &cnt);
-    /*
     ++cnt;
     sys_fork();
     while (cnt < 5) {
-      printf("pid: %d, cnt: %d, ptr: %p\n", sys_getpid(), cnt, &cnt);
+      printf("pid: %d, cnt: %d, ptr: 0x%x\n", sys_getpid(), cnt, &cnt);
       io::delay(1000000);
       ++cnt;
     }
-    */
     printf("child terminating...\n");
   } else {
     printf("parent here, pid %d, child %d\n", sys_getpid(), ret);
@@ -96,12 +94,17 @@ void TaskScheduler::run() {
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
   _run_queue.push_back(move(task));
-  printk("scheduler: added a thread 0x%x (pid = %d)\n", _run_queue.back().get(),
+  printk("scheduler: added a thread 0x%x [%s] (pid = %d)\n",
+      _run_queue.back().get(),
+      _run_queue.back()->get_name(),
       _run_queue.back()->get_pid());
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
-  printk("scheduler: removing thread 0x%x (pid = %d)\n", &task, task.get_pid());
+  printk("scheduler: removing thread 0x%x [%s] (pid = %d)\n",
+      &task,
+      task.get_name(),
+      task.get_pid());
 
   UniquePtr<Task> removed_task;
 
@@ -109,10 +112,6 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
     return t.get() == &task &&
            (removed_task = move(t), true);
   });
-
-  if (unlikely(!removed_task)) {
-    Kernel::panic("TaskScheduler::remove_task(0x%x) failed\n", &task);
-  }
 
   return removed_task;
 }
