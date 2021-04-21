@@ -3,9 +3,14 @@
 
 #include <String.h>
 #include <dev/Console.h>
+#include <kernel/Kernel.h>
 #include <libs/CString.h>
 #include <libs/Math.h>
 #include <mm/MemoryManager.h>
+#include <proc/TaskScheduler.h>
+
+extern "C" void switch_to(valkyrie::kernel::Task* prev,
+                          valkyrie::kernel::Task* next);
 
 namespace valkyrie::kernel {
 
@@ -43,6 +48,48 @@ Task::~Task() {
   kfree(_stack_page);
 }
 
+
+int Task::fork() const {
+  size_t ret = 0;
+
+  // Duplicate task
+  printk("saving parent cpu context\n");
+  switch_to(&Task::get_current(), nullptr);  // save parent cpu context
+
+  size_t sp_offset = _context.sp - reinterpret_cast<size_t>(_stack_page);;
+
+  printk("duplicating child task\n");
+  auto child = make_unique<Task>(_entry_point, _name);
+
+  // Copy stack page content
+  memcpy(child->_stack_page,
+         _stack_page,
+         PAGE_SIZE - PageFrameAllocator::get_block_header_size());
+
+  // Set parent's fork() return value to child's pid.
+  ret = child->_pid;
+
+  // Copy child's CPU context.
+  child->_context.x19 = _context.x19;
+  child->_context.x20 = _context.x20;
+  child->_context.x21 = _context.x21;
+  child->_context.x22 = _context.x22;
+  child->_context.x23 = _context.x23;
+  child->_context.x24 = _context.x24;
+  child->_context.x25 = _context.x25;
+  child->_context.x26 = _context.x26;
+  child->_context.x27 = _context.x27;
+  child->_context.x28 = _context.x28;
+  child->_context.fp = _context.fp;
+  child->_context.lr = reinterpret_cast<uint64_t>(&&out);
+  child->_context.sp = reinterpret_cast<uint64_t>(child->_stack_page) + sp_offset;
+
+  // Enqueue the child task.
+  TaskScheduler::get_instance().enqueue_task(move(child));
+
+out:
+  return ret;
+}
 
 int Task::exec(void (*func)(), const char* const _argv[]) {
   // Construct the argv chain.

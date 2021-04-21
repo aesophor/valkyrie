@@ -31,13 +31,39 @@ int main(int argc, char** argv) {
     printf("argv[%d] = %s\n", i, argv[i]);
   }
   sys_exit();
+  Kernel::panic("sys_exit failed\n");
   return 0;
 }
 
 void exec_test() {
-  const char *argv[] = {"omg", "-o", "arg2", "damn_my_gg_ininder", nullptr};
+  const char *argv[] = {"omg", "-o", "arg2", "holy_shit", nullptr};
   sys_exec(reinterpret_cast<void (*)()>(main), argv);
   Kernel::panic("sys_exec faild\n");
+}
+
+void fork_test() {
+  printf("Fork Test, pid %d\n", sys_getpid());
+  int cnt = 1;
+  int ret = 0;
+  if ((ret = sys_fork()) == 0) { // child
+    printf("pid: %d, cnt: %d, ptr: 0x%x\n", sys_getpid(), cnt, &cnt);
+    /*
+    ++cnt;
+    sys_fork();
+    while (cnt < 5) {
+      printf("pid: %d, cnt: %d, ptr: %p\n", sys_getpid(), cnt, &cnt);
+      io::delay(1000000);
+      ++cnt;
+    }
+    */
+    printf("child terminating...\n");
+  } else {
+    printf("parent here, pid %d, child %d\n", sys_getpid(), ret);
+    printf("parent terminating...\n");
+  }
+
+  sys_exit();
+  Kernel::panic("?__?\n");
 }
 
 void idle() {
@@ -59,7 +85,7 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(exec_test), "exec_test"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(fork_test), "fork_test"));
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
@@ -70,7 +96,8 @@ void TaskScheduler::run() {
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
   _run_queue.push_back(move(task));
-  printk("scheduler: added a thread 0x%x\n", _run_queue.back().get());
+  printk("scheduler: added a thread 0x%x (pid = %d)\n", _run_queue.back().get(),
+      _run_queue.back()->get_pid());
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
@@ -82,6 +109,11 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
     return t.get() == &task &&
            (removed_task = move(t), true);
   });
+
+  if (unlikely(!removed_task)) {
+    Kernel::panic("TaskScheduler::remove_task(0x%x) failed\n", &task);
+  }
+
   return removed_task;
 }
 
@@ -97,6 +129,15 @@ void TaskScheduler::schedule() {
     _run_queue.pop_front();
     _run_queue.push_back(move(task));
   }
+
+  /*
+  printf("ctx switch: 0x%x (%s) -> 0x%x (%s): 0x%x\n",
+      _run_queue.back().get(),
+      _run_queue.back()->get_name(),
+      _run_queue.front().get(),
+      _run_queue.front()->get_name(),
+      _run_queue.front()->_context.lr);
+  */
 
   // Run the next task.
   switch_to(&Task::get_current(), _run_queue.front().get());
