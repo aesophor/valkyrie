@@ -64,6 +64,22 @@ void fork_test() {
   Kernel::panic("?__?\n");
 }
 
+int argv_test(int argc, char** argv) {
+  printf("Argv Test (pid %d), argc = %d, argv = 0x%x\n", sys_getpid(), argc, argv);
+  for (int i = 0; i < argc; ++i) {
+    printf("argv[%d] = %s\n", i, argv[i]);
+  }
+  const char *fork_argv[] = {"fork_test", 0};
+  sys_exec(fork_test, fork_argv);
+  Kernel::panic("sys_exec failed\n");
+  return 0;
+}
+
+void argv_test_driver() {
+  const char *fork_argv[] = {"argv_test", 0};
+  sys_exec(reinterpret_cast<void(*)()>(argv_test), fork_argv);
+}
+
 void idle() {
   while (true) {
     TaskScheduler::get_instance().reap_zombies();
@@ -83,7 +99,7 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(fork_test), "fork_test"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(argv_test_driver), "argv_test_driver"));
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
