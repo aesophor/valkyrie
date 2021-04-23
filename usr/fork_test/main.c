@@ -12,23 +12,32 @@ int start_main() {
                 bl main");
 }
 
+void fork_test() {
+  printf("Fork Test, pid %d\n", sys_getpid());
+  int cnt = 1;
+  int ret = 0;
+
+  if ((ret = sys_fork()) == 0) { // child
+    printf("pid: %d, cnt: %d, ptr: 0x%x\n", sys_getpid(), cnt, &cnt);
+    ++cnt;
+    sys_fork();
+    while (cnt < 5) {
+      printf("pid: %d, cnt: %d, ptr: 0x%x\n", sys_getpid(), cnt, &cnt);
+      ++cnt;
+    }
+    printf("child terminating...\n");
+  } else {
+    printf("parent here, pid %d, child %d\n", sys_getpid(), ret);
+    printf("parent terminating...\n");
+  }
+}
+
+
 int main(int argc, char **argv) {
   init_printf(nullptr, putchar);
 
-  char fmt[64] = "[init] started... pid: %d\n";
-  printf(fmt, sys_getpid());
-
-  printf("argc = %d\n", argc);
-
-  for (int i = 0; i < argc; ++i) {
-    printf("%s\n", argv[i]);
-  }
-
-  const char *fork_argv[] = {"bin/fork_test", 0};
-  sys_exec("bin/fork_test", fork_argv);
-
+  fork_test();
   sys_exit();
-  return 0;
 }
 
 extern "C" void sys_uart_putchar(const char c) {

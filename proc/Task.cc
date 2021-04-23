@@ -84,8 +84,12 @@ int Task::fork() {
         PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
     memcpy(child->_kstack_page,
-        _kstack_page,
-        PAGE_SIZE - PageFrameAllocator::get_block_header_size());
+           _kstack_page,
+           PAGE_SIZE - PageFrameAllocator::get_block_header_size());
+
+    memcpy(child->_ustack_page,
+           _ustack_page,
+           PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
     // Set parent's fork() return value to child's pid.
     ret = child->_pid;
