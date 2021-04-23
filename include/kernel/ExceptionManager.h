@@ -4,6 +4,7 @@
 
 #include <dev/IO.h>
 #include <kernel/TaskletScheduler.h>
+#include <proc/TrapFrame.h>
 
 #define IRQ_BASIC_PENDING  (MMIO_BASE + 0x0000B200)
 #define IRQ_PENDING_1      (MMIO_BASE + 0x0000B204)
@@ -34,12 +35,7 @@ class ExceptionManager final {
   void enable();
   void disable();
 
-  static void handle_exception(const size_t x0,
-                               const size_t x1,
-                               const size_t x2,
-                               const size_t x3,
-                               const size_t x4,
-                               const size_t x5);
+  static void handle_exception(TrapFrame* trap_frame);
   static void handle_irq();
 
   uint8_t get_exception_level() const;

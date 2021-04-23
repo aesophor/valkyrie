@@ -29,6 +29,7 @@ valkyrie:
 run-debug:
 	qemu-system-aarch64 -M raspi3b\
 		-kernel $(BUILD_DIR)/$(IMG)\
+		-initrd initramfs.cpio\
 		-display none\
 		-serial null\
 		-serial stdio\

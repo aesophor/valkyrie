@@ -42,10 +42,11 @@ Task::Task(void* entry_point, const char* name)
                 PageFrameAllocator::get_block_header_size() +
                 PAGE_SIZE;
   strcpy(_name, name);
-  printk("constructed thread 0x%x [%s] (pid = %d)\n",
+  printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x\n",
       this,
       _name,
-      _pid);
+      _pid,
+      _entry_point);
 }
 
 Task::~Task() {

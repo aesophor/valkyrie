@@ -22,6 +22,7 @@ class Task {
     SIZE
   };
 
+
   // Constructor
   Task(void* entry_point, const char* name);
 
@@ -64,6 +65,7 @@ class Task {
  private:
   static uint32_t _next_pid;
 
+
   struct Context {
     uint64_t x19;
     uint64_t x20;
@@ -82,6 +84,7 @@ class Task {
 
   Task::State _state;
   uint32_t _pid;
+  bool _is_kernel_thread;
   int _time_slice;
   void* _entry_point;
   void* _stack_page;

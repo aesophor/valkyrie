@@ -14,6 +14,7 @@ namespace valkyrie::kernel {
 const size_t __syscall_table[__NR_syscall] = {
   SYSCALL_DECL(sys_uart_read),
   SYSCALL_DECL(sys_uart_write),
+  SYSCALL_DECL(sys_uart_putchar),
   SYSCALL_DECL(sys_fork),
   SYSCALL_DECL(sys_exec),
   SYSCALL_DECL(sys_exit),
@@ -33,6 +34,10 @@ size_t sys_uart_write(const char buf[], size_t size) {
     MiniUART::get_instance().putchar(buf[i]);
   }
   return size;
+}
+
+void sys_uart_putchar(const char c) {
+  MiniUART::get_instance().putchar(c);
 }
 
 int sys_fork() {

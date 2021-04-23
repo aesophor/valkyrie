@@ -3,6 +3,8 @@
 
 #include <dev/IO.h>
 #include <dev/Console.h>
+#include <fs/Initramfs.h>
+#include <fs/ELF.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
@@ -45,6 +47,7 @@ void fork_test() {
   printf("Fork Test, pid %d\n", sys_getpid());
   int cnt = 1;
   int ret = 0;
+
   if ((ret = sys_fork()) == 0) { // child
     printf("pid: %d, cnt: %d, ptr: 0x%x\n", sys_getpid(), cnt, &cnt);
     ++cnt;
@@ -70,14 +73,24 @@ int argv_test(int argc, char** argv) {
     printf("argv[%d] = %s\n", i, argv[i]);
   }
   const char *fork_argv[] = {"fork_test", 0};
-  sys_exec(fork_test, fork_argv);
+  //sys_exec(fork_test, fork_argv);
+
+  asm volatile("mov x8, 4\n\
+                mov x0, %0\n\
+                mov x1, %1\n\
+                svc #0" :: "r" (fork_test), "r" (fork_argv));
+
   Kernel::panic("sys_exec failed\n");
   return 0;
 }
 
 void argv_test_driver() {
   const char *fork_argv[] = {"argv_test", 0};
-  sys_exec(reinterpret_cast<void(*)()>(argv_test), fork_argv);
+  asm volatile("mov x8, 4\n\
+                mov x0, %0\n\
+                mov x1, %1\n\
+                svc #0" :: "r" (argv_test), "r" (fork_argv));
+  //sys_exec(reinterpret_cast<void(*)()>(argv_test), fork_argv);
 }
 
 void idle() {
@@ -99,11 +112,23 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(argv_test_driver), "argv_test_driver"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(argv_test_driver), "argv_test"));
+
+  /*
+  size_t filesize;
+  const char* base = Initramfs::get_instance().read("bin/argv_test", &filesize);
+  ELF exe(base, filesize);
+
+  void* dest = reinterpret_cast<void*>(0x20000000);
+  exe.load_at(dest);
+
+  enqueue_task(make_unique<Task>(exe.get_entry_point(dest), "argv_test"));
+  */
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
   }
+
   switch_to(nullptr, _run_queue.front().get());
 }
 
