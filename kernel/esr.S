@@ -54,12 +54,17 @@
   add	sp, sp, REGISTER_SAVE_LOAD_BYTES
 .endm
 
+.macro set_x0_to_trapframe_addr
+  mov x0, sp
+.endm
+
 
 .section ".text"
 .global handle_exception
 handle_exception:
   save_cpu_context
-  bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEmmmmmm
+  set_x0_to_trapframe_addr
+  bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEPNS0_9TrapFrameE
   restore_cpu_context
   eret
 

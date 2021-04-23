@@ -5,12 +5,14 @@
 #include <Types.h>
 #include <dev/Console.h>
 #include <kernel/Compiler.h>
+#include <proc/TrapFrame.h>
 
 namespace valkyrie::kernel {
 
 enum Syscall {
   SYS_UART_READ,
   SYS_UART_WRITE,
+  SYS_UART_PUTCHAR,
   SYS_FORK,
   SYS_EXEC,
   SYS_EXIT,
@@ -24,6 +26,7 @@ extern const size_t __syscall_table[Syscall::__NR_syscall];
 // Individual system call declaration.
 size_t sys_uart_read(char buf[], size_t size);
 size_t sys_uart_write(const char buf[], size_t size);
+void sys_uart_putchar(const char c);
 int sys_fork();
 int sys_exec(void (*func)(), const char *const argv[]);
 void sys_exit();
@@ -41,14 +44,28 @@ void sys_timer_irq_disable();
 // the parameters are stored in x0 ~ x5,
 // and the return value will be stored in x0.
 template <typename... Args>
-size_t syscall(Args ...args) {
-  size_t id;
-  asm volatile("mov %0, x8" : "=r" (id));
-
+size_t syscall(uint64_t id, Args ...args) {
+  // Check if syscall id is valid.
   if (unlikely(id >= Syscall::__NR_syscall)) {
     printk("bad system call: (id=0x%x)\n", id);
-    return 0;
+    return -1;
   }
+
+  /*
+  auto& trap_frame = TrapFrame::get_instance();
+
+  printk("system call: 0x%x(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n",
+      id, args...);
+
+  printk("system call: 0x%x(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n",
+      trap_frame.get_x8(),
+      trap_frame.get_x0(),
+      trap_frame.get_x1(),
+      trap_frame.get_x2(),
+      trap_frame.get_x3(),
+      trap_frame.get_x4(),
+      trap_frame.get_x5());
+      */
 
   return reinterpret_cast<size_t (*)(Args...)>(__syscall_table[id])(args...);
 }

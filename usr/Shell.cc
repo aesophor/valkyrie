@@ -80,7 +80,7 @@ void run_shell() {
       gets(_buf);
       size_t dest_addr = atoi(_buf, 16);
       void* dest = reinterpret_cast<void*>(dest_addr);
-      void* entry = reinterpret_cast<void*>(dest_addr + sizeof(ELF::Header));
+      void* entry = reinterpret_cast<void*>(dest_addr + sizeof(ELF::FileHeader));
       memcpy(dest, base, filesize);
 
       printf("branching to 0x%x\n", entry);

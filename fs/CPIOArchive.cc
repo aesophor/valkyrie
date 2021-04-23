@@ -20,7 +20,7 @@ const char* CPIOArchive::get_entry_content(const char* pathname, size_t* size) c
   DirectoryEntry dentry;
 
   while ((dentry = DirectoryEntry(ptr))) {
-    printf("%s \t = %d\n", dentry.pathname, dentry.content_len);
+    //printf("%s \t = %d\n", dentry.pathname, dentry.content_len);
 
     if (!strcmp(pathname, dentry.pathname)) {
       if (size) {
