@@ -36,31 +36,29 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   size_t* stack_pointer;
   asm volatile("mov %0, sp" : "=r" (stack_pointer));
   printk("SP = 0x%x\n", stack_pointer);
-  //TrapFrame::get_instance().set_stack_pointer(stack_pointer + 12);
 
   uint64_t spsr_el1;
-  asm volatile("mrs %0, SPSR_EL1" : "=r"(spsr_el1));
-
+  asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
   const Exception ex = ExceptionManager::get_instance().get_current_exception();
-  //printk("Current exception lvl: %d\n", get_exception_level());
-  /*
-  printk("Saved Program Status Register: 0x%x\n", spsr_el1);
-  printk("Exception return address: 0x%x\n", ex.ret_addr);
-  printk("Exception class (EC): 0x%x\n", ex.ec);
-  printk("Instruction specific syndrome (ISS): 0x%x\n", ex.iss);
-  */
 
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (likely(ex.ec == 0b10101 && ex.iss == 0)) {
-    syscall(trap_frame->x8,
-            trap_frame->x0,
-            trap_frame->x1,
-            trap_frame->x2,
-            trap_frame->x3,
-            trap_frame->x4,
-            trap_frame->x5);
+    trap_frame->x0 = do_syscall(trap_frame->x8,
+                                trap_frame->x0,
+                                trap_frame->x1,
+                                trap_frame->x2,
+                                trap_frame->x3,
+                                trap_frame->x4,
+                                trap_frame->x5);
+    return;
   }
+
+  //printk("Current exception lvl: %d\n", get_exception_level());
+  printk("Saved Program Status Register: 0x%x\n", spsr_el1);
+  printk("Exception return address: 0x%x\n", ex.ret_addr);
+  printk("Exception class (EC): 0x%x\n", ex.ec);
+  printk("Instruction specific syndrome (ISS): 0x%x\n", ex.iss);
 
   // For ec and iss, see ARMv8 manual p.1877
   switch (ex.ec) {

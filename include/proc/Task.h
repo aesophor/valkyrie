@@ -30,7 +30,7 @@ class Task {
   ~Task();
 
 
-  int fork() const;
+  int fork();
   int exec(void (*func)(), const char* const _argv[]);
   void exit();
 
@@ -82,12 +82,12 @@ class Task {
     uint64_t sp;
   } _context;
 
+  Task* _parent;
   Task::State _state;
   uint32_t _pid;
-  bool _is_kernel_thread;
   int _time_slice;
   void* _entry_point;
-  void* _stack_page;
+  void* _kstack_page;
   char _name[16];
 };
 

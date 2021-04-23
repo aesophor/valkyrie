@@ -44,29 +44,14 @@ void sys_timer_irq_disable();
 // the parameters are stored in x0 ~ x5,
 // and the return value will be stored in x0.
 template <typename... Args>
-size_t syscall(uint64_t id, Args ...args) {
+size_t do_syscall(uint64_t id, Args ...args) {
   // Check if syscall id is valid.
   if (unlikely(id >= Syscall::__NR_syscall)) {
     printk("bad system call: (id=0x%x)\n", id);
     return -1;
   }
 
-  /*
-  auto& trap_frame = TrapFrame::get_instance();
-
-  printk("system call: 0x%x(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n",
-      id, args...);
-
-  printk("system call: 0x%x(0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n",
-      trap_frame.get_x8(),
-      trap_frame.get_x0(),
-      trap_frame.get_x1(),
-      trap_frame.get_x2(),
-      trap_frame.get_x3(),
-      trap_frame.get_x4(),
-      trap_frame.get_x5());
-      */
-
+  // Invoke the specified system call
   return reinterpret_cast<size_t (*)(Args...)>(__syscall_table[id])(args...);
 }
 

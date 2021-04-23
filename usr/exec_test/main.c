@@ -16,13 +16,14 @@ int main(int argc, char **argv) {
 */
 extern "C" void putchar(void*, char);
 extern "C" void sys_exit();
+extern "C" long long int sys_getpid();
 
 int main(int argc, char **argv) {
   init_printf(nullptr, putchar);
 
   int length = 30;
-  char fmt[64] = "MY GG is %dcm O M G\n";
-  printf(fmt, length);
+  char fmt[64] = "<pid: %d>  MY GG is %dcm O M G\n";
+  printf(fmt, sys_getpid(), length);
 
   sys_exit();
   return 0;
@@ -40,5 +41,10 @@ extern "C" void putchar(void*, char c) {
 
 extern "C" void sys_exit() {
   asm volatile("mov x8, 5\n\
+                svc #0");
+}
+
+extern "C" long long int sys_getpid() {
+  asm volatile("mov x8, 6\n\
                 svc #0");
 }
