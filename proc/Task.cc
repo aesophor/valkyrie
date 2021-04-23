@@ -3,7 +3,9 @@
 
 #include <String.h>
 #include <dev/Console.h>
-#include <kernel/Kernel.h>
+#include <fs/ELF.h>
+#include <fs/Initramfs.h>
+#include <kernel/ExceptionManager.h>
 #include <libs/CString.h>
 #include <libs/Math.h>
 #include <mm/MemoryManager.h>
@@ -37,6 +39,7 @@ Task::Task(void* entry_point, const char* name)
       _time_slice(3),
       _entry_point(reinterpret_cast<void*>(entry_point)),
       _kstack_page(get_free_page()),
+      _ustack_page(get_free_page()),
       _name() {
   _context.lr = reinterpret_cast<uint64_t>(entry_point);
   _context.sp = reinterpret_cast<uint64_t>(_kstack_page) -
@@ -57,6 +60,7 @@ Task::~Task() {
       _pid);
 
   kfree(_kstack_page);
+  kfree(_ustack_page);
 }
 
 
@@ -112,9 +116,9 @@ child_pc:
   return ret;
 }
 
-int Task::exec(void (*func)(), const char* const _argv[]) {
+int Task::exec(const char* name, const char* const _argv[]) {
   // Construct the argv chain.
-  size_t sp = reinterpret_cast<size_t>(_kstack_page) -
+  size_t sp = reinterpret_cast<size_t>(_ustack_page) -
               PageFrameAllocator::get_block_header_size() +
               PAGE_SIZE;
 
@@ -159,18 +163,54 @@ int Task::exec(void (*func)(), const char* const _argv[]) {
   // Reset the stack pointer.
   _context.sp = sp;
 
+  // Load the specified file from the filesystem.
+  ELF elf(Initramfs::get_instance().read(name));
+  size_t dest_addr = 0x20000000;
+  void* dest = reinterpret_cast<void*>(dest_addr);
+  elf.load_at(dest);
+
   // Jump to the entry point.
-  printf("trying to exec the new program...\n");
+  printk("executing new program: %s, _ustack_page = 0x%x, sp = 0x%x\n",
+      name, _ustack_page, _context.sp);
+  
+  /*
+  ExceptionManager::get_instance()
+    .switch_to_exception_level(0,
+                               elf.get_entry_point(dest),
+                               reinterpret_cast<void*>(_context.sp + 0x10));
+  */
+
+  /*
   asm volatile("mov x0, %0\n\
                 mov x1, %1\n\
                 mov lr, %2\n\
-                blr lr" :: "r" (argc), "r" (new_argv), "r" (func));
+                mov sp, %3\n\
+                blr lr" :: "r" (argc), "r" (new_argv), "r" (elf.get_entry_point(dest)),
+                "r" (sp + 0x10));
+  */
 
+  // Construct the argv chain.
+  size_t ksp = reinterpret_cast<size_t>(_kstack_page) -
+              PageFrameAllocator::get_block_header_size() +
+              PAGE_SIZE;
+
+  asm volatile("msr SP_EL0, %0\n\
+                msr SPSR_EL1, %1\n\
+                msr ELR_EL1, %2\n\
+                mov sp, %3\n\
+                eret" :: "r" (_context.sp), "r" (0), "r" (elf.get_entry_point(dest)),
+                "r" (ksp));
+
+  // Exec failed.
   return -1;
 }
 
 void Task::exit() {
   _state = Task::State::TERMINATED;
+}
+
+
+void Task::construct_argv_chain(const char* const _argv[]) {
 }
 
 }  // namespace valkyrie::kernel

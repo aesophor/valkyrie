@@ -31,7 +31,7 @@ class Task {
 
 
   int fork();
-  int exec(void (*func)(), const char* const _argv[]);
+  int exec(const char* name, const char* const _argv[]);
   void exit();
 
   static Task& get_current();
@@ -63,6 +63,8 @@ class Task {
 
 
  private:
+  void construct_argv_chain(const char* const _argv[]);
+
   static uint32_t _next_pid;
 
 
@@ -88,6 +90,7 @@ class Task {
   int _time_slice;
   void* _entry_point;
   void* _kstack_page;
+  void* _ustack_page;
   char _name[16];
 };
 

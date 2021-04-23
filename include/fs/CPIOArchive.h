@@ -3,6 +3,7 @@
 #define VALKYRIE_CPIO_ARCHIVE_H_
 
 #include <Types.h>
+#include <Utility.h>
 
 #define CPIO_ARCHIVE_ADDR 0x8000000
 
@@ -13,7 +14,8 @@ class CPIOArchive {
   explicit CPIOArchive(const size_t base_addr);
   ~CPIOArchive() = default;
 
-  const char* get_entry_content(const char* pathname, size_t* size) const;
+  Pair<const char*, size_t>
+  get_entry_content_and_size(const char* name) const;
 
  private:
   struct [[gnu::packed]] Header final {

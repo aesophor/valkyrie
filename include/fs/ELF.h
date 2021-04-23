@@ -3,6 +3,7 @@
 #define VALKYRIE_ELF_H_
 
 #include <Types.h>
+#include <Utility.h>
 
 #define EI_NIDENT (16)
 
@@ -60,7 +61,7 @@ class ELF {
   };
 
 
-  ELF(const char* addr, const size_t size);
+  ELF(Pair<const char*, size_t> addr_size);
   ~ELF() = default;
 
   bool is_valid() const;

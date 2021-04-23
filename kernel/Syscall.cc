@@ -44,8 +44,8 @@ int sys_fork() {
   return Task::get_current().fork();
 }
 
-int sys_exec(void (*func)(), const char* const argv[]) {
-  return Task::get_current().exec(func, argv);
+int sys_exec(const char* name, const char* const argv[]) {
+  return Task::get_current().exec(name, argv);
 }
 
 void sys_exit() {
