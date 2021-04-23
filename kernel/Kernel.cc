@@ -28,8 +28,8 @@ void Kernel::run() {
   printk("starting task scheduler...\n");
   _task_scheduler.run();
 
-  printk("you shouldn't have reached here :(\n");
-  _halt();
+
+  Kernel::panic("you shouldn't have reached here...\n");
 }
 
 
