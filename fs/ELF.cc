@@ -24,6 +24,7 @@ void ELF::load_at(void* dest) const {
   printk("memcpy(0x%x, 0x%x, 0x%x);\n", dest, _header, _size);
   memcpy(dest, _header, _size);
 
+  /*
   auto header = reinterpret_cast<const ELF::FileHeader*>(p);
   printk("loaded ELF at 0x%x\n", dest);
   printk("  <ELF file header> entry point: 0x%x\n", header->entry);
@@ -49,6 +50,7 @@ void ELF::load_at(void* dest) const {
     }
     p += header->shentsize;
   }
+  */
 }
 
 void* ELF::get_entry_point(const void* elf_base) const {

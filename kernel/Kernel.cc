@@ -23,7 +23,7 @@ void Kernel::run() {
   print_hardware_info();
 
   printk("switching to supervisor mode... (≧▽ ≦)\n");
-  _exception_manager.switch_to_exception_level(1);
+  _exception_manager.downgrade_exception_level(1);
 
   printk("starting task scheduler...\n");
   _task_scheduler.run();

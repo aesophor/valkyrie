@@ -117,10 +117,14 @@ child_pc:
 }
 
 int Task::exec(const char* name, const char* const _argv[]) {
+  size_t kernel_sp = reinterpret_cast<size_t>(_kstack_page) -
+                     PageFrameAllocator::get_block_header_size() +
+                     PAGE_SIZE;
+
   // Construct the argv chain.
-  size_t sp = reinterpret_cast<size_t>(_ustack_page) -
-              PageFrameAllocator::get_block_header_size() +
-              PAGE_SIZE;
+  size_t user_sp = reinterpret_cast<size_t>(_ustack_page) -
+                   PageFrameAllocator::get_block_header_size() +
+                   PAGE_SIZE;
 
   int argc = 0;
   const char* s = _argv[0];
@@ -140,28 +144,28 @@ int Task::exec(const char* name, const char* const _argv[]) {
   for (int i = argc - 1; i >= 0; i--) {
     size_t len = argv[i].size() + 1;
     len = round_up_to_multiple_of_16(len);
-    sp -= len;
-    char* s = reinterpret_cast<char*>(sp);
+    user_sp -= len;
+    char* s = reinterpret_cast<char*>(user_sp);
     strcpy(s, argv[i].c_str());
     addresses[i] = s;
     printf("argv[i] = %s\n", s);
   }
 
 
-  sp -= round_up_to_multiple_of_16(sizeof(char*) * (argc + 2));
-  char** new_argv = reinterpret_cast<char**>(sp);
+  user_sp -= round_up_to_multiple_of_16(sizeof(char*) * (argc + 2));
+  char** new_argv = reinterpret_cast<char**>(user_sp);
   //new_argv[0] = new_argv[1];
   for (int i = 0; i < argc; i++) {
     new_argv[i] = addresses[i];
   }
   new_argv[argc] = nullptr;
 
-  sp -= 16;
-  int* new_argc = reinterpret_cast<int*>(sp);
+  user_sp -= 16;
+  int* new_argc = reinterpret_cast<int*>(user_sp);
   *new_argc = argc;
 
   // Reset the stack pointer.
-  _context.sp = sp;
+  _context.sp = user_sp;
 
   // Load the specified file from the filesystem.
   ELF elf(Initramfs::get_instance().read(name));
@@ -172,34 +176,12 @@ int Task::exec(const char* name, const char* const _argv[]) {
   // Jump to the entry point.
   printk("executing new program: %s, _ustack_page = 0x%x, sp = 0x%x\n",
       name, _ustack_page, _context.sp);
-  
-  /*
+ 
   ExceptionManager::get_instance()
-    .switch_to_exception_level(0,
+    .downgrade_exception_level(0,
                                elf.get_entry_point(dest),
-                               reinterpret_cast<void*>(_context.sp + 0x10));
-  */
-
-  /*
-  asm volatile("mov x0, %0\n\
-                mov x1, %1\n\
-                mov lr, %2\n\
-                mov sp, %3\n\
-                blr lr" :: "r" (argc), "r" (new_argv), "r" (elf.get_entry_point(dest)),
-                "r" (sp + 0x10));
-  */
-
-  // Construct the argv chain.
-  size_t ksp = reinterpret_cast<size_t>(_kstack_page) -
-              PageFrameAllocator::get_block_header_size() +
-              PAGE_SIZE;
-
-  asm volatile("msr SP_EL0, %0\n\
-                msr SPSR_EL1, %1\n\
-                msr ELR_EL1, %2\n\
-                mov sp, %3\n\
-                eret" :: "r" (_context.sp), "r" (0), "r" (elf.get_entry_point(dest)),
-                "r" (ksp));
+                               reinterpret_cast<void*>(kernel_sp),
+                               reinterpret_cast<void*>(user_sp));
 
   // Exec failed.
   return -1;

@@ -107,38 +107,33 @@ uint8_t ExceptionManager::get_exception_level() const {
   return level >> 2;
 }
 
-void ExceptionManager::switch_to_exception_level(const uint8_t level,
+void ExceptionManager::downgrade_exception_level(const uint8_t level,
                                                  void* ret_addr,
-                                                 void* new_sp) {
+                                                 void* high_level_sp,
+                                                 void* low_level_sp) {
   uint64_t spsr;
   void* return_address = (ret_addr) ? ret_addr : &&out;
-  void* stack_pointer = (new_sp) ? new_sp : nullptr;
+  void* low_level_stack_pointer = (low_level_sp) ? low_level_sp : nullptr;
 
-  // If the user hasn't specified `new_sp` (which means it is nullptr),
+  // If the user hasn't specified `low_level_sp` (which means it is nullptr),
   // then we will use the current SP as the new SP after `eret`.
-  if (!stack_pointer) {
-    asm volatile("mov %0, sp" : "=r" (stack_pointer));
+  if (!low_level_sp) {
+    asm volatile("mov %0, sp" : "=r" (low_level_stack_pointer));
   }
 
   switch (level) {
     case 1:
-      // Setup EL1 stack
-      asm volatile("msr SP_EL1, %0" :: "r" (stack_pointer));
-      // Setup SPSR_EL2 (Saved Processor Status Register)
+      asm volatile("msr SP_EL1, %0" :: "r" (low_level_stack_pointer));
       spsr  = (1 << 0);       // use SP_ELx, not SP_EL0
       spsr |= (1 << 2);       // exception was taken from EL1
       spsr |= (0b1111 << 6);  // DAIF masked
       asm volatile("msr SPSR_EL2, %0" :: "r" (spsr));
-      // Setup ELR_EL2
       asm volatile("msr ELR_EL2, %0" :: "r" (return_address));
       break;
 
     case 0:
-      // Setup EL0 stack
-      asm volatile("msr SP_EL0, %0" :: "r" (stack_pointer));
-      // Setup SPSR_EL1 (Saved Processor Status Register)
+      asm volatile("msr SP_EL0, %0" :: "r" (low_level_stack_pointer));
       asm volatile("msr SPSR_EL1, %0" :: "r" (0));
-      // Setup ELR_EL1
       asm volatile("msr ELR_EL1, %0" :: "r" (return_address));
       break;
 
@@ -146,7 +141,14 @@ void ExceptionManager::switch_to_exception_level(const uint8_t level,
       return;
   }
 
-  // Execute `eret`
+  // Each user task will have a kernel stack and a user stack.
+  // The value of SP before `eret` will be the SP after the user task
+  // switches from EL0 to EL1.
+  if (high_level_sp) {
+    asm volatile("mov SP, %0" :: "r" (high_level_sp));
+  }
+
+  // Finally downgrade the exception level.
   asm volatile("eret");
 
 out:
