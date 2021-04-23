@@ -90,7 +90,7 @@ void idle() {
 }
 
 void start_init() {
-  const char* argv[] = {"sbin/init"};
+  const char* argv[] = {"sbin/init", nullptr};
   sys_exec("sbin/init", argv);
   Kernel::panic("start_init: sys_exec failed.\n");
 }

@@ -154,13 +154,16 @@ int Task::exec(const char* name, const char* const _argv[]) {
 
   user_sp -= round_up_to_multiple_of_16(sizeof(char*) * (argc + 2));
   char** new_argv = reinterpret_cast<char**>(user_sp);
-  //new_argv[0] = new_argv[1];
   for (int i = 0; i < argc; i++) {
     new_argv[i] = addresses[i];
   }
   new_argv[argc] = nullptr;
 
-  user_sp -= 16;
+  user_sp -= 8;
+  char*** new_argvp = reinterpret_cast<char***>(user_sp);
+  *new_argvp = &new_argv[0];
+
+  user_sp -= 8;
   int* new_argc = reinterpret_cast<int*>(user_sp);
   *new_argc = argc;
 
@@ -171,6 +174,10 @@ int Task::exec(const char* name, const char* const _argv[]) {
   ELF elf(Initramfs::get_instance().read(name));
   size_t dest_addr = 0x20000000;
   void* dest = reinterpret_cast<void*>(dest_addr);
+
+  if (!elf.is_valid()) {
+    goto failed;
+  }
   elf.load_at(dest);
 
   // Jump to the entry point.
@@ -183,7 +190,8 @@ int Task::exec(const char* name, const char* const _argv[]) {
                                reinterpret_cast<void*>(kernel_sp),
                                reinterpret_cast<void*>(user_sp));
 
-  // Exec failed.
+failed:
+  printk("exec failed: %s\n", name);
   return -1;
 }
 
