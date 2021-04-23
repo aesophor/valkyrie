@@ -31,14 +31,15 @@ void Task::set_current(const Task* t) {
 
 Task::Task(void* entry_point, const char* name)
     : _context(),
+      _parent(),
       _state(Task::State::CREATED),
       _pid(Task::_next_pid++),
       _time_slice(3),
       _entry_point(reinterpret_cast<void*>(entry_point)),
-      _stack_page(get_free_page()),
+      _kstack_page(get_free_page()),
       _name() {
   _context.lr = reinterpret_cast<uint64_t>(entry_point);
-  _context.sp = reinterpret_cast<uint64_t>(_stack_page) -
+  _context.sp = reinterpret_cast<uint64_t>(_kstack_page) -
                 PageFrameAllocator::get_block_header_size() +
                 PAGE_SIZE;
   strcpy(_name, name);
@@ -55,30 +56,31 @@ Task::~Task() {
       _name,
       _pid);
 
-  kfree(_stack_page);
+  kfree(_kstack_page);
 }
 
 
-int Task::fork() const {
+int Task::fork() {
   size_t ret = 0;
 
   // Duplicate task
   printk("saving parent cpu context\n");
   switch_to(&Task::get_current(), nullptr);  // save parent cpu context
 
-  size_t sp_offset = _context.sp - reinterpret_cast<size_t>(_stack_page);;
+  size_t sp_offset = _context.sp - reinterpret_cast<size_t>(_kstack_page);;
 
   {
     printk("duplicating child task\n");
     auto child = make_unique<Task>(_entry_point, _name);
+    child->_parent = this;
 
     // Copy stack page content
-    printk("memcpy(0x%x, 0x%x, 0x%x)\n", child->_stack_page,
-        _stack_page,
+    printk("memcpy(0x%x, 0x%x, 0x%x)\n", child->_kstack_page,
+        _kstack_page,
         PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
-    memcpy(child->_stack_page,
-        _stack_page,
+    memcpy(child->_kstack_page,
+        _kstack_page,
         PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
     // Set parent's fork() return value to child's pid.
@@ -97,7 +99,7 @@ int Task::fork() const {
     child->_context.x28 = _context.x28;
     child->_context.fp = _context.fp;
     child->_context.lr = reinterpret_cast<uint64_t>(&&child_pc);
-    child->_context.sp = reinterpret_cast<uint64_t>(child->_stack_page) + sp_offset;
+    child->_context.sp = reinterpret_cast<uint64_t>(child->_kstack_page) + sp_offset;
 
     // Enqueue the child task.
     printk("enque task...\n");
@@ -112,7 +114,7 @@ child_pc:
 
 int Task::exec(void (*func)(), const char* const _argv[]) {
   // Construct the argv chain.
-  size_t sp = reinterpret_cast<size_t>(_stack_page) -
+  size_t sp = reinterpret_cast<size_t>(_kstack_page) -
               PageFrameAllocator::get_block_header_size() +
               PAGE_SIZE;
 

@@ -73,24 +73,14 @@ int argv_test(int argc, char** argv) {
     printf("argv[%d] = %s\n", i, argv[i]);
   }
   const char *fork_argv[] = {"fork_test", 0};
-  //sys_exec(fork_test, fork_argv);
-
-  asm volatile("mov x8, 4\n\
-                mov x0, %0\n\
-                mov x1, %1\n\
-                svc #0" :: "r" (fork_test), "r" (fork_argv));
-
+  sys_exec(fork_test, fork_argv);
   Kernel::panic("sys_exec failed\n");
   return 0;
 }
 
 void argv_test_driver() {
   const char *fork_argv[] = {"argv_test", 0};
-  asm volatile("mov x8, 4\n\
-                mov x0, %0\n\
-                mov x1, %1\n\
-                svc #0" :: "r" (argv_test), "r" (fork_argv));
-  //sys_exec(reinterpret_cast<void(*)()>(argv_test), fork_argv);
+  sys_exec(reinterpret_cast<void(*)()>(argv_test), fork_argv);
 }
 
 void idle() {
@@ -99,6 +89,7 @@ void idle() {
     TaskScheduler::get_instance().schedule();
   }
 }
+
 
 TaskScheduler& TaskScheduler::get_instance() {
   static TaskScheduler instance;
@@ -112,9 +103,8 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(argv_test_driver), "argv_test"));
+  //enqueue_task(make_unique<Task>(reinterpret_cast<void*>(argv_test_driver), "argv_test"));
 
-  /*
   size_t filesize;
   const char* base = Initramfs::get_instance().read("bin/argv_test", &filesize);
   ELF exe(base, filesize);
@@ -123,7 +113,6 @@ void TaskScheduler::run() {
   exe.load_at(dest);
 
   enqueue_task(make_unique<Task>(exe.get_entry_point(dest), "argv_test"));
-  */
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
