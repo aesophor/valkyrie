@@ -67,6 +67,7 @@ void run_shell() {
       MemoryManager::get_instance().dump_slob_allocator_info();
 
     } else if (!strcmp(_buf, "run")) {
+      /*
       printf("filename: ");
       gets(_buf);
       String filename = _buf;
@@ -86,7 +87,7 @@ void run_shell() {
       printf("branching to 0x%x\n", entry);
       void* user_sp = reinterpret_cast<void*>(0x20000);
       ExceptionManager::get_instance().switch_to_exception_level(0, entry, user_sp);
-
+      */
     } else if (!strcmp(_buf, "set_timeout")) {
       printf("message: ");
       gets(_buf);

@@ -28,7 +28,7 @@ size_t sys_uart_read(char buf[], size_t size);
 size_t sys_uart_write(const char buf[], size_t size);
 void sys_uart_putchar(const char c);
 int sys_fork();
-int sys_exec(void (*func)(), const char *const argv[]);
+int sys_exec(const char* name, const char *const argv[]);
 void sys_exit();
 int sys_getpid();
 /*
@@ -44,14 +44,13 @@ void sys_timer_irq_disable();
 // the parameters are stored in x0 ~ x5,
 // and the return value will be stored in x0.
 template <typename... Args>
-size_t do_syscall(uint64_t id, Args ...args) {
+size_t do_syscall(const uint64_t id, Args... args) {
   // Check if syscall id is valid.
   if (unlikely(id >= Syscall::__NR_syscall)) {
     printk("bad system call: (id=0x%x)\n", id);
     return -1;
   }
-
-  // Invoke the specified system call
+  // Invoke the specified system call.
   return reinterpret_cast<size_t (*)(Args...)>(__syscall_table[id])(args...);
 }
 

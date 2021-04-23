@@ -15,7 +15,7 @@ CXXFLAGS = -std=c++20\
 LD = aarch64-linux-gnu-ld
 LDFLAGS = -T linker.ld
 
-ELF = argv_test
+ELF = init
 SRC = main.c printf.c
 OBJ = main.o printf.o
 

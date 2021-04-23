@@ -11,8 +11,8 @@ Initramfs& Initramfs::get_instance() {
 Initramfs::Initramfs() : _archive(CPIO_ARCHIVE_ADDR) {}
 
 
-const char* Initramfs::read(const char* pathname, size_t* size) const {
-  return _archive.get_entry_content(pathname, size);
+Pair<const char*, size_t> Initramfs::read(const char* name) const {
+  return _archive.get_entry_content_and_size(name);
 }
 
 }  // namespace valkyrie::kernel

@@ -33,10 +33,6 @@ void ExceptionManager::disable() {
 
 
 void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
-  size_t* stack_pointer;
-  asm volatile("mov %0, sp" : "=r" (stack_pointer));
-  printk("SP = 0x%x\n", stack_pointer);
-
   uint64_t spsr_el1;
   asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
   const Exception ex = ExceptionManager::get_instance().get_current_exception();
@@ -54,7 +50,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
     return;
   }
 
-  //printk("Current exception lvl: %d\n", get_exception_level());
+  printk("Current exception lvl: %d\n", ExceptionManager::get_instance().get_exception_level());
   printk("Saved Program Status Register: 0x%x\n", spsr_el1);
   printk("Exception return address: 0x%x\n", ex.ret_addr);
   printk("Exception class (EC): 0x%x\n", ex.ec);

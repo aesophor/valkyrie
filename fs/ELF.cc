@@ -9,9 +9,9 @@
 
 namespace valkyrie::kernel {
 
-ELF::ELF(const char* addr, const size_t size)
-    : _header(reinterpret_cast<const ELF::FileHeader*>(addr)),
-      _size(size) {}
+ELF::ELF(Pair<const char*, size_t> addr_size)
+    : _header(reinterpret_cast<const ELF::FileHeader*>(addr_size.first)),
+      _size(addr_size.second) {}
 
 
 bool ELF::is_valid() const {
@@ -21,6 +21,7 @@ bool ELF::is_valid() const {
 void ELF::load_at(void* dest) const {
   size_t p = reinterpret_cast<size_t>(dest);
   size_t base = p;
+  printk("memcpy(0x%x, 0x%x, 0x%x);\n", dest, _header, _size);
   memcpy(dest, _header, _size);
 
   auto header = reinterpret_cast<const ELF::FileHeader*>(p);

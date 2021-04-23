@@ -3,8 +3,6 @@
 
 #include <dev/IO.h>
 #include <dev/Console.h>
-#include <fs/Initramfs.h>
-#include <fs/ELF.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
@@ -15,7 +13,7 @@ extern "C" void switch_to(valkyrie::kernel::Task* prev,
 
 namespace valkyrie::kernel {
 
-
+/*
 void func() {
   for (int i = 0; i < 10; ++i) {
     printf("pid: %d %d\n", sys_getpid(), i);
@@ -82,12 +80,19 @@ void argv_test_driver() {
   const char *fork_argv[] = {"argv_test", 0};
   sys_exec(reinterpret_cast<void(*)()>(argv_test), fork_argv);
 }
+*/
 
 void idle() {
   while (true) {
     TaskScheduler::get_instance().reap_zombies();
     TaskScheduler::get_instance().schedule();
   }
+}
+
+void start_init() {
+  const char* argv[] = {"sbin/init"};
+  sys_exec("sbin/init", argv);
+  Kernel::panic("start_init: sys_exec failed.\n");
 }
 
 
@@ -103,16 +108,7 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(idle), "idle"));
-  //enqueue_task(make_unique<Task>(reinterpret_cast<void*>(argv_test_driver), "argv_test"));
-
-  size_t filesize;
-  const char* base = Initramfs::get_instance().read("bin/argv_test", &filesize);
-  ELF exe(base, filesize);
-
-  void* dest = reinterpret_cast<void*>(0x20000000);
-  exe.load_at(dest);
-
-  enqueue_task(make_unique<Task>(exe.get_entry_point(dest), "argv_test"));
+  enqueue_task(make_unique<Task>(reinterpret_cast<void*>(start_init), "init"));
 
   if (_run_queue.empty()) {
     Kernel::panic("No working init found.\n");
