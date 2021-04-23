@@ -20,7 +20,6 @@
 #define VALKYRIE_TRAP_FRAME_H_
 
 #include <Types.h>
-#include <libs/CString.h>
 
 namespace valkyrie::kernel {
 
