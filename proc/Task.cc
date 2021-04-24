@@ -44,13 +44,10 @@ int Task::fork() {
     // Set parent's fork() return value to child's pid.
     ret = child->_pid;
 
-    // Calculate child's kernel SP.
-    size_t child_ksp = child->_kstack_page.add_offset(kernel_sp_offset);
-
     // Copy child's CPU context.
     child->_context = _context;
     child->_context.lr = reinterpret_cast<uint64_t>(&&child_pc);
-    child->_context.sp = child_ksp;
+    child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
     // Enqueue the child task.
     TaskScheduler::get_instance().enqueue_task(move(child));
