@@ -111,7 +111,7 @@ void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(reinterpret_cast<void*>(start_init), "init"));
 
   if (_run_queue.empty()) {
-    Kernel::panic("No working init found.\n");
+    Kernel::panic("no working init found.\n");
   }
 
   switch_to(nullptr, _run_queue.front().get());
@@ -119,15 +119,21 @@ void TaskScheduler::run() {
 
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
+  if (unlikely(!task)) {
+    Kernel::panic("sched: task is empty\n");
+  }
+
+  printk("sched: adding thread to runqueue 0x%x [%s] (pid = %d)\n",
+      task.get(),
+      task->get_name(),
+      task->get_pid());
+
+  task->set_state(Task::State::RUNNABLE);
   _run_queue.push_back(move(task));
-  printk("scheduler: added a thread 0x%x [%s] (pid = %d)\n",
-      _run_queue.back().get(),
-      _run_queue.back()->get_name(),
-      _run_queue.back()->get_pid());
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
-  printk("scheduler: removing thread 0x%x [%s] (pid = %d)\n",
+  printk("sched: removing thread from runqueue 0x%x [%s] (pid = %d)\n",
       &task,
       task.get_name(),
       task.get_pid());
@@ -139,13 +145,17 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
            (removed_task = move(t), true);
   });
 
+  if (unlikely(!removed_task)) {
+    Kernel::panic("sched: removed_task is empty\n");
+  }
+
   return removed_task;
 }
 
 
 void TaskScheduler::schedule() {
   if (unlikely(_run_queue.empty())) {
-    Kernel::panic("_run_queue is empty.\n");
+    Kernel::panic("sched: runqueue is empty.\n");
   }
 
   if (likely(_run_queue.size() > 1)) {
@@ -175,7 +185,7 @@ void TaskScheduler::mark_terminated(Task& task) {
 
 void TaskScheduler::reap_zombies() {
   if (!_zombies.empty()) {
-    printk("reaping %d zombies\n", _zombies.size());
+    printk("sched: reaping %d zombies\n", _zombies.size());
     _zombies.clear();
   }
 }

@@ -67,24 +67,41 @@ Task::~Task() {
 int Task::fork() {
   size_t ret = 0;
 
+  size_t parent_usp;
+  asm volatile("mrs %0, sp_el0" : "=r" (parent_usp));
+  size_t usp_offset = parent_usp - reinterpret_cast<uint64_t>(_ustack_page);
+
+  size_t trap_frame_offset = reinterpret_cast<uint64_t>(_trap_frame) -
+                             reinterpret_cast<uint64_t>(_kstack_page);
+
   // Duplicate task
-  printk("saving parent cpu context\n");
+  printk("fork: saving parent cpu context\n");
   switch_to(&Task::get_current(), nullptr);  // save parent cpu context
 
-  size_t sp_offset = _context.sp - reinterpret_cast<size_t>(_kstack_page);;
-
   {
-    printk("duplicating child task\n");
+    printk("fork: start duplicating task\n");
     auto child = make_unique<Task>(_entry_point, _name);
     child->_parent = this;
 
-    // Copy stack page content
-    printk("memcpy(0x%x, 0x%x, 0x%x)\n", child->_kstack_page,
-        _kstack_page,
-        PAGE_SIZE - PageFrameAllocator::get_block_header_size());
+    size_t child_trap_frame = reinterpret_cast<uint64_t>(child->_kstack_page) +
+                            trap_frame_offset;
+    child->_trap_frame = reinterpret_cast<TrapFrame*>(child_trap_frame);
+    printk("child trap frame = 0x%x\n", child->_trap_frame);
+
+    // Copy kernel stack page content
+    printk("fork: copying kernel stack... memcpy(0x%x, 0x%x, 0x%x)\n",
+           child->_kstack_page,
+           _kstack_page,
+           PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
     memcpy(child->_kstack_page,
            _kstack_page,
+           PAGE_SIZE - PageFrameAllocator::get_block_header_size());
+
+    // Copy user stack page content
+    printk("fork: copying user stack... memcpy(0x%x, 0x%x, 0x%x)\n",
+           child->_ustack_page,
+           _ustack_page,
            PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 
     memcpy(child->_ustack_page,
@@ -93,6 +110,11 @@ int Task::fork() {
 
     // Set parent's fork() return value to child's pid.
     ret = child->_pid;
+
+    // Calculate child's kernel SP.
+    size_t child_ksp = reinterpret_cast<uint64_t>(child->_kstack_page) +
+                       _context.sp -
+                       reinterpret_cast<size_t>(_kstack_page);
 
     // Copy child's CPU context.
     child->_context.x19 = _context.x19;
@@ -107,18 +129,29 @@ int Task::fork() {
     child->_context.x28 = _context.x28;
     child->_context.fp = _context.fp;
     child->_context.lr = reinterpret_cast<uint64_t>(&&child_pc);
-    child->_context.sp = reinterpret_cast<uint64_t>(child->_kstack_page) + sp_offset;
+    child->_context.sp = child_ksp;
 
     // Enqueue the child task.
-    printk("enque task...\n");
     TaskScheduler::get_instance().enqueue_task(move(child));
   }
 
   // The child will start executing from here.
 child_pc:
-  printk("child ready to return!\n");
+  if (ret == 0) {
+    auto child = &Task::get_current();
+
+    // Calculate child's user SP.
+    size_t child_usp = reinterpret_cast<uint64_t>(child->_ustack_page) + usp_offset;
+    printk("parent usp: 0x%x\n", parent_usp);
+    printk("_ustack_page = 0x%x, child usp: 0x%x\n", child->_ustack_page, child_usp);
+    printk("setting child usp to 0x%x\n", child_usp);
+    asm volatile("msr SP_EL0, %0" :: "r" (child_usp));
+  }
+
+  printk("ret = %d\n", ret);
   return ret;
 }
+
 
 int Task::exec(const char* name, const char* const _argv[]) {
   size_t kernel_sp = reinterpret_cast<size_t>(_kstack_page) -
@@ -185,9 +218,9 @@ int Task::exec(const char* name, const char* const _argv[]) {
   elf.load_at(dest);
 
   // Jump to the entry point.
-  printk("executing new program: %s, _ustack_page = 0x%x, sp = 0x%x\n",
-      name, _ustack_page, _context.sp);
- 
+  printk("executing new program: %s, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
+      name, _kstack_page, _ustack_page);
+
   ExceptionManager::get_instance()
     .downgrade_exception_level(0,
                                elf.get_entry_point(dest),
@@ -200,7 +233,10 @@ failed:
 }
 
 void Task::exit() {
-  _state = Task::State::TERMINATED;
+  auto& sched = TaskScheduler::get_instance();
+
+  sched.mark_terminated(*this);
+  sched.schedule();
 }
 
 

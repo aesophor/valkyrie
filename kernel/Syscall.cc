@@ -49,10 +49,7 @@ int sys_exec(const char* name, const char* const argv[]) {
 }
 
 void sys_exit() {
-  auto& sched = TaskScheduler::get_instance();
-
-  sched.mark_terminated(Task::get_current());
-  sched.schedule();
+  Task::get_current().exit();
 }
 
 int sys_getpid() {
