@@ -2,7 +2,9 @@
 #ifndef VALKYRIE_PAGE_FRAME_ALLOCATOR_H_
 #define VALKYRIE_PAGE_FRAME_ALLOCATOR_H_
 
-#define PAGE_SIZE  4096
+#include <Types.h>
+#include <mm/Page.h>
+
 #define HEAP_BEGIN 0X10000000
 #define HEAP_END   0x10200000
 
@@ -10,8 +12,6 @@
 
 #define ALLOCATED     static_cast<int8_t>(-1)
 #define DONT_ALLOCATE static_cast<int8_t>(-2)
-
-#include <Types.h>
 
 namespace valkyrie::kernel {
 
