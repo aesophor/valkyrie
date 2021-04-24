@@ -37,16 +37,18 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
   const Exception ex = ExceptionManager::get_instance().get_current_exception();
 
+  Task::get_current().set_trap_frame(trap_frame);
+
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (likely(ex.ec == 0b10101 && ex.iss == 0)) {
-    trap_frame->x0 = do_syscall(trap_frame->x8,
-                                trap_frame->x0,
-                                trap_frame->x1,
-                                trap_frame->x2,
-                                trap_frame->x3,
-                                trap_frame->x4,
-                                trap_frame->x5);
+    Task::get_current().get_trap_frame()->x0 = do_syscall(trap_frame->x8,
+                                                          trap_frame->x0,
+                                                          trap_frame->x1,
+                                                          trap_frame->x2,
+                                                          trap_frame->x3,
+                                                          trap_frame->x4,
+                                                          trap_frame->x5);
     return;
   }
 

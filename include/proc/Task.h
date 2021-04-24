@@ -4,6 +4,7 @@
 
 #include <Types.h>
 #include <mm/PageFrameAllocator.h>
+#include <proc/TrapFrame.h>
 
 #define TASK_0_STACK_TOP HEAP_END
 #define TASK_STACK_SIZE  8192
@@ -57,6 +58,14 @@ class Task {
     _time_slice -= 1;
   }
 
+  TrapFrame* get_trap_frame() const {
+    return _trap_frame;
+  }
+
+  void set_trap_frame(TrapFrame* trap_frame) {
+    _trap_frame = trap_frame;
+  }
+
   const char* get_name() const {
     return _name;
   }
@@ -91,6 +100,7 @@ class Task {
   void* _entry_point;
   void* _kstack_page;
   void* _ustack_page;
+  TrapFrame* _trap_frame;
   char _name[16];
 };
 

@@ -16,7 +16,7 @@ LD = aarch64-linux-gnu-ld
 LDFLAGS = -T linker.ld
 
 ELF = init
-SRC = main.c printf.c
+SRC = main.cc printf.cc
 OBJ = main.o printf.o
 
 all:

@@ -6,10 +6,14 @@ extern "C" int sys_exec(const char* name, const char* const argv[]);
 extern "C" void sys_exit();
 extern "C" long long int sys_getpid();
 
-int start_main() {
+void start_main() {
+  init_printf(nullptr, putchar);
+
   // Prepare argc and argv
   asm volatile("ldp x0, x1, [sp]\n\
                 bl main");
+
+  sys_exit();
 }
 
 void fork_test() {
@@ -34,10 +38,8 @@ void fork_test() {
 
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, putchar);
-
   fork_test();
-  sys_exit();
+  return 0;
 }
 
 extern "C" void sys_uart_putchar(const char c) {
