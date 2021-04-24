@@ -111,7 +111,9 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
                                                  void* ret_addr,
                                                  void* high_level_sp,
                                                  void* low_level_sp) {
-  uint64_t spsr;
+  // If the user hasn't specified `ret_addr` (which means it is nullptr),
+  // then we will use the address out `out` as the new PC after `eret`
+  // so that the program will keep executing like a normal function.
   void* return_address = (ret_addr) ? ret_addr : &&out;
 
   // If the user hasn't specified `low_level_sp` (which means it is nullptr),
@@ -123,6 +125,7 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
   switch (level) {
     case 1:
       asm volatile("msr SP_EL1, %0" :: "r" (low_level_sp));
+      uint64_t spsr;
       spsr  = (1 << 0);       // use SP_ELx, not SP_EL0
       spsr |= (1 << 2);       // exception was taken from EL1
       spsr |= (0b1111 << 6);  // DAIF masked
