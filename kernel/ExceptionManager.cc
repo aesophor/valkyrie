@@ -113,17 +113,16 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
                                                  void* low_level_sp) {
   uint64_t spsr;
   void* return_address = (ret_addr) ? ret_addr : &&out;
-  void* low_level_stack_pointer = (low_level_sp) ? low_level_sp : nullptr;
 
   // If the user hasn't specified `low_level_sp` (which means it is nullptr),
   // then we will use the current SP as the new SP after `eret`.
   if (!low_level_sp) {
-    asm volatile("mov %0, sp" : "=r" (low_level_stack_pointer));
+    asm volatile("mov %0, sp" : "=r" (low_level_sp));
   }
 
   switch (level) {
     case 1:
-      asm volatile("msr SP_EL1, %0" :: "r" (low_level_stack_pointer));
+      asm volatile("msr SP_EL1, %0" :: "r" (low_level_sp));
       spsr  = (1 << 0);       // use SP_ELx, not SP_EL0
       spsr |= (1 << 2);       // exception was taken from EL1
       spsr |= (0b1111 << 6);  // DAIF masked
@@ -132,7 +131,7 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
       break;
 
     case 0:
-      asm volatile("msr SP_EL0, %0" :: "r" (low_level_stack_pointer));
+      asm volatile("msr SP_EL0, %0" :: "r" (low_level_sp));
       asm volatile("msr SPSR_EL1, %0" :: "r" (0));
       asm volatile("msr ELR_EL1, %0" :: "r" (return_address));
       break;
