@@ -135,8 +135,12 @@ int Task::fork() {
     TaskScheduler::get_instance().enqueue_task(move(child));
   }
 
-  // The child will start executing from here.
 child_pc:
+  // The child will start executing from here.
+  // However, the `this` pointer (which is stored in x0)
+  // cannot be reassigned. Therefore, in order to
+  // operate on the child, we have to explicitly operate
+  // on the child's task stucture.
   if (ret == 0) {
     auto child = &Task::get_current();
 
