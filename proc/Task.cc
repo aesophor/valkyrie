@@ -15,21 +15,22 @@ uint32_t Task::_next_pid = 0;
 
 
 int Task::fork() {
-  size_t ret = 0;
-
-  size_t parent_usp;
-  asm volatile("mrs %0, sp_el0" : "=r" (parent_usp));
-
-  size_t user_sp_offset = _ustack_page.offset_of(parent_usp);
-  size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
-
   // Duplicate task
   printk("fork: saving parent cpu context\n");
   save_context();
 
+  size_t ret = 0;
+  size_t parent_usp;
+  asm volatile("mrs %0, sp_el0" : "=r" (parent_usp));
+
+  size_t user_sp_offset = _ustack_page.offset_of(parent_usp);
+  size_t kernel_sp_offset = _kstack_page.offset_of(_context.sp);
+  size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
+
+
   {
     printk("fork: start duplicating task\n");
-    auto child = make_unique<Task>(this, _entry_point, _name);
+    auto child = make_unique<Task>(/*parent=*/this, _entry_point, _name);
 
     child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
     printk("child trap frame = 0x%x\n", child->_trap_frame);
@@ -44,8 +45,7 @@ int Task::fork() {
     ret = child->_pid;
 
     // Calculate child's kernel SP.
-    size_t child_ksp = child->_kstack_page.add_offset(
-        _kstack_page.offset_of(_context.sp));
+    size_t child_ksp = child->_kstack_page.add_offset(kernel_sp_offset);
 
     // Copy child's CPU context.
     child->_context = _context;

@@ -7,7 +7,7 @@
 namespace valkyrie::kernel {
 
 void Page::copy_from(const Page& source) {
-  memcpy(_user_data_addr,
+  memcpy(get(),
          source.get(),
          PAGE_SIZE - PageFrameAllocator::get_block_header_size());
 }
