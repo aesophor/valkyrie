@@ -3,6 +3,7 @@
 #define VALKYRIE_TASK_SCHEDULER_H_
 
 #include <DoublyLinkedList.h>
+#include <Memory.h>
 #include <proc/Task.h>
 
 namespace valkyrie::kernel {
@@ -15,6 +16,7 @@ class TaskScheduler {
   // Starts the task scheduler.
   void run();
 
+
   void enqueue_task(UniquePtr<Task> task);
   UniquePtr<Task> remove_task(const Task& task);
   void schedule();
@@ -24,7 +26,7 @@ class TaskScheduler {
  private:
   TaskScheduler();
 
-  DoublyLinkedList<UniquePtr<Task>> _run_queue;
+  DoublyLinkedList<UniquePtr<Task>> _runqueue;
   DoublyLinkedList<UniquePtr<Task>> _zombies;
 };
 

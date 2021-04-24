@@ -11,13 +11,10 @@
 #include <mm/MemoryManager.h>
 #include <proc/TaskScheduler.h>
 
-extern "C" void switch_to(valkyrie::kernel::Task* prev,
-                          valkyrie::kernel::Task* next);
-
 namespace valkyrie::kernel {
 
-// PID starts at 1
-uint32_t Task::_next_pid = 1;
+// PID starts at 0 (idle task)
+uint32_t Task::_next_pid = 0;
 
 
 Task& Task::get_current() {
@@ -31,9 +28,9 @@ void Task::set_current(const Task* t) {
 }
 
 
-Task::Task(void* entry_point, const char* name)
+Task::Task(Task* parent, void* entry_point, const char* name)
     : _context(),
-      _parent(),
+      _parent(parent),
       _state(Task::State::CREATED),
       _pid(Task::_next_pid++),
       _time_slice(3),
@@ -76,11 +73,11 @@ int Task::fork() {
 
   // Duplicate task
   printk("fork: saving parent cpu context\n");
-  switch_to(&Task::get_current(), nullptr);  // save parent cpu context
+  save_context();
 
   {
     printk("fork: start duplicating task\n");
-    auto child = make_unique<Task>(_entry_point, _name);
+    auto child = make_unique<Task>(this, _entry_point, _name);
     child->_parent = this;
 
     size_t child_trap_frame = reinterpret_cast<uint64_t>(child->_kstack_page) +

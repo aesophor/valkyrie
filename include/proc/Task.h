@@ -11,6 +11,9 @@
 
 namespace valkyrie::kernel {
 
+class Task;
+extern "C" void switch_to(Task* prev, Task* next);
+
 class Task {
  public:
   friend class TaskScheduler;
@@ -25,50 +28,31 @@ class Task {
 
 
   // Constructor
-  Task(void* entry_point, const char* name);
+  Task(Task* parent, void* entry_point, const char* name);
 
   // Destructor
   ~Task();
 
 
+  static Task& get_current();
+  static void  set_current(const Task* t);
+
+  [[gnu::always_inline]] void save_context() { switch_to(this, nullptr); }
+
   int fork();
   int exec(const char* name, const char* const _argv[]);
   void exit();
 
-  static Task& get_current();
-  static void  set_current(const Task* t);
+  Task::State get_state() const { return _state; }
+  uint32_t get_pid() const { return _pid; }
+  TrapFrame* get_trap_frame() const { return _trap_frame; }
+  const char* get_name() const { return _name; }
 
-  Task::State get_state() const {
-    return _state;
-  }
+  void set_state(Task::State state) { _state = state; }
+  void set_trap_frame(TrapFrame* trap_frame) { _trap_frame = trap_frame; }
 
-  void set_state(Task::State state) {
-    _state = state;
-  }
-
-  uint32_t get_pid() const {
-    return _pid;
-  }
-
-  int get_time_slice() const {
-    return _time_slice;
-  }
-
-  void reduce_time_slice() {
-    _time_slice -= 1;
-  }
-
-  TrapFrame* get_trap_frame() const {
-    return _trap_frame;
-  }
-
-  void set_trap_frame(TrapFrame* trap_frame) {
-    _trap_frame = trap_frame;
-  }
-
-  const char* get_name() const {
-    return _name;
-  }
+  int get_time_slice() const { return _time_slice; }
+  void reduce_time_slice() { --_time_slice; }
 
 
  private:
