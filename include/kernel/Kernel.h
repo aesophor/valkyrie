@@ -51,7 +51,7 @@ template <typename... Args>
   console::set_color(console::Color::RED, /*bold=*/true);
   printf("Kernel panic: ");
   console::set_color(console::Color::YELLOW);
-  printf(fmt, args...);
+  printf(fmt, forward<Args>(args)...);
   console::clear_color();
 
   printk("SP = 0x%x\n", stack_pointer);
@@ -62,7 +62,7 @@ template <typename... Args>
   console::set_color(console::Color::RED, /*bold=*/true);
   printf("---[ end Kernel panic: ");
   console::set_color(console::Color::YELLOW);
-  printf(fmt, args...);
+  printf(fmt, forward<Args>(args)...);
   console::clear_color();
 
   ExceptionManager::get_instance().disable();
