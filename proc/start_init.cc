@@ -8,7 +8,7 @@
 
 namespace valkyrie::kernel {
 
-void start_init() {
+[[noreturn]] void start_init() {
   const char* argv[] = {INIT_PATH, nullptr};
   sys_exec(INIT_PATH, argv);
 
