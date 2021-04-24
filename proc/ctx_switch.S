@@ -1,15 +1,17 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+//
+// ctx_switch.S - Context Switch
 
 .section ".text"
 .global switch_to
 switch_to:
   cmp x0, #0
-  beq _restore
+  beq __restore
   
   cmp x0, x1
-  beq _restore
+  beq __restore
 
-_save:
+__save:
   stp x19, x20, [x0, 16 * 0]
   stp x21, x22, [x0, 16 * 1]
   stp x23, x24, [x0, 16 * 2]
@@ -19,9 +21,9 @@ _save:
   mov x9, sp
   str x9, [x0, 16 * 6]
 
-_restore:
+__restore:
   cmp x1, #0
-  beq _out
+  beq __out
 
   ldp x19, x20, [x1, 16 * 0]
   ldp x21, x22, [x1, 16 * 1]
@@ -33,5 +35,5 @@ _restore:
   mov sp,  x9
   msr TPIDR_EL1, x1
 
-_out:
+__out:
   ret
