@@ -17,24 +17,28 @@ ExceptionManager& ExceptionManager::get_instance() {
 }
 
 ExceptionManager::ExceptionManager()
-    : _tasklet_scheduler() {
+    : _is_enabled(),
+      _tasklet_scheduler() {
   // Install the address of exception vector table to VBAR_EL1.
-  asm volatile("msr VBAR_EL1, %0" :: "r"(&evt));
+  asm volatile("msr VBAR_EL1, %0" :: "r" (&evt));
 }
 
 
 void ExceptionManager::enable() {
-  asm volatile("msr DAIFCLR, 0b1111");
+  asm volatile("msr DAIFCLR, #0b1111");
+  _is_enabled = true;
 }
 
 void ExceptionManager::disable() {
-  asm volatile("msr DAIFSET, 0b1111");
+  asm volatile("msr DAIFSET, #0b1111");
+  _is_enabled = false;
 }
 
 
 void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   uint64_t spsr_el1;
   asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
+
   const Exception ex = ExceptionManager::get_instance().get_current_exception();
 
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
@@ -157,6 +161,10 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
 out:
   // Do nothing.
   ;
+}
+
+bool ExceptionManager::is_enabled() const {
+  return _is_enabled;
 }
 
 

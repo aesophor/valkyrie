@@ -25,9 +25,11 @@ void Kernel::run() {
   printk("switching to supervisor mode... (≧▽ ≦)\n");
   _exception_manager.downgrade_exception_level(1);
 
+  printk("enabling timer interrupts\n");
+  _timer_multiplexer.get_arm_core_timer().enable();
+
   printk("starting task scheduler...\n");
   _task_scheduler.run();
-
 
   Kernel::panic("you shouldn't have reached here...\n");
 }
@@ -43,13 +45,14 @@ void Kernel::print_banner() {
 
 void Kernel::print_hardware_info() {
   const auto board_revision = _mailbox.get_board_revision();
-  const auto arm_memory_info = _mailbox.get_arm_memory();
   const auto vc_memory_info = _mailbox.get_vc_memory();
 
   printk("Hardware: Raspberry Pi 3B+ (revision: %x)\n", board_revision);
-  printk("ARM memory size: 0x%x\n", arm_memory_info.second);
+  printk("RAM size: 0x%x\n", _memory_manager.get_ram_size());
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
+
+  printk("%d buddy allocator is needed\n", _memory_manager.get_ram_size() / (0x10200000 - 0x10000000));
 }
 
 }  // namespace valkyrie::kernel

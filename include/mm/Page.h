@@ -12,7 +12,7 @@ class Page final {
  public:
   // Constructor
   explicit
-  Page(void* user_data_addr) : _user_data_addr(user_data_addr) {} 
+  Page(void* user_data_addr);
 
   // Destructor
   ~Page() = default;

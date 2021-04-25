@@ -9,8 +9,8 @@
 
 namespace valkyrie::kernel {
 
-SlobAllocator::SlobAllocator(PageFrameAllocator* page_frame_allocator)
-    : _page_frame_allocator(page_frame_allocator),
+SlobAllocator::SlobAllocator(BuddyAllocator* page_frame_allocator)
+    : _buddy_allocator(page_frame_allocator),
       _page_frame_allocatable_begin(),
       _top_chunk(),
       _page_frame_allocatable_end(),
@@ -162,13 +162,13 @@ size_t SlobAllocator::get_chunk_header_size() {
 
 
 void SlobAllocator::request_new_page_frame() {
-  _page_frame_allocatable_begin = _page_frame_allocator->allocate_one_page_frame();
+  _page_frame_allocatable_begin = _buddy_allocator->allocate_one_page_frame();
 
   _top_chunk = _page_frame_allocatable_begin;
 
   _page_frame_allocatable_end = reinterpret_cast<char*>(_top_chunk) +
                                 PAGE_SIZE -
-                                PageFrameAllocator::get_block_header_size();
+                                BuddyAllocator::get_block_header_size();
 }
 
 bool SlobAllocator::is_first_chunk_in_page_frame(const Slob* chunk) const {

@@ -2,9 +2,9 @@
 #ifndef VALKYRIE_MEMORY_MANAGER_H_
 #define VALKYRIE_MEMORY_MANAGER_H_
 
-#include <mm/PageFrameAllocator.h>
-#include <mm/SlobAllocator.h>
 #include <mm/AddressSanitizer.h>
+#include <mm/BuddyAllocator.h>
+#include <mm/SlobAllocator.h>
 
 namespace valkyrie::kernel {
 
@@ -17,14 +17,16 @@ class MemoryManager {
   void* kmalloc(size_t size);
   void  kfree(void* p);
 
-
   void dump_page_frame_allocator_info() const;
   void dump_slob_allocator_info() const;
+
+  size_t get_ram_size() const;
 
  private:
   MemoryManager();
 
-  PageFrameAllocator _page_frame_allocator;
+  size_t _ram_size;
+  BuddyAllocator _buddy_allocator;
   SlobAllocator _slob_allocator;
   AddressSanitizer _asan;
 };
