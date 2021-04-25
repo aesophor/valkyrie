@@ -173,7 +173,6 @@ class Task {
 
  private:
   size_t construct_argv_chain(const char* const _argv[]);
-  int probe_for_argc(const char* const argv[]) const;
 
   static Task* _init;
   static Task* _kthreadd;
