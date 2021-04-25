@@ -1,4 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// WARNING: DO NOT USE THIS WITHOUT VIRTUAL MEMORY
 #ifndef VALKYRIE_ATOMIC_H_
 #define VALKYRIE_ATOMIC_H_
 

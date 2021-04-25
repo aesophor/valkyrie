@@ -24,16 +24,12 @@ TaskScheduler::TaskScheduler()
 
 
 void TaskScheduler::run() {
-  enqueue_task(make_unique<Task>(nullptr, idle, "idle"));
-  enqueue_task(make_unique<Task>(nullptr, start_init, "init"));
-  enqueue_task(make_unique<Task>(nullptr, start_kthreadd, "kthreadd"));
+  // Enqueue initial tasks.
+  enqueue_task(make_unique<Task>(/*parent=*/nullptr, idle, "idle"));
+  enqueue_task(make_unique<Task>(/*parent=*/nullptr, start_init, "init"));
+  enqueue_task(make_unique<Task>(/*parent=*/nullptr, start_kthreadd, "kthreadd"));
 
-  /*
-  for (int i = 0; i < 5; i++) {
-    create_kernel_thread(foo, "kthread");
-  }
-  */
-
+  // Switch to the first task.
   switch_to(/*prev=*/nullptr, /*next=*/_runqueue.front().get());
 }
 

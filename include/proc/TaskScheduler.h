@@ -17,10 +17,12 @@ class TaskScheduler {
   // Starts the task scheduler.
   void run();
 
+  /*
   template <typename F>
   Task& create_kernel_thread(F func, const char* name) {
     return enqueue_task(make_unique<Task>(&Task::get_kthreadd(), func, name));
   }
+  */
 
   Task& enqueue_task(UniquePtr<Task> task);
   UniquePtr<Task> remove_task(const Task& task);
