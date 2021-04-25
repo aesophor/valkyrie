@@ -51,8 +51,6 @@ void Kernel::print_hardware_info() {
   printk("RAM size: 0x%x\n", _memory_manager.get_ram_size());
   printk("VC core base address: 0x%x\n", vc_memory_info.first);
   printk("VC core size: 0x%x\n", vc_memory_info.second);
-
-  printk("%d buddy allocator is needed\n", _memory_manager.get_ram_size() / (0x10200000 - 0x10000000));
 }
 
 }  // namespace valkyrie::kernel
