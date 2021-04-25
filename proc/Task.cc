@@ -240,55 +240,60 @@ int Task::do_signal(int signal, void (*handler)()) {
 
 
 size_t Task::construct_argv_chain(const char* const _argv[]) {
-  // Construct the argv chain on the user stack.
+  // Construct the argv chain.
   size_t user_sp = _ustack_page.end();
-  int argc = probe_for_argc(_argv);
-  UniquePtr<char*[]> new_strs;
 
-  // The number of items to write on the stack.
-  // i.e. argc itself, $(argc) char pointers, and a nullptr sentinel.
-  size_t nr_items;
+  if (!_argv) {
+    char*** new_argvp = reinterpret_cast<char***>(user_sp);
+    *new_argvp = nullptr;
 
-
-  if (_argv) {
-    // Back up all argv to the kernel heap.
-    String argv[argc];
-    for (int i = 0; i < argc; i++) {
-      argv[i] = _argv[i];
-    }
-
-    new_strs = make_unique<char*[]>(argc);
-
-    for (int i = argc - 1; i >= 0; i--) {
-      size_t len = round_up_to_multiple_of_n(argv[i].size() + 1, 16);
-      user_sp -= len;
-
-      char* s = reinterpret_cast<char*>(user_sp);
-      strcpy(s, argv[i].c_str());
-      new_strs[i] = s;
-    }
-  }
-
-
-  // Calculate the final user SP value.
-  nr_items = argc + 2;
-  user_sp -= nr_items * sizeof(size_t);
-
-  // If `user_sp` is misaligned, minus 8 to make it aligned to 16 byte.
-  if (user_sp & 0xf) {
     user_sp -= 8;
+    int* new_argc = reinterpret_cast<int*>(user_sp);
+    *new_argc = 0;
+
+    return user_sp;
   }
 
-  // Write `argc`.
-  *reinterpret_cast<int*>(user_sp) = argc;
+  int argc = 0;
+  const char* s = _argv[0];
 
-  // Write `argv` pointers.
+  while (s) {
+    s = _argv[++argc];
+  }
+
+  String argv[argc];
+
   for (int i = 0; i < argc; i++) {
-    *reinterpret_cast<char**>(user_sp + 8 * (i + 1)) = new_strs[i];
+    argv[i] = _argv[i];
   }
 
-  // Write `argv` sentinel.
-  *reinterpret_cast<char**>(user_sp + 8 * (argc + 1)) = nullptr;
+  char* addresses[argc];
+
+  for (int i = argc - 1; i >= 0; i--) {
+    size_t len = argv[i].size() + 1;
+    len = round_up_to_multiple_of_n(len, 16);
+    user_sp -= len;
+    char* s = reinterpret_cast<char*>(user_sp);
+    strcpy(s, argv[i].c_str());
+    addresses[i] = s;
+    printf("argv[%d] (0x%x) = %s\n", i, s, s);
+  }
+
+
+  user_sp -= round_up_to_multiple_of_n(sizeof(char*) * (argc + 2), 16);
+  char** new_argv = reinterpret_cast<char**>(user_sp);
+  for (int i = 0; i < argc; i++) {
+    new_argv[i] = addresses[i];
+  }
+  new_argv[argc] = nullptr;
+
+  user_sp -= 8;
+  char*** new_argvp = reinterpret_cast<char***>(user_sp);
+  *new_argvp = &new_argv[0];
+
+  user_sp -= 8;
+  int* new_argc = reinterpret_cast<int*>(user_sp);
+  *new_argc = argc;
 
   return user_sp;
 }
