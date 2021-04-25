@@ -27,7 +27,7 @@ class Page final {
   // Returns the offset of `addr` relative to `_user_data_addr`.
   template <typename T, typename ReturnType = size_t>
   ReturnType offset_of(T addr) const {
-    // Use C-style typecasting here since we are no sure
+    // Use C-style typecasting here since we are not sure
     // whether we should use static_cast or reinterpret_cast.
     size_t ret = ((size_t) addr) - data();
     return reinterpret_cast<ReturnType>(ret);
