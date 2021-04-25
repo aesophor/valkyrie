@@ -46,10 +46,10 @@ size_t round_up_to_pow_of_2(size_t x) {
   return result;
 }
 
-size_t round_up_to_multiple_of_16(size_t x) {
-  size_t result = 16;
+size_t round_up_to_multiple_of_n(size_t x, const size_t n) {
+  size_t result = n;
   while (result < x) {
-    result += 16;
+    result += n;
   }
   return result;
 }

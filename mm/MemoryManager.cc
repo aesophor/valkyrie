@@ -2,6 +2,7 @@
 #include <mm/MemoryManager.h>
 
 #include <dev/Mailbox.h>
+#include <mm/Page.h>
 
 namespace valkyrie::kernel {
 
@@ -12,13 +13,12 @@ MemoryManager& MemoryManager::get_instance() {
 
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::get_instance().get_arm_memory().second),
-      _buddy_allocator(),
-      _slob_allocator(&_buddy_allocator),
-      _asan() {}
+      _asan(),
+      _zones{{0x10000000, 0x200000}} {}
 
 
 void* MemoryManager::get_free_page() {
-  return _buddy_allocator.allocate_one_page_frame();
+  return _zones[0]._buddy_allocator.allocate_one_page_frame();
 }
 
 void* MemoryManager::kmalloc(size_t size) {
@@ -26,9 +26,9 @@ void* MemoryManager::kmalloc(size_t size) {
   if (size +
       BuddyAllocator::get_block_header_size() +
       SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
-    return _buddy_allocator.allocate(size);
+    return _zones[0]._buddy_allocator.allocate(size);
   } else {
-    auto ret = _slob_allocator.allocate(size);
+    auto ret = _zones[0]._slob_allocator.allocate(size);
     _asan.mark_allocated(ret);
     return ret;
   }
@@ -39,20 +39,20 @@ void MemoryManager::kfree(void* p) {
                 BuddyAllocator::get_block_header_size();
 
   if (addr % PAGE_SIZE == 0) {
-    _buddy_allocator.deallocate(p);
+    _zones[0]._buddy_allocator.deallocate(p);
   } else {
     _asan.mark_free_chk(p);
-    _slob_allocator.deallocate(p);
+    _zones[0]._slob_allocator.deallocate(p);
   }
 }
 
 
 void MemoryManager::dump_page_frame_allocator_info() const {
-  _buddy_allocator.dump_memory_map();
+  _zones[0]._buddy_allocator.dump_memory_map();
 }
 
 void MemoryManager::dump_slob_allocator_info() const {
-  _slob_allocator.dump_slob_info();
+  _zones[0]._slob_allocator.dump_slob_info();
 }
 
 

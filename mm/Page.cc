@@ -30,4 +30,4 @@ size_t Page::end() const {
   return begin() + PAGE_SIZE;
 }
 
-}
+}  // namespace valkyrie::kernel

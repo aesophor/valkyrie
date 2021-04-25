@@ -143,7 +143,7 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
 
   for (int i = argc - 1; i >= 0; i--) {
     size_t len = argv[i].size() + 1;
-    len = round_up_to_multiple_of_16(len);
+    len = round_up_to_multiple_of_n(len, 16);
     user_sp -= len;
     char* s = reinterpret_cast<char*>(user_sp);
     strcpy(s, argv[i].c_str());
@@ -152,7 +152,7 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
   }
 
 
-  user_sp -= round_up_to_multiple_of_16(sizeof(char*) * (argc + 2));
+  user_sp -= round_up_to_multiple_of_n(sizeof(char*) * (argc + 2), 16);
   char** new_argv = reinterpret_cast<char**>(user_sp);
   for (int i = 0; i < argc; i++) {
     new_argv[i] = addresses[i];
