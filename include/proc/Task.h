@@ -10,9 +10,6 @@
 #include <mm/PageFrameAllocator.h>
 #include <proc/TrapFrame.h>
 
-#define TASK_0_STACK_TOP HEAP_END
-#define TASK_STACK_SIZE  8192
-
 namespace valkyrie::kernel {
 
 // Forward declaration.
