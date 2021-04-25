@@ -2,24 +2,19 @@
 #include <mm/Page.h>
 
 #include <libs/CString.h>
-#include <mm/BuddyAllocator.h>
 
 namespace valkyrie::kernel {
 
-Page::Page(void* user_data_addr)
-    : _user_data_addr(user_data_addr) {}
+Page::Page(void* user_data_addr) : _user_data_addr(user_data_addr) {}
 
 
 void Page::copy_from(const Page& source) {
-  memcpy(get(),
-         source.get(),
-         PAGE_SIZE - BuddyAllocator::get_block_header_size());
+  memcpy(get(), source.get(), PAGE_DATA_SIZE);
 }
 
 
 size_t Page::begin() const {
-  return reinterpret_cast<size_t>(_user_data_addr) -
-         BuddyAllocator::get_block_header_size();
+  return reinterpret_cast<size_t>(_user_data_addr) - PAGE_HEADER_SIZE;
 }
 
 size_t Page::data() const {
@@ -28,6 +23,11 @@ size_t Page::data() const {
 
 size_t Page::end() const {
   return begin() + PAGE_SIZE;
+}
+
+
+void* Page::get() const {
+  return _user_data_addr;
 }
 
 }  // namespace valkyrie::kernel
