@@ -23,6 +23,65 @@ Task* Task::_kthreadd = nullptr;
 uint32_t Task::_next_pid = 0;
 
 
+Task::Task(Task* parent, void (*entry_point)(), const char* name)
+    : _context(),
+      _parent(parent),
+      _active_children(),
+      _terminated_children(),
+      _state(Task::State::CREATED),
+      _error_code(),
+      _pid(Task::_next_pid++),
+      _time_slice(TASK_TIME_SLICE),
+      _entry_point(entry_point),
+      _elf_dest(),
+      _kstack_page(get_free_page()),
+      _ustack_page(get_free_page()),
+      _name(),
+      _pending_signals(),
+      _custom_signal_handlers() {
+
+  if (unlikely(_pid == 1)) {
+    Task::_init = this;
+  } else if (unlikely(_pid == 2)) {
+    Task::_kthreadd = this;
+  }
+
+  if (likely(parent)) {
+    parent->_active_children.push_back(this);
+  }
+
+  _context.lr = reinterpret_cast<uint64_t>(entry_point);
+  _context.sp = _kstack_page.end();
+  strcpy(_name, name);
+
+  printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x\n",
+      this,
+      _name,
+      _pid,
+      _entry_point);
+}
+
+
+Task::~Task() {
+  printk("destructing thread 0x%x [%s] (pid = %d)\n",
+        this,
+        _name,
+        _pid);
+
+  // If the current task still has running children,
+  // make the init task adopt these orphans.
+  // Note: terminated children will be automatically released.
+  while (!_active_children.empty()) {
+    auto child = _active_children.front();
+    Task::_init->_active_children.push_back(child);
+    _active_children.pop_front();
+  }
+
+  kfree(_kstack_page.get());
+  kfree(_ustack_page.get());
+}
+
+
 Task* Task::get_by_pid(const pid_t pid) {
   if (pid == 1) {
     return Task::_init;

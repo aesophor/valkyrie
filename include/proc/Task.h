@@ -37,65 +37,10 @@ class Task {
   };
 
   // Constructor
-  template <typename T>
-  Task(Task* parent, T entry_point, const char* name)
-      : _context(),
-        _parent(parent),
-        _active_children(),
-        _terminated_children(),
-        _state(Task::State::CREATED),
-        _error_code(),
-        _pid(Task::_next_pid++),
-        _time_slice(TASK_TIME_SLICE),
-        _entry_point(reinterpret_cast<void*>(entry_point)),
-        _elf_dest(),
-        _kstack_page(get_free_page()),
-        _ustack_page(get_free_page()),
-        _name(),
-        _pending_signals(),
-        _custom_signal_handlers() {
-    if (unlikely(_pid == 1)) {
-      Task::_init = this;
-    } else if (unlikely(_pid == 2)) {
-      Task::_kthreadd = this;
-    }
-
-    if (parent) {
-      parent->_active_children.push_back(this);
-    }
-
-    _context.lr = reinterpret_cast<uint64_t>(entry_point);
-    _context.sp = _kstack_page.end();
-    strcpy(_name, name);
-
-    printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x\n",
-        this,
-        _name,
-        _pid,
-        _entry_point);
-  }
-
+  Task(Task* parent, void (*entry_point)(), const char* name);
 
   // Destructor
-  ~Task() {
-    printk("destructing thread 0x%x [%s] (pid = %d)\n",
-        this,
-        _name,
-        _pid);
-
-    // If the current task still has running children,
-    // make the init task adopt these orphans.
-    // Note: terminated children will be automatically released.
-    while (!_active_children.empty()) {
-      auto child = _active_children.front();
-      get_init()._active_children.push_back(child);
-      _active_children.pop_front();
-    }
-
-    kfree(_kstack_page.get());
-    kfree(_ustack_page.get());
-  }
-
+  ~Task();
 
   // Copy constructor
   Task(const Task& r) = delete;
@@ -104,31 +49,21 @@ class Task {
   Task& operator= (const Task& r) = delete;
 
 
-
-  static Task& get_current() {
+  [[gnu::always_inline]] static Task& get_current() {
     Task* current;
     asm volatile("mrs %0, TPIDR_EL1" : "=r" (current));
     return *current;
   }
 
-  static void set_current(const Task* t) {
+  [[gnu::always_inline]] static void set_current(const Task* t) {
     asm volatile("msr TPIDR_EL1, %0" :: "r" (t));
   }
-
-  static Task& get_init() {
-    return *Task::_init;
-  }
-
-  static Task& get_kthreadd() {
-    return *Task::_kthreadd;
-  }
-
-  static Task* get_by_pid(const pid_t pid);
 
   [[gnu::always_inline]] void save_context() {
     switch_to(this, nullptr);
   }
 
+  static Task* get_by_pid(const pid_t pid);
 
   int do_fork();
   int do_exec(const char* name, const char* const _argv[]);
@@ -151,11 +86,7 @@ class Task {
   int get_time_slice() const { return _time_slice; }
   void set_time_slice(int time_slice) { _time_slice = time_slice; }
 
-  void tick() {
-    if (_time_slice > 0) {
-      _time_slice--;
-    }
-  }
+  void tick() { if (_time_slice > 0) _time_slice--; }
 
 
   size_t get_children_count() const {
@@ -202,7 +133,7 @@ class Task {
   int _error_code;
   pid_t _pid;
   int _time_slice;
-  void* _entry_point;
+  void (*_entry_point)();
   void* _elf_dest;
   Page _kstack_page;
   Page _ustack_page;
