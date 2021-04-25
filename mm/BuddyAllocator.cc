@@ -6,25 +6,30 @@
 #include <kernel/Compiler.h>
 #include <kernel/Kernel.h>
 #include <libs/Math.h>
+#include <mm/Page.h>
 
 namespace valkyrie::kernel {
 
-BuddyAllocator::BuddyAllocator()
-    : _frame_array(),
-      _frame_array_size(sizeof(_frame_array) / sizeof(_frame_array[0])),
+BuddyAllocator::BuddyAllocator(const size_t zone_begin)
+    : _zone_begin(zone_begin),
+      _frame_array(),
       _free_lists() {
-  const int order = size_to_order(HEAP_END - HEAP_BEGIN);
+  const int order = size_to_order(get_zone_end() - _zone_begin);
 
-  for (size_t i = 1; i < _frame_array_size; i++) {
+  for (size_t i = 1; i < MAX_ORDER_NR_PAGES; i++) {
     _frame_array[i] = DONT_ALLOCATE;
   }
   _frame_array[0] = order;
 
-  _free_lists[order] = reinterpret_cast<Block*>(HEAP_BEGIN);
+  _free_lists[order] = reinterpret_cast<Block*>(_zone_begin);
   _free_lists[order]->order = _frame_array[0];
   _free_lists[order]->next = nullptr;
 }
 
+
+size_t BuddyAllocator::get_block_header_size() {
+  return sizeof(Block);
+}
 
 void* BuddyAllocator::allocate(size_t requested_size) {
   if (unlikely(!requested_size)) {
@@ -109,7 +114,7 @@ void BuddyAllocator::deallocate(void* p) {
 void BuddyAllocator::dump_memory_map() const {
   puts("--- dumping buddy ---");
 
-  for (size_t i = 0; i < _frame_array_size; i++) {
+  for (size_t i = 0; i < MAX_ORDER_NR_PAGES; i++) {
     if (_frame_array[i] == DONT_ALLOCATE) {
       // Do nothing.
     } else if (_frame_array[i] == ALLOCATED) {
@@ -138,13 +143,9 @@ void* BuddyAllocator::allocate_one_page_frame() {
   return allocate(PAGE_SIZE - sizeof(Block));
 }
 
-size_t BuddyAllocator::get_block_header_size() {
-  return sizeof(Block);
-}
-
 
 int BuddyAllocator::get_page_frame_index(const Block* block) const {
-  return (reinterpret_cast<size_t>(block) - HEAP_BEGIN) / PAGE_SIZE;
+  return (reinterpret_cast<size_t>(block) - _zone_begin) / PAGE_SIZE;
 }
 
 void BuddyAllocator::mark_block_as_allocated(const Block* block) {
@@ -265,18 +266,25 @@ BuddyAllocator::Block* BuddyAllocator::get_buddy(Block* block) {
 }
 
 
-size_t BuddyAllocator::normalize_size(size_t size) {
-  return round_up_to_pow_of_2(size);
-}
-
-
-int BuddyAllocator::size_to_order(const size_t size) {
+int BuddyAllocator::size_to_order(const size_t size) const {
   // e.g., 4096 -> 0, 8192 -> 1, 16384 -> 2
   return log2(size / PAGE_SIZE);
 }
 
-bool BuddyAllocator::is_block_allocated(const Block* block) {
+int BuddyAllocator::order_to_size(const size_t order) const {
+  return pow(2, order) * PAGE_SIZE;
+}
+
+bool BuddyAllocator::is_block_allocated(const Block* block) const {
   return _frame_array[get_page_frame_index(block)] == ALLOCATED;
+}
+
+size_t BuddyAllocator::normalize_size(size_t size) const {
+  return round_up_to_pow_of_2(size);
+}
+
+size_t BuddyAllocator::get_zone_end() const {
+  return _zone_begin + order_to_size(MAX_ORDER - 1);
 }
 
 }  // namespace valkyrie::kernel

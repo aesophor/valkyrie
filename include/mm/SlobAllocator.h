@@ -2,16 +2,20 @@
 #ifndef VALKYRIE_SLOB_ALLOCATOR_H_
 #define VALKYRIE_SLOB_ALLOCATOR_H_
 
-#include <mm/BuddyAllocator.h>
+#include <Types.h>
 
 #define CHUNK_SMALLEST_SIZE static_cast<size_t>(0x10)
 #define CHUNK_LARGEST_SIZE  static_cast<size_t>(0x80)
 #define CHUNK_SIZE_GAP      0x10
 
-#define NUM_OF_BINS \
-  static_cast<int>((CHUNK_LARGEST_SIZE - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP + 1)
+#define NR_BINS                                                        \
+  static_cast<int>(                                                    \
+      (CHUNK_LARGEST_SIZE - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP + 1)
 
 namespace valkyrie::kernel {
+
+// Forward Declaration
+class BuddyAllocator;
 
 class SlobAllocator {
  public:
@@ -62,7 +66,7 @@ class SlobAllocator {
   void* _page_frame_allocatable_end;
   int32_t _top_chunk_prev_chunk_size;
 
-  Slob* _bins[NUM_OF_BINS];
+  Slob* _bins[NR_BINS];
   Slob* _unsorted_bin;
 };
 

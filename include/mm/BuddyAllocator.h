@@ -3,30 +3,26 @@
 #define VALKYRIE_BUDDY_ALLOCATOR_H_
 
 #include <Types.h>
-#include <mm/Page.h>
 
-#define HEAP_BEGIN 0X10000000
-#define HEAP_END   0x10200000
+#define MAX_ORDER          10
+#define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
 
-#define MAX_ORDER 10
-
-#define ALLOCATED     static_cast<int8_t>(-1)
-#define DONT_ALLOCATE static_cast<int8_t>(-2)
+#define ALLOCATED          static_cast<int8_t>(-1)
+#define DONT_ALLOCATE      static_cast<int8_t>(-2)
 
 namespace valkyrie::kernel {
 
 class BuddyAllocator {
  public:
-  BuddyAllocator();
+  explicit BuddyAllocator(const size_t zone_begin);
   ~BuddyAllocator() = default;
+
+  static size_t get_block_header_size();
 
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
   void  dump_memory_map() const;
-
   void* allocate_one_page_frame();
-
-  static size_t get_block_header_size();
 
  private:
   struct Block {
@@ -42,16 +38,22 @@ class BuddyAllocator {
   void free_list_add_head(Block* block);
   void free_list_del_entry(Block* block);
 
-  int size_to_order(const size_t size);
-
-  bool is_block_allocated(const Block* block);
-
   // Recursively split the given block
   // until it is exactly the size of PAGE_SIZE * 2^`target_order`.
   Block* split_block(Block* block, const int target_order);
   Block* get_buddy(Block* block);
 
-  size_t normalize_size(size_t size);
+  int size_to_order(const size_t size) const;
+  int order_to_size(const size_t order) const;
+  bool is_block_allocated(const Block* block) const;
+  size_t normalize_size(size_t size) const;
+  size_t get_zone_end() const;
+
+
+
+  // The address of the beginning of this zone.
+  // Each buddy allocator manages a "zone".
+  const size_t _zone_begin;
 
   // The Frame Array (or "The Array")
   // See: https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab3.html#data-structure
@@ -66,8 +68,7 @@ class BuddyAllocator {
   // (3) x == DONT_ALLOCATE : this block is free,
   //                          but it belongs to another larger contiguous block,
   //                          so the buddy allocator shouldn't directly allocate it.
-  int8_t _frame_array[(HEAP_END - HEAP_BEGIN) / PAGE_SIZE];
-  const size_t _frame_array_size;
+  int8_t _frame_array[MAX_ORDER_NR_PAGES];
 
   // An array of Singly-linked Lists of free page frames of different sizes.
   // See: https://www.kernel.org/doc/gorman/html/understand/understand009.html

@@ -3,8 +3,7 @@
 #define VALKYRIE_MEMORY_MANAGER_H_
 
 #include <mm/AddressSanitizer.h>
-#include <mm/BuddyAllocator.h>
-#include <mm/SlobAllocator.h>
+#include <mm/Zone.h>
 
 namespace valkyrie::kernel {
 
@@ -25,10 +24,9 @@ class MemoryManager {
  private:
   MemoryManager();
 
-  size_t _ram_size;
-  BuddyAllocator _buddy_allocator;
-  SlobAllocator _slob_allocator;
+  const size_t _ram_size;
   AddressSanitizer _asan;
+  Zone _zones[1];
 };
 
 }  // namespace valkyrie::kernel

@@ -3,6 +3,7 @@
 #define VALKYRIE_SYSCALL_H_
 
 #include <Types.h>
+#include <Utility.h>
 #include <dev/Console.h>
 #include <kernel/Compiler.h>
 #include <proc/TrapFrame.h>
@@ -50,6 +51,7 @@ size_t do_syscall(const uint64_t id, Args... args) {
     printk("bad system call: (id=0x%x)\n", id);
     return -1;
   }
+
   // Invoke the specified system call.
   return reinterpret_cast<size_t (*)(Args...)>(__syscall_table[id])(args...);
 }
