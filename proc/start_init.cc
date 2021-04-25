@@ -9,7 +9,7 @@
 namespace valkyrie::kernel {
 
 [[noreturn]] void start_init() {
-  const char* argv[] = {INIT_PATH, "-o", "omg", nullptr};
+  const char* argv[] = {INIT_PATH, "-o", "omg", "haha", nullptr};
   Task::get_current().do_exec(INIT_PATH, argv);
 
   // sys_exec() shouldn't have returned.

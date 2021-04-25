@@ -74,9 +74,6 @@ int Task::do_fork() {
 
 
   // Duplicate task.
-  Mutex m;
-  m.lock();
-
   auto task = make_unique<Task>(/*parent=*/this, _entry_point, _name);
   Task* child = task.get();
 
@@ -105,8 +102,6 @@ int Task::do_fork() {
   child->_kstack_page.copy_from(_kstack_page);
   child->_ustack_page.copy_from(_ustack_page);
   
-  m.unlock();
-
   /* ------ You can safely modify the child now ------ */
 
   // Set parent's fork() return value to child's pid.
@@ -241,33 +236,31 @@ int Task::do_signal(int signal, void (*handler)()) {
 
 size_t Task::construct_argv_chain(const char* const _argv[]) {
   // Construct the argv chain.
-  size_t user_sp = _ustack_page.end();
-
-  if (!_argv) {
-    char*** new_argvp = reinterpret_cast<char***>(user_sp);
-    *new_argvp = nullptr;
-
-    user_sp -= 8;
-    int* new_argc = reinterpret_cast<int*>(user_sp);
-    *new_argc = 0;
-
-    return user_sp;
-  }
+  size_t user_sp = _ustack_page.end() - 0x10;
+  printk("user_sp = 0x%x\n", user_sp);
 
   int argc = 0;
-  const char* s = _argv[0];
 
-  while (s) {
-    s = _argv[++argc];
+  UniquePtr<String[]> argv;
+  UniquePtr<char*[]> addresses;
+
+  char** new_argv;
+  char** new_argv_data = nullptr;
+
+  if (!_argv) {
+    goto out;
   }
 
-  String argv[argc];
+  for (const char* s = _argv[0]; s; s = _argv[++argc]);
+  printk("argc = %d\n", argc);
+
+
+  argv = make_unique<String[]>(argc);
+  addresses = make_unique<char*[]>(argc);
 
   for (int i = 0; i < argc; i++) {
     argv[i] = _argv[i];
   }
-
-  char* addresses[argc];
 
   for (int i = argc - 1; i >= 0; i--) {
     size_t len = argv[i].size() + 1;
@@ -279,33 +272,29 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
     printf("argv[%d] (0x%x) = %s\n", i, s, s);
   }
 
-
   user_sp -= round_up_to_multiple_of_n(sizeof(char*) * (argc + 2), 16);
-  char** new_argv = reinterpret_cast<char**>(user_sp);
+  new_argv = reinterpret_cast<char**>(user_sp);
   for (int i = 0; i < argc; i++) {
     new_argv[i] = addresses[i];
   }
   new_argv[argc] = nullptr;
 
+  new_argv_data = &new_argv[0];
+
+out:
   user_sp -= 8;
   char*** new_argvp = reinterpret_cast<char***>(user_sp);
-  *new_argvp = &new_argv[0];
+  *new_argvp = new_argv_data;
 
   user_sp -= 8;
   int* new_argc = reinterpret_cast<int*>(user_sp);
   *new_argc = argc;
 
-  return user_sp;
-}
-
-int Task::probe_for_argc(const char* const argv[]) const {
-  if (!argv) {
-    return 0;
+  if (user_sp & 0xf) {
+    Kernel::panic("sys_exec: user_sp misaligned!\n");
   }
 
-  int argc = 0;
-  for (const char* s = argv[0]; s; s = argv[++argc]);
-  return argc;
+  return user_sp;
 }
 
 
