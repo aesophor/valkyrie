@@ -172,7 +172,7 @@ class Task {
   
 
  private:
-  size_t construct_argv_chain(const char* const _argv[]);
+  size_t copy_arguments_to_user_stack(const char* const _argv[]);
 
   static Task* _init;
   static Task* _kthreadd;
