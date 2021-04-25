@@ -25,7 +25,7 @@ class MemoryManager {
   MemoryManager();
 
   const size_t _ram_size;
-  AddressSanitizer _asan;
+  AddressSanitizer _kasan;
   Zone _zones[1];
 };
 
