@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/MemoryManager.h>
 
+#include <dev/Console.h>
 #include <dev/Mailbox.h>
 #include <mm/Page.h>
 
@@ -13,9 +14,31 @@ MemoryManager& MemoryManager::get_instance() {
 
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::get_instance().get_arm_memory().second),
-      _kasan(),
-      _zones{{0x10000000, 0x200000}} {}
+      _zones(initialize_zones()),
+      _kasan() {}
 
+
+Zone* MemoryManager::initialize_zones() {
+  printk("sizeof(BuddyAllocator) = %d\n", sizeof(BuddyAllocator));
+  printk("sizeof(SlobAllocator) = %d\n", sizeof(SlobAllocator));
+
+  size_t nr_pages = (_ram_size - 0x10000000) / PAGE_SIZE;
+  printk("%d of pages to manage\n", nr_pages);
+
+  size_t nr_zones = nr_pages / Zone::get_pages_count();
+  printk("%d zones are needed\n", nr_zones);
+
+  printk("zone structs size = 0x%x\n", nr_zones * (sizeof(BuddyAllocator) + sizeof(SlobAllocator)));
+
+  Zone* zone = reinterpret_cast<Zone*>(0x400000);
+  for (size_t i = 0; i < nr_zones; i++, zone++) { 
+    zone->Zone(reinterpret_cast<size_t>(zone), 0x200000);
+    zone->buddy_allocator();
+  }
+
+  while (1);
+  return reinterpret_cast<Zone*>(0x400000);
+}
 
 void* MemoryManager::get_free_page() {
   return _zones[0].buddy_allocator.allocate_one_page_frame();

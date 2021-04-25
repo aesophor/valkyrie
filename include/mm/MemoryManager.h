@@ -24,9 +24,11 @@ class MemoryManager {
  private:
   MemoryManager();
 
+  Zone* initialize_zones();
+
   const size_t _ram_size;
+  Zone* _zones;
   AddressSanitizer _kasan;
-  Zone _zones[1];
 };
 
 }  // namespace valkyrie::kernel

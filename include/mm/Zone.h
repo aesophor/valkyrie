@@ -15,11 +15,8 @@
 namespace valkyrie::kernel {
 
 struct Zone final {
-  Zone(const size_t begin_addr, const size_t size);
-  ~Zone() = default;
-
-  const size_t begin_addr;
-  const size_t size;
+  // Returns the number of pages in each zone.
+  static size_t get_pages_count();
 
   BuddyAllocator buddy_allocator;
   SlobAllocator  slob_allocator;
