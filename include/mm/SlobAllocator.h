@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_SLOB_ALLOCATOR_H_
 #define VALKYRIE_SLOB_ALLOCATOR_H_
 
-#include <mm/PageFrameAllocator.h>
+#include <mm/BuddyAllocator.h>
 
 #define CHUNK_SMALLEST_SIZE static_cast<size_t>(0x10)
 #define CHUNK_LARGEST_SIZE  static_cast<size_t>(0x80)
@@ -15,7 +15,7 @@ namespace valkyrie::kernel {
 
 class SlobAllocator {
  public:
-  explicit SlobAllocator(PageFrameAllocator* page_frame_allocator);
+  explicit SlobAllocator(BuddyAllocator* page_frame_allocator);
   ~SlobAllocator() = default;
 
   void* allocate(size_t requested_size);
@@ -56,7 +56,7 @@ class SlobAllocator {
   size_t normalize_size(size_t size);
 
 
-  PageFrameAllocator* _page_frame_allocator;
+  BuddyAllocator* _buddy_allocator;
   void* _page_frame_allocatable_begin;
   void* _top_chunk;
   void* _page_frame_allocatable_end;

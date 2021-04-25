@@ -5,6 +5,7 @@
 #include <fs/ELF.h>
 #include <fs/Initramfs.h>
 #include <kernel/ExceptionManager.h>
+#include <kernel/Kernel.h>
 #include <libs/Math.h>
 #include <proc/TaskScheduler.h>
 
@@ -77,13 +78,12 @@ child_pc:
 
 
 int Task::exec(const char* name, const char* const _argv[]) {
-  size_t kernel_sp = _kstack_page.end();
+  // Update task name
+  strcpy(_name, name);
 
   // Construct the argv chain on the user stack.
   size_t user_sp = construct_argv_chain(_argv);
-
-  // Update task name
-  strcpy(_name, name);
+  size_t kernel_sp = _kstack_page.end();
 
   // Reset the stack pointer.
   _context.sp = user_sp;
@@ -100,7 +100,7 @@ int Task::exec(const char* name, const char* const _argv[]) {
 
   // Jump to the entry point.
   printk("executing new program: %s, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
-         name, _kstack_page, _ustack_page);
+         _name, _kstack_page, _ustack_page);
 
   ExceptionManager::get_instance()
     .downgrade_exception_level(0,
@@ -116,7 +116,9 @@ void Task::exit() {
   auto& sched = TaskScheduler::get_instance();
 
   sched.mark_terminated(*this);
+
   sched.schedule();
+  Kernel::panic("sys_exit: returned from sched.\n");
 }
 
 

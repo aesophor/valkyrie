@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_PAGE_FRAME_ALLOCATOR_H_
-#define VALKYRIE_PAGE_FRAME_ALLOCATOR_H_
+#ifndef VALKYRIE_BUDDY_ALLOCATOR_H_
+#define VALKYRIE_BUDDY_ALLOCATOR_H_
 
 #include <Types.h>
 #include <mm/Page.h>
@@ -15,10 +15,10 @@
 
 namespace valkyrie::kernel {
 
-class PageFrameAllocator {
+class BuddyAllocator {
  public:
-  PageFrameAllocator();
-  ~PageFrameAllocator() = default;
+  BuddyAllocator();
+  ~BuddyAllocator() = default;
 
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
@@ -76,4 +76,4 @@ class PageFrameAllocator {
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_PAGE_FRAME_ALLOCATOR_H_
+#endif  // VALKYRIE_BUDDY_ALLOCATOR_H_

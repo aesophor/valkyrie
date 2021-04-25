@@ -7,7 +7,6 @@
 #include <libs/CString.h>
 #include <mm/Page.h>
 #include <mm/MemoryManager.h>
-#include <mm/PageFrameAllocator.h>
 #include <proc/TrapFrame.h>
 
 namespace valkyrie::kernel {
@@ -81,7 +80,8 @@ class Task {
 
   int fork();
   int exec(const char* name, const char* const _argv[]);
-  void exit();
+  [[noreturn]] void exit();
+
 
   Task::State get_state() const { return _state; }
   uint32_t get_pid() const { return _pid; }

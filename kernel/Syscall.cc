@@ -19,6 +19,8 @@ const size_t __syscall_table[__NR_syscall] = {
   SYSCALL_DECL(sys_exec),
   SYSCALL_DECL(sys_exit),
   SYSCALL_DECL(sys_getpid),
+  SYSCALL_DECL(sys_timer_irq_enable),
+  SYSCALL_DECL(sys_timer_irq_disable),
 };
 
 

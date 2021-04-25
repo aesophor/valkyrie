@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <mm/PageFrameAllocator.h>
+#include <mm/BuddyAllocator.h>
 
 #include <Utility.h>
 #include <dev/Console.h>
@@ -9,7 +9,7 @@
 
 namespace valkyrie::kernel {
 
-PageFrameAllocator::PageFrameAllocator()
+BuddyAllocator::BuddyAllocator()
     : _frame_array(),
       _frame_array_size(sizeof(_frame_array) / sizeof(_frame_array[0])),
       _free_lists() {
@@ -26,7 +26,7 @@ PageFrameAllocator::PageFrameAllocator()
 }
 
 
-void* PageFrameAllocator::allocate(size_t requested_size) {
+void* BuddyAllocator::allocate(size_t requested_size) {
   if (unlikely(!requested_size)) {
     return nullptr;
   }
@@ -73,7 +73,7 @@ out:
   return victim + 1;  // skip the header
 }
 
-void PageFrameAllocator::deallocate(void* p) {
+void BuddyAllocator::deallocate(void* p) {
   if (unlikely(!p)) {
     return;
   }
@@ -106,7 +106,7 @@ void PageFrameAllocator::deallocate(void* p) {
   mark_block_as_allocatable(block);
 }
 
-void PageFrameAllocator::dump_memory_map() const {
+void BuddyAllocator::dump_memory_map() const {
   puts("--- dumping buddy ---");
 
   for (size_t i = 0; i < _frame_array_size; i++) {
@@ -134,20 +134,20 @@ void PageFrameAllocator::dump_memory_map() const {
   puts("--- end dumping buddy ---");
 }
 
-void* PageFrameAllocator::allocate_one_page_frame() {
+void* BuddyAllocator::allocate_one_page_frame() {
   return allocate(PAGE_SIZE - sizeof(Block));
 }
 
-size_t PageFrameAllocator::get_block_header_size() {
+size_t BuddyAllocator::get_block_header_size() {
   return sizeof(Block);
 }
 
 
-int PageFrameAllocator::get_page_frame_index(const Block* block) const {
+int BuddyAllocator::get_page_frame_index(const Block* block) const {
   return (reinterpret_cast<size_t>(block) - HEAP_BEGIN) / PAGE_SIZE;
 }
 
-void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
+void BuddyAllocator::mark_block_as_allocated(const Block* block) {
   int idx = get_page_frame_index(block);
   int len = pow(2, block->order);
  
@@ -156,7 +156,7 @@ void PageFrameAllocator::mark_block_as_allocated(const Block* block) {
   }
 }
 
-void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
+void BuddyAllocator::mark_block_as_allocatable(const Block* block) {
   int idx = get_page_frame_index(block);
   int len = pow(2, block->order);
 
@@ -167,7 +167,7 @@ void PageFrameAllocator::mark_block_as_allocatable(const Block* block) {
 }
 
 
-void PageFrameAllocator::free_list_del_head(Block* block) {
+void BuddyAllocator::free_list_del_head(Block* block) {
   if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
   }
@@ -180,7 +180,7 @@ void PageFrameAllocator::free_list_del_head(Block* block) {
   block->next = nullptr;
 }
 
-void PageFrameAllocator::free_list_add_head(Block* block) {
+void BuddyAllocator::free_list_add_head(Block* block) {
   if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_add_head(nullptr)\n");
   }
@@ -199,7 +199,7 @@ void PageFrameAllocator::free_list_add_head(Block* block) {
   }
 }
 
-void PageFrameAllocator::free_list_del_entry(Block* block) {
+void BuddyAllocator::free_list_del_entry(Block* block) {
   if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_del_entry(nullptr)\n");
   }
@@ -225,7 +225,7 @@ void PageFrameAllocator::free_list_del_entry(Block* block) {
 }
 
 
-PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
+BuddyAllocator::Block* BuddyAllocator::split_block(Block* block,
                                                            const int target_order) {
   if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: block == nullptr\n");
@@ -258,24 +258,24 @@ PageFrameAllocator::Block* PageFrameAllocator::split_block(Block* block,
   return split_block(buddies.first, target_order);
 }
 
-PageFrameAllocator::Block* PageFrameAllocator::get_buddy(Block* block) {
+BuddyAllocator::Block* BuddyAllocator::get_buddy(Block* block) {
   const size_t b1 = reinterpret_cast<size_t>(block);
   const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
   return reinterpret_cast<Block*>(b2);
 }
 
 
-size_t PageFrameAllocator::normalize_size(size_t size) {
+size_t BuddyAllocator::normalize_size(size_t size) {
   return round_up_to_pow_of_2(size);
 }
 
 
-int PageFrameAllocator::size_to_order(const size_t size) {
+int BuddyAllocator::size_to_order(const size_t size) {
   // e.g., 4096 -> 0, 8192 -> 1, 16384 -> 2
   return log2(size / PAGE_SIZE);
 }
 
-bool PageFrameAllocator::is_block_allocated(const Block* block) {
+bool BuddyAllocator::is_block_allocated(const Block* block) {
   return _frame_array[get_page_frame_index(block)] == ALLOCATED;
 }
 

@@ -44,6 +44,8 @@ class ExceptionManager final {
                                  void* high_level_sp = nullptr,
                                  void* low_level_sp = nullptr);
 
+  bool is_enabled() const;
+
  private:
   ExceptionManager();
 
@@ -55,6 +57,7 @@ class ExceptionManager final {
 
   Exception get_current_exception();
 
+  bool _is_enabled;
   TaskletScheduler _tasklet_scheduler;
 };
 
