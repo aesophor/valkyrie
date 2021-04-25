@@ -120,7 +120,6 @@ int Task::do_fork() {
   child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
 
 out:
-  //printf("pid: %d, ret = %d\n", Task::get_current()._pid, ret);
   return ret;
 }
 
@@ -130,7 +129,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   strncpy(_name, name, TASK_NAME_MAX_LEN - 1);
 
   // Construct the argv chain on the user stack.
-  size_t user_sp = construct_argv_chain(_argv);
+  size_t user_sp = copy_arguments_to_user_stack(_argv);
   size_t kernel_sp = _kstack_page.end();
 
   // Reset the stack pointer.
@@ -164,7 +163,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
                                reinterpret_cast<void*>(kernel_sp),
                                reinterpret_cast<void*>(user_sp));
 failed:
-  printf("exec failed: pid = %d [%s]\n", _pid, _name);
+  printk("exec failed: pid = %d [%s]\n", _pid, _name);
   return -1;
 }
 
@@ -234,64 +233,60 @@ int Task::do_signal(int signal, void (*handler)()) {
 }
 
 
-size_t Task::construct_argv_chain(const char* const _argv[]) {
-  // Construct the argv chain.
-  size_t user_sp = _ustack_page.end() - 0x10;
-  printk("user_sp = 0x%x\n", user_sp);
-
+size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
   int argc = 0;
+  char** copied_argv = nullptr;
+  char** copied_argv_ptr = nullptr;
+  size_t user_sp = _ustack_page.end() - 0x10;
+  UniquePtr<String[]> strings;
+  UniquePtr<char*[]> copied_str_addrs;
 
-  UniquePtr<String[]> argv;
-  UniquePtr<char*[]> addresses;
-
-  char** new_argv;
-  char** new_argv_data = nullptr;
-
-  if (!_argv) {
+  if (!argv) {
     goto out;
   }
 
-  for (const char* s = _argv[0]; s; s = _argv[++argc]);
-  printk("argc = %d\n", argc);
+  // Probe for argc from `_argv`.
+  for (const char* s = argv[0]; s; s = argv[++argc]);
+  strings = make_unique<String[]>(argc);
+  copied_str_addrs = make_unique<char*[]>(argc);
 
-
-  argv = make_unique<String[]>(argc);
-  addresses = make_unique<char*[]>(argc);
-
+  // Copy all `argv` to kernel heap.
   for (int i = 0; i < argc; i++) {
-    argv[i] = _argv[i];
+    strings[i] = argv[i];
   }
 
+  // Actually copy all C strings to user stack,
+  // at the meanwhile save the new C strings' addrs in `copied_str_addrs`.
   for (int i = argc - 1; i >= 0; i--) {
-    size_t len = argv[i].size() + 1;
-    len = round_up_to_multiple_of_n(len, 16);
+    size_t len = round_up_to_multiple_of_n(strings[i].size() + sizeof('\0'), 16);
     user_sp -= len;
+
     char* s = reinterpret_cast<char*>(user_sp);
-    strcpy(s, argv[i].c_str());
-    addresses[i] = s;
-    printf("argv[%d] (0x%x) = %s\n", i, s, s);
+    strcpy(reinterpret_cast<char*>(user_sp), strings[i].c_str());
+    copied_str_addrs[i] = s;
   }
 
+  // Subtract user SP and make it align to a 16-byte boundary.
   user_sp -= round_up_to_multiple_of_n(sizeof(char*) * (argc + 2), 16);
-  new_argv = reinterpret_cast<char**>(user_sp);
-  for (int i = 0; i < argc; i++) {
-    new_argv[i] = addresses[i];
-  }
-  new_argv[argc] = nullptr;
 
-  new_argv_data = &new_argv[0];
+  // Now we will write the addrs in `copied_str_addrs`
+  // towards high address starting from user SP.
+  copied_argv = reinterpret_cast<char**>(user_sp);
+  for (int i = 0; i < argc; i++) {
+    copied_argv[i] = copied_str_addrs[i];
+  }
+  copied_argv[argc] = nullptr;
+  copied_argv_ptr = &copied_argv[0];
 
 out:
   user_sp -= 8;
-  char*** new_argvp = reinterpret_cast<char***>(user_sp);
-  *new_argvp = new_argv_data;
+  *reinterpret_cast<char***>(user_sp) = copied_argv_ptr;
 
   user_sp -= 8;
-  int* new_argc = reinterpret_cast<int*>(user_sp);
-  *new_argc = argc;
+  *reinterpret_cast<int*>(user_sp) = argc;
 
   if (user_sp & 0xf) {
-    Kernel::panic("sys_exec: user_sp misaligned!\n");
+    Kernel::panic("sys_exec: user SP misaligned!\n");
   }
 
   return user_sp;
