@@ -18,7 +18,7 @@ MemoryManager::MemoryManager()
 
 
 void* MemoryManager::get_free_page() {
-  return _zones[0]._buddy_allocator.allocate_one_page_frame();
+  return _zones[0].buddy_allocator.allocate_one_page_frame();
 }
 
 void* MemoryManager::kmalloc(size_t size) {
@@ -26,9 +26,9 @@ void* MemoryManager::kmalloc(size_t size) {
   if (size +
       BuddyAllocator::get_block_header_size() +
       SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
-    return _zones[0]._buddy_allocator.allocate(size);
+    return _zones[0].buddy_allocator.allocate(size);
   } else {
-    auto ret = _zones[0]._slob_allocator.allocate(size);
+    auto ret = _zones[0].slob_allocator.allocate(size);
     _asan.mark_allocated(ret);
     return ret;
   }
@@ -39,20 +39,20 @@ void MemoryManager::kfree(void* p) {
                 BuddyAllocator::get_block_header_size();
 
   if (addr % PAGE_SIZE == 0) {
-    _zones[0]._buddy_allocator.deallocate(p);
+    _zones[0].buddy_allocator.deallocate(p);
   } else {
     _asan.mark_free_chk(p);
-    _zones[0]._slob_allocator.deallocate(p);
+    _zones[0].slob_allocator.deallocate(p);
   }
 }
 
 
 void MemoryManager::dump_page_frame_allocator_info() const {
-  _zones[0]._buddy_allocator.dump_memory_map();
+  _zones[0].buddy_allocator.dump_memory_map();
 }
 
 void MemoryManager::dump_slob_allocator_info() const {
-  _zones[0]._slob_allocator.dump_slob_info();
+  _zones[0].slob_allocator.dump_slob_info();
 }
 
 

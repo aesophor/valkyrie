@@ -18,11 +18,11 @@ struct Zone final {
   Zone(const size_t begin_addr, const size_t size);
   ~Zone() = default;
 
-  const size_t _begin_addr;
-  const size_t _size;
+  const size_t begin_addr;
+  const size_t size;
 
-  BuddyAllocator _buddy_allocator;
-  SlobAllocator _slob_allocator;
+  BuddyAllocator buddy_allocator;
+  SlobAllocator  slob_allocator;
 };
 
 }  // namespace valkyrie::kernel
