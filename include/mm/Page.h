@@ -3,8 +3,11 @@
 #define VALKYRIE_PAGE_H_
 
 #include <Types.h>
+#include <mm/BuddyAllocator.h>
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE        4096
+#define PAGE_HEADER_SIZE (BuddyAllocator::get_block_header_size())
+#define PAGE_DATA_SIZE   (PAGE_SIZE - PAGE_HEADER_SIZE)
 
 namespace valkyrie::kernel {
 
@@ -39,8 +42,7 @@ class Page final {
   size_t begin() const;
   size_t data() const;
   size_t end() const;
-
-  void* get() const { return _user_data_addr; }
+  void* get() const;
 
  private:
   void* _user_data_addr;
