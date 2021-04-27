@@ -72,7 +72,7 @@ void TaskScheduler::schedule() {
   switch_to(&Task::get_current(), _runqueue.front().get());
 }
 
-void TaskScheduler::mark_terminated(Task& task) {
+void TaskScheduler::terminate(Task& task) {
   task.set_state(Task::State::TERMINATED);
   _zombies.push_back(remove_task(task));
 }

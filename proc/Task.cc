@@ -90,7 +90,8 @@ int Task::exec(const char* name, const char* const _argv[]) {
 
   // Load the specified file from the filesystem.
   ELF elf(Initramfs::get_instance().read(name));
-  void* dest = reinterpret_cast<void*>(0x20000000);
+  void* dest = (char*) kmalloc(elf.get_size() + 0x1000) + 0x1000 - 0x10;
+  printk("loading ELF at 0x%x\n", dest);
 
   if (!elf.is_valid()) {
     goto failed;
@@ -112,10 +113,11 @@ failed:
   return -1;
 }
 
-void Task::exit() {
+[[noreturn]] void Task::exit() {
   auto& sched = TaskScheduler::get_instance();
 
-  sched.mark_terminated(*this);
+  sched.terminate(*this);
+  kfree(_elf_dest);
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");

@@ -60,4 +60,9 @@ void* ELF::get_entry_point(const void* elf_base) const {
   return reinterpret_cast<void*>(entry);
 }
 
+
+size_t ELF::get_size() const {
+  return _size;
+}
+
 }  // namespace valkyrie::kernel

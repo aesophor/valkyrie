@@ -3,10 +3,8 @@
 
 namespace valkyrie::kernel {
 
-Zone::Zone(const size_t begin_addr, const size_t size)
-    : begin_addr(begin_addr),
-      size(size),
-      buddy_allocator(begin_addr),
+Zone::Zone(const size_t begin_addr)
+    : buddy_allocator(begin_addr),
       slob_allocator(&buddy_allocator) {}
 
 

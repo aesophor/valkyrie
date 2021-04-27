@@ -15,6 +15,8 @@
 namespace valkyrie::kernel {
 
 struct Zone final {
+  explicit Zone(const size_t begin_addr);
+
   // Returns the number of pages in each zone.
   static size_t get_pages_count();
 
