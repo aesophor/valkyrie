@@ -64,8 +64,6 @@ child_pc:
   if (ret == 0) {
     auto child = &Task::get_current();
 
-    printk(" ================ pid: %d\n", Task::get_current().get_pid());
-
     // Calculate child's user SP.
     size_t child_usp = child->_ustack_page.add_offset(user_sp_offset);
     child->_trap_frame->sp_el0 = child_usp;
@@ -81,7 +79,6 @@ child_pc:
 
 
 int Task::exec(const char* name, const char* const _argv[]) {
-  printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^ exec ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
   // Update task name
   strcpy(_name, name);
 
@@ -126,7 +123,6 @@ failed:
   sched.terminate(*this);
   kfree(_elf_dest);
 
-  printf("sys_exit done. rescheduling...\n");
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
 }

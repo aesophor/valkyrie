@@ -6,13 +6,14 @@ extern "C" int sys_exec(const char* name, const char* const argv[]);
 extern "C" [[noreturn]] void sys_exit();
 extern "C" long long int sys_getpid();
 
-[[noreturn]] void start_main() {
+[[noreturn]] void __libc_start_main() {
   init_printf(nullptr, putchar);
 
   // Prepare argc and argv
   asm volatile("ldp x0, x1, [sp]\n\
                 bl main");
 
+  printf("__libc_start_main: calling sys_exit() for pid: %d\n\n", sys_getpid());
   sys_exit();
 }
 
@@ -42,7 +43,6 @@ void fork_test() {
 
 int main(int argc, char **argv) {
   fork_test();
-  printf("return ok bitch\n");
   return 0;
 }
 

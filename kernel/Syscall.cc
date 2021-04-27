@@ -51,7 +51,6 @@ int sys_exec(const char* name, const char* const argv[]) {
 }
 
 [[noreturn]] void sys_exit() {
-  printf("sys_exit: 0x%x\n", &Task::get_current());
   Task::get_current().exit();
 }
 
