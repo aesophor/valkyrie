@@ -12,6 +12,9 @@
 
 namespace valkyrie::kernel {
 
+// The pointer to the init process.
+Task* Task::_init = nullptr;
+
 // PID starts at 0 (idle task)
 uint32_t Task::_next_pid = 0;
 
@@ -117,11 +120,38 @@ failed:
   return -1;
 }
 
-[[noreturn]] void Task::exit() {
-  auto& sched = TaskScheduler::get_instance();
 
-  sched.terminate(*this);
+int Task::wait(int* wstatus) {
+  if (_active_children.empty()) {
+    return -1;
+  }
+
+  // Suspends execution of the calling thread until
+  // one of its children terminates.
+  while (_terminated_children.empty()) {
+    TaskScheduler::get_instance().schedule();
+  }
+
+  auto& child = _terminated_children.front();
+
+  if (wstatus) {
+    *wstatus = child->_error_code;
+  }
+
+  int ret = child->_pid;
+  _terminated_children.pop_front();
+  return ret;
+}
+
+
+[[noreturn]] void Task::exit(int error_code) {
+  _state = Task::State::TERMINATED;
+  _error_code = error_code;
   kfree(_elf_dest);
+
+  auto& sched = TaskScheduler::get_instance();
+  _parent->_active_children.remove(this);
+  _parent->_terminated_children.push_back(sched.remove_task(*this));
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
@@ -154,7 +184,7 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
     char* s = reinterpret_cast<char*>(user_sp);
     strcpy(s, argv[i].c_str());
     addresses[i] = s;
-    printf("argv[i] = %s\n", s);
+    printf("argv[%d] = %s\n", i, s);
   }
 
 
@@ -166,10 +196,12 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
   new_argv[argc] = nullptr;
 
   user_sp -= 8;
+  printk("user_sp = 0x%x\n", user_sp);
   char*** new_argvp = reinterpret_cast<char***>(user_sp);
   *new_argvp = &new_argv[0];
 
   user_sp -= 8;
+  printk("user_sp = 0x%x -> writing argc = %d\n", user_sp, argc);
   int* new_argc = reinterpret_cast<int*>(user_sp);
   *new_argc = argc;
 

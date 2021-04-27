@@ -26,7 +26,7 @@ void Kernel::run() {
   _exception_manager.downgrade_exception_level(1);
 
   printk("enabling timer interrupts\n");
-  _timer_multiplexer.get_arm_core_timer().enable();
+  //_timer_multiplexer.get_arm_core_timer().enable();
 
   printk("starting task scheduler...\n");
   _task_scheduler.run();

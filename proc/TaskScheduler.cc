@@ -13,9 +13,7 @@ TaskScheduler& TaskScheduler::get_instance() {
   return instance;
 }
 
-TaskScheduler::TaskScheduler()
-    : _runqueue(),
-      _zombies() {}
+TaskScheduler::TaskScheduler() : _runqueue() {}
 
 
 void TaskScheduler::run() {
@@ -79,20 +77,6 @@ void TaskScheduler::schedule() {
 
 void TaskScheduler::tick() {
   Task::get_current().reduce_time_slice();
-}
-
-void TaskScheduler::terminate(Task& task) {
-  task.set_state(Task::State::TERMINATED);
-  _zombies.push_back(remove_task(task));
-}
-
-void TaskScheduler::reap_zombies() {
-  if (_zombies.empty()) {
-    return;
-  }
-
-  printk("sched: reaping %d zombie(s)\n", _zombies.size());
-  _zombies.clear();
 }
 
 }  // namespace valkyrie::kernel
