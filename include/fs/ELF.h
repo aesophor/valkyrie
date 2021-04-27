@@ -68,7 +68,9 @@ class ELF {
   void load_at(void* dest) const;
   void* get_entry_point(const void* elf_base) const;
 
- public:
+  size_t get_size() const;
+
+ private:
   const FileHeader* _header;
 
   const size_t _size;

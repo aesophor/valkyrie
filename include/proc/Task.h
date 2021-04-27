@@ -36,6 +36,7 @@ class Task {
         _pid(Task::_next_pid++),
         _time_slice(3),
         _entry_point(reinterpret_cast<void*>(entry_point)),
+        _elf_dest(),
         _kstack_page(get_free_page()),
         _ustack_page(get_free_page()),
         _name() {
@@ -122,6 +123,7 @@ class Task {
   uint32_t _pid;
   int _time_slice;
   void* _entry_point;
+  void* _elf_dest;
   Page _kstack_page;
   Page _ustack_page;
   TrapFrame* _trap_frame;

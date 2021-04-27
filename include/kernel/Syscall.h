@@ -32,7 +32,7 @@ size_t sys_uart_write(const char buf[], size_t size);
 void sys_uart_putchar(const char c);
 int sys_fork();
 int sys_exec(const char* name, const char *const argv[]);
-void sys_exit();
+[[noreturn]] void sys_exit();
 int sys_getpid();
 void sys_timer_irq_enable();
 void sys_timer_irq_disable();

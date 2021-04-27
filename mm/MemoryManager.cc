@@ -14,7 +14,7 @@ MemoryManager& MemoryManager::get_instance() {
 
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::get_instance().get_arm_memory().second),
-      _zones(initialize_zones()),
+      _zones{Zone(0x10000000)},
       _kasan() {}
 
 
@@ -30,11 +30,13 @@ Zone* MemoryManager::initialize_zones() {
 
   printk("zone structs size = 0x%x\n", nr_zones * (sizeof(BuddyAllocator) + sizeof(SlobAllocator)));
 
+  /*
   Zone* zone = reinterpret_cast<Zone*>(0x400000);
-  for (size_t i = 0; i < nr_zones; i++, zone++) { 
-    zone->Zone(reinterpret_cast<size_t>(zone), 0x200000);
-    zone->buddy_allocator();
+  for (size_t i = 0; i < nr_zones; i++, zone++) {
+    zone->buddy_allocator = BuddyAllocator(reinterpret_cast<size_t>(zone));
+    zone->slob_allocator = SlobAllocator(&zone->buddy_allocator);
   }
+  */
 
   while (1);
   return reinterpret_cast<Zone*>(0x400000);

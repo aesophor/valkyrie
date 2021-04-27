@@ -50,7 +50,7 @@ int sys_exec(const char* name, const char* const argv[]) {
   return Task::get_current().exec(name, argv);
 }
 
-void sys_exit() {
+[[noreturn]] void sys_exit() {
   Task::get_current().exit();
 }
 
