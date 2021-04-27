@@ -20,7 +20,7 @@ ExceptionManager::ExceptionManager()
     : _is_enabled(),
       _tasklet_scheduler() {
   // Install the address of exception vector table to VBAR_EL1.
-  asm volatile("msr VBAR_EL1, %0" :: "r" (&evt));
+  asm volatile("msr VBAR_EL1, %0" :: "r"(&evt));
 }
 
 
@@ -55,13 +55,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
     auto& current = Task::get_current();
     if (current.get_time_slice() <= 0) {
       current.set_time_slice(3);
-      printf("*********************************  preempting ******************************\n");
       TaskScheduler::get_instance().schedule();
-
-      size_t sp_el0;
-      asm volatile("mrs %0, sp_el0" : "=r"(sp_el0));
-      printf("--> about to eret, sp_el0 = 0x%x\n", sp_el0);
-
     }
     return;
   }
@@ -127,24 +121,24 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
   // If the user hasn't specified `low_level_sp` (which means it is nullptr),
   // then we will use the current SP as the new SP after `eret`.
   if (!low_level_sp) {
-    asm volatile("mov %0, sp" : "=r" (low_level_sp));
+    asm volatile("mov %0, sp" : "=r"(low_level_sp));
   }
 
   switch (level) {
     case 1:
-      asm volatile("msr SP_EL1, %0" :: "r" (low_level_sp));
+      asm volatile("msr SP_EL1, %0" :: "r"(low_level_sp));
       uint64_t spsr;
       spsr  = (1 << 0);       // use SP_ELx, not SP_EL0
       spsr |= (1 << 2);       // exception was taken from EL1
       spsr |= (0b1111 << 6);  // DAIF masked
-      asm volatile("msr SPSR_EL2, %0" :: "r" (spsr));
-      asm volatile("msr ELR_EL2, %0" :: "r" (return_address));
+      asm volatile("msr SPSR_EL2, %0" :: "r"(spsr));
+      asm volatile("msr ELR_EL2, %0" :: "r"(return_address));
       break;
 
     case 0:
-      asm volatile("msr SP_EL0, %0" :: "r" (low_level_sp));
-      asm volatile("msr SPSR_EL1, %0" :: "r" (0));
-      asm volatile("msr ELR_EL1, %0" :: "r" (return_address));
+      asm volatile("msr SP_EL0, %0" :: "r"(low_level_sp));
+      asm volatile("msr SPSR_EL1, %0" :: "r"(0));
+      asm volatile("msr ELR_EL1, %0" :: "r"(return_address));
       break;
 
     default:
@@ -155,7 +149,7 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
   // The value of SP before `eret` will be the SP after the user task
   // switches from EL0 to EL1.
   if (high_level_sp) {
-    asm volatile("mov SP, %0" :: "r" (high_level_sp));
+    asm volatile("mov SP, %0" :: "r"(high_level_sp));
   }
 
   // Finally downgrade the exception level.
