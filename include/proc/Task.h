@@ -19,6 +19,8 @@ extern "C" void switch_to(Task* prev, Task* next);
 
 class Task {
  public:
+  friend class TaskScheduler;
+
   enum class State {
     CREATED,
     RUNNABLE,
@@ -93,6 +95,7 @@ class Task {
   void set_trap_frame(TrapFrame* trap_frame) { _trap_frame = trap_frame; }
 
   int get_time_slice() const { return _time_slice; }
+  void set_time_slice(int time_slice) { _time_slice = time_slice; }
   void reduce_time_slice() { --_time_slice; }
 
 

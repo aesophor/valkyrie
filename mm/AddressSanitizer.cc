@@ -17,7 +17,7 @@ bool AddressSanitizer::mark_free_chk(void *p) {
     }
   }
 
-  Kernel::panic("*** kasan: double free detected ***\n");
+  Kernel::panic("*** kasan: double free detected at 0x%x ***\n", p);
   return false;
 }
 

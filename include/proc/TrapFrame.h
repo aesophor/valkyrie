@@ -56,6 +56,7 @@ struct TrapFrame final {
   uint64_t x29;
   uint64_t spsr_el1;
   uint64_t elr_el1;
+  uint64_t sp_el0;
   uint64_t x30;
   uint64_t __unused;
 };

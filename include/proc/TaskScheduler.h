@@ -16,11 +16,12 @@ class TaskScheduler {
   // Starts the task scheduler.
   void run();
 
-
   void enqueue_task(UniquePtr<Task> task);
   UniquePtr<Task> remove_task(const Task& task);
+
   void schedule();
   void terminate(Task& task);
+  void tick();
   void reap_zombies();
 
  private:
