@@ -22,12 +22,12 @@
   stp	x26, x27, [sp, 16 * 13]
   stp	x28, x29, [sp, 16 * 14]
   // Begin saving SPSR_EL1 and ELR_EL1
-  mrs x28, SPSR_EL1
-  mrs x29, ELR_EL1
-  stp x28, x29, [sp, 16 * 15]
+  mrs   x28, SPSR_EL1
+  mrs   x29, ELR_EL1
+  stp   x28, x29, [sp, 16 * 15]
   // End saving SPSR_EL1 and ELR_EL1
-  mrs x29, SP_EL0
-  stp x29, x30, [sp, 16 * 16]
+  mrs   x29, SP_EL0
+  stp   x29, x30, [sp, 16 * 16]
 .endm
 
 .macro restore_cpu_context
@@ -46,9 +46,9 @@
   ldp	x24, x25, [sp, 16 * 12]
   ldp	x26, x27, [sp, 16 * 13]
   // Begin restoring SPSR_EL1 and ELR_EL1
-  ldp x28, x29, [sp, 16 * 15]
-  msr SPSR_EL1, x28
-  msr ELR_EL1, x29
+  ldp   x28, x29, [sp, 16 * 15]
+  msr   SPSR_EL1, x28
+  msr   ELR_EL1, x29
   // End restoring SPSR_EL1 and ELR_EL1
   ldp   x29, x30, [sp, 16 * 16]
   msr   SP_EL0, x29
