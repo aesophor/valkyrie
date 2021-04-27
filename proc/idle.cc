@@ -11,14 +11,9 @@ namespace valkyrie::kernel {
   auto& sched = TaskScheduler::get_instance();
 
   while (true) {
-    /*
-    size_t spsr;
-    asm volatile("mrs %0, spsr_el1" : "=r" (spsr));
-    printf("spsr = 0x%x\n", spsr);
-    */
-
-    exmgr.enable();
     sched.reap_zombies();
+//    printf("~~~~~~~~~~~~~~~~~~~~~~~~~ preemption ON ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    exmgr.enable();
     sched.schedule();
   }
 }

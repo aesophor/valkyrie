@@ -52,6 +52,17 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                           trap_frame->x3,
                                                           trap_frame->x4,
                                                           trap_frame->x5);
+    auto& current = Task::get_current();
+    if (current.get_time_slice() <= 0) {
+      current.set_time_slice(3);
+      printf("*********************************  preempting ******************************\n");
+      TaskScheduler::get_instance().schedule();
+
+      size_t sp_el0;
+      asm volatile("mrs %0, sp_el0" : "=r"(sp_el0));
+      printf("--> about to eret, sp_el0 = 0x%x\n", sp_el0);
+
+    }
     return;
   }
 
@@ -82,15 +93,7 @@ void ExceptionManager::handle_irq() {
     MiniUART::get_instance().handle_irq();
   } else {
     TimerMultiplexer::get_instance().tick();
-
-    /*
-    auto& current = Task::get_current();
-    current.reduce_time_slice();
-
-    if (current.get_time_slice() <= 0) {
-      TaskScheduler::get_instance().schedule();
-    }
-    */
+    TaskScheduler::get_instance().tick();
 
     /*
     auto task = []() { printf("ok\n"); };
@@ -145,7 +148,7 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
       break;
 
     default:
-      return;
+      goto out;
   }
 
   // Each user task will have a kernel stack and a user stack.
@@ -159,8 +162,7 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
   asm volatile("eret");
 
 out:
-  // Do nothing.
-  ;
+  return;
 }
 
 bool ExceptionManager::is_enabled() const {

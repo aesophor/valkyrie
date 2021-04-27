@@ -71,7 +71,8 @@ void ARMCoreTimer::tick() {
 void ARMCoreTimer::arrange_next_timer_irq_after(const uint32_t second) {
   uint64_t cntfrq_el0;
   asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(cntfrq_el0));
-  asm volatile("msr CNTP_TVAL_EL0, %0" :: "r"(cntfrq_el0 * second));
+  //asm volatile("msr CNTP_TVAL_EL0, %0" :: "r"(cntfrq_el0 * second));
+  asm volatile("msr CNTP_TVAL_EL0, %0" :: "r"(0x0ffff));
 }
 
 

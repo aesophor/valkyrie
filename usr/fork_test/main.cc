@@ -3,10 +3,10 @@
 extern "C" void putchar(void*, char);
 extern "C" int sys_fork();
 extern "C" int sys_exec(const char* name, const char* const argv[]);
-extern "C" void sys_exit();
+extern "C" [[noreturn]] void sys_exit();
 extern "C" long long int sys_getpid();
 
-void start_main() {
+[[noreturn]] void start_main() {
   init_printf(nullptr, putchar);
 
   // Prepare argc and argv
@@ -34,11 +34,15 @@ void fork_test() {
     printf("parent here, pid %d, child %d\n", sys_getpid(), ret);
     printf("parent terminating...\n");
   }
+  asm volatile("mov %0, sp" : "=r" (cnt));
+  asm volatile("mov %0, lr" : "=r" (ret));
+  printf("SP = 0x%x, LR = 0x%x\n", cnt, ret);
 }
 
 
 int main(int argc, char **argv) {
   fork_test();
+  printf("return ok bitch\n");
   return 0;
 }
 

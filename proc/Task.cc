@@ -6,6 +6,7 @@
 #include <fs/Initramfs.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
+#include <kernel/Syscall.h>
 #include <libs/Math.h>
 #include <proc/TaskScheduler.h>
 
@@ -63,21 +64,24 @@ child_pc:
   if (ret == 0) {
     auto child = &Task::get_current();
 
+    printk(" ================ pid: %d\n", Task::get_current().get_pid());
+
     // Calculate child's user SP.
     size_t child_usp = child->_ustack_page.add_offset(user_sp_offset);
-    asm volatile("msr SP_EL0, %0" :: "r" (child_usp));
+    child->_trap_frame->sp_el0 = child_usp;
 
-    printk("parent usp: 0x%x\n", parent_usp);
-    printk("_ustack_page = 0x%x, child usp: 0x%x\n", child->_ustack_page, child_usp);
-    printk("setting child usp to 0x%x\n", child_usp);
+    printf("parent usp: 0x%x\n", parent_usp);
+    printf("_ustack_page = 0x%x, child usp: 0x%x\n", child->_ustack_page, child_usp);
+    printf("setting child usp to 0x%x\n", child_usp);
   }
 
-  printk("ret = %d\n", ret);
+  printf("ret = %d\n", ret);
   return ret;
 }
 
 
 int Task::exec(const char* name, const char* const _argv[]) {
+  printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^ exec ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
   // Update task name
   strcpy(_name, name);
 
@@ -88,9 +92,12 @@ int Task::exec(const char* name, const char* const _argv[]) {
   // Reset the stack pointer.
   _context.sp = user_sp;
 
+  kfree(_elf_dest);
+
   // Load the specified file from the filesystem.
   ELF elf(Initramfs::get_instance().read(name));
-  void* dest = (char*) kmalloc(elf.get_size() + 0x1000) + 0x1000 - 0x10;
+  _elf_dest = kmalloc(elf.get_size() + 0x1000);
+  void* dest = reinterpret_cast<char*>(_elf_dest) + 0x1000 - 0x10;
   printk("loading ELF at 0x%x\n", dest);
 
   if (!elf.is_valid()) {
@@ -109,7 +116,7 @@ int Task::exec(const char* name, const char* const _argv[]) {
                                reinterpret_cast<void*>(kernel_sp),
                                reinterpret_cast<void*>(user_sp));
 failed:
-  printk("exec failed: %s\n", name);
+  printf("exec failed: pid = %d [%s]\n", _pid, _name);
   return -1;
 }
 
@@ -119,6 +126,7 @@ failed:
   sched.terminate(*this);
   kfree(_elf_dest);
 
+  printf("sys_exit done. rescheduling...\n");
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
 }

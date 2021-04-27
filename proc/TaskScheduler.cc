@@ -69,7 +69,40 @@ void TaskScheduler::schedule() {
     _runqueue.push_back(move(task));
   }
 
+  /*
+  auto& next = _runqueue.front();
+
+  printf(">>>> context switch: %d -> %d\n", Task::get_current().get_pid(),
+                                            next->get_pid());
+
+  size_t sp;
+  size_t lr;
+
+  asm volatile("mov %0, sp" : "=r" (sp));
+  asm volatile("mov %0, lr" : "=r" (lr));
+
+  printf("current task: SP = 0x%x, LR = 0x%x\n", sp,
+                                                 lr);
+
+  printf("next task: SP = 0x%x, LR = 0x%x\n", next->_context.sp,
+                                              next->_context.lr);
+  */
+
   switch_to(&Task::get_current(), _runqueue.front().get());
+
+  /*
+  asm volatile("mov %0, sp" : "=r"(sp));
+  asm volatile("mov %0, lr" : "=r" (lr));
+
+  printf("<<<< return from pid: %d [%s], SP: 0x%x LR: 0x%x\n", Task::get_current().get_pid(),
+                                            Task::get_current().get_name(),
+                                            sp,
+                                            lr);
+  */
+}
+
+void TaskScheduler::tick() {
+  Task::get_current().reduce_time_slice();
 }
 
 void TaskScheduler::terminate(Task& task) {
@@ -82,7 +115,7 @@ void TaskScheduler::reap_zombies() {
     return;
   }
 
-  printk("sched: reaping %d zombies\n", _zombies.size());
+  printk("sched: reaping %d zombie(s)\n", _zombies.size());
   _zombies.clear();
 }
 

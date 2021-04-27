@@ -26,7 +26,8 @@
   mrs x29, ELR_EL1
   stp x28, x29, [sp, 16 * 15]
   // End saving SPSR_EL1 and ELR_EL1
-  str	x30, [sp, 16 * 16] 
+  mrs x29, SP_EL0
+  stp x29, x30, [sp, 16 * 16]
 .endm
 
 .macro restore_cpu_context
@@ -49,8 +50,9 @@
   msr SPSR_EL1, x28
   msr ELR_EL1, x29
   // End restoring SPSR_EL1 and ELR_EL1
+  ldp   x29, x30, [sp, 16 * 16]
+  msr   SP_EL0, x29
   ldp	x28, x29, [sp, 16 * 14]
-  ldr	x30, [sp, 16 * 16] 
   add	sp, sp, REGISTER_SAVE_LOAD_BYTES
 .endm
 
