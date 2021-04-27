@@ -11,8 +11,6 @@ namespace valkyrie::kernel {
   auto& sched = TaskScheduler::get_instance();
 
   while (true) {
-    sched.reap_zombies();
-//    printf("~~~~~~~~~~~~~~~~~~~~~~~~~ preemption ON ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     exmgr.enable();
     sched.schedule();
   }

@@ -19,8 +19,7 @@ const size_t __syscall_table[__NR_syscall] = {
   SYSCALL_DECL(sys_exec),
   SYSCALL_DECL(sys_exit),
   SYSCALL_DECL(sys_getpid),
-  SYSCALL_DECL(sys_timer_irq_enable),
-  SYSCALL_DECL(sys_timer_irq_disable),
+  SYSCALL_DECL(sys_wait),
 };
 
 
@@ -50,22 +49,16 @@ int sys_exec(const char* name, const char* const argv[]) {
   return Task::get_current().exec(name, argv);
 }
 
-[[noreturn]] void sys_exit() {
-  Task::get_current().exit();
+int sys_wait(int* wstatus) {
+  return Task::get_current().wait(wstatus);
+}
+
+[[noreturn]] void sys_exit(int error_code) {
+  Task::get_current().exit(error_code);
 }
 
 int sys_getpid() {
   return Task::get_current().get_pid();
-}
-
-void sys_timer_irq_enable() {
-  printk("ARM core timer enabled.\n");
-  TimerMultiplexer::get_instance().get_arm_core_timer().enable();
-}
-
-void sys_timer_irq_disable() {
-  printk("ARM core timer disabled.\n");
-  TimerMultiplexer::get_instance().get_arm_core_timer().disable();
 }
 
 }  // namespace valkyrie::kernel

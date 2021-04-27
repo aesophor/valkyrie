@@ -18,8 +18,7 @@ enum Syscall {
   SYS_EXEC,
   SYS_EXIT,
   SYS_GETPID,
-  SYS_TIMER_ENABLE,
-  SYS_TIMER_DISABLE,
+  SYS_WAIT,
   __NR_syscall
 };
 
@@ -32,11 +31,9 @@ size_t sys_uart_write(const char buf[], size_t size);
 void sys_uart_putchar(const char c);
 int sys_fork();
 int sys_exec(const char* name, const char *const argv[]);
-[[noreturn]] void sys_exit();
+[[noreturn]] void sys_exit(int error_code);
 int sys_getpid();
-void sys_timer_irq_enable();
-void sys_timer_irq_disable();
-
+int sys_wait(int* wstatus);
 
 // Indirect system call
 //

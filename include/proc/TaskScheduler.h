@@ -20,15 +20,12 @@ class TaskScheduler {
   UniquePtr<Task> remove_task(const Task& task);
 
   void schedule();
-  void terminate(Task& task);
   void tick();
-  void reap_zombies();
 
  private:
   TaskScheduler();
 
   DoublyLinkedList<UniquePtr<Task>> _runqueue;
-  DoublyLinkedList<UniquePtr<Task>> _zombies;
 };
 
 }  // namespace valkyrie::kernel

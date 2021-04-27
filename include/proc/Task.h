@@ -2,8 +2,11 @@
 #ifndef VALKYRIE_TASK_H_
 #define VALKYRIE_TASK_H_
 
+#include <DoublyLinkedList.h>
+#include <Memory.h>
 #include <Types.h>
 #include <dev/Console.h>
+#include <kernel/Compiler.h>
 #include <libs/CString.h>
 #include <mm/Page.h>
 #include <mm/MemoryManager.h>
@@ -34,7 +37,10 @@ class Task {
   Task(Task* parent, T entry_point, const char* name)
       : _context(),
         _parent(parent),
+        _active_children(),
+        _terminated_children(),
         _state(Task::State::CREATED),
+        _error_code(),
         _pid(Task::_next_pid++),
         _time_slice(3),
         _entry_point(reinterpret_cast<void*>(entry_point)),
@@ -42,6 +48,14 @@ class Task {
         _kstack_page(get_free_page()),
         _ustack_page(get_free_page()),
         _name() {
+    if (unlikely(_pid == 1)) {
+      Task::_init = this;
+    }
+
+    if (parent) {
+      parent->_active_children.push_back(this);
+    }
+
     _context.lr = reinterpret_cast<uint64_t>(entry_point);
     _context.sp = _kstack_page.end();
     strcpy(_name, name);
@@ -61,6 +75,17 @@ class Task {
         _name,
         _pid);
 
+    // If the current task still has running children,
+    // make the init task adopt these orphans.
+    // Note: terminated children will be automatically released.
+    while (!_active_children.empty()) {
+      auto child = _active_children.front();
+      get_init()._active_children.push_back(child);
+      _active_children.pop_front();
+
+      printk("[init] adopted orphan: pid = %d\n", child->_pid);
+    }
+
     kfree(_kstack_page.get());
     kfree(_ustack_page.get());
   }
@@ -76,6 +101,10 @@ class Task {
     asm volatile("msr TPIDR_EL1, %0" :: "r" (t));
   }
 
+  static Task& get_init() {
+    return *Task::_init;
+  }
+
   [[gnu::always_inline]] void save_context() {
     switch_to(this, nullptr);
   }
@@ -83,7 +112,8 @@ class Task {
 
   int fork();
   int exec(const char* name, const char* const _argv[]);
-  [[noreturn]] void exit();
+  int wait(int* wstatus);
+  [[noreturn]] void exit(int error_code);
 
 
   Task::State get_state() const { return _state; }
@@ -99,9 +129,11 @@ class Task {
   void reduce_time_slice() { --_time_slice; }
 
 
+
  private:
   size_t construct_argv_chain(const char* const _argv[]);
 
+  static Task* _init;
   static uint32_t _next_pid;
 
 
@@ -122,7 +154,10 @@ class Task {
   } _context;
 
   Task* _parent;
+  DoublyLinkedList<Task*> _active_children;
+  DoublyLinkedList<UniquePtr<Task>> _terminated_children;
   Task::State _state;
+  int _error_code;
   uint32_t _pid;
   int _time_slice;
   void* _entry_point;
