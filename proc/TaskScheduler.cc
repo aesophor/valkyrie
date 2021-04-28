@@ -76,7 +76,13 @@ void TaskScheduler::schedule() {
 }
 
 void TaskScheduler::tick() {
-  Task::get_current().reduce_time_slice();
+  auto& current = Task::get_current();
+  current.reduce_time_slice();
+
+  if (current.get_time_slice() <= 0) {
+    current.set_time_slice(3);
+    schedule();
+  }
 }
 
 }  // namespace valkyrie::kernel
