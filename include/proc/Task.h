@@ -12,6 +12,8 @@
 #include <mm/MemoryManager.h>
 #include <proc/TrapFrame.h>
 
+#define TASK_NAME_MAX_LEN 16
+
 namespace valkyrie::kernel {
 
 // Forward declaration.
@@ -91,6 +93,14 @@ class Task {
   }
 
 
+  // Copy constructor
+  Task(const Task& r) = delete;
+
+  // Copy assignment operator
+  Task& operator= (const Task& r) = delete;
+
+
+
   static Task& get_current() {
     Task* current;
     asm volatile("mrs %0, TPIDR_EL1" : "=r" (current));
@@ -165,7 +175,7 @@ class Task {
   Page _kstack_page;
   Page _ustack_page;
   TrapFrame* _trap_frame;
-  char _name[16];
+  char _name[TASK_NAME_MAX_LEN];
 };
 
 }  // namespace valkyrie::kernel

@@ -7,10 +7,10 @@ extern "C" void sys_exit(int error_code);
 extern "C" long long int sys_getpid();
 extern "C" int sys_wait(int* wstatus);
 
-int start_main() {
+[[noreturn]] void __libc_start_main() {
   // Prepare argc and argv
   asm volatile("ldp x0, x1, [sp]\n\
-                bl main");
+                b main");
 }
 
 int main(int argc, char **argv) {
