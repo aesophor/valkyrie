@@ -6,10 +6,21 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 | --- | ----------- | --- | --- |
 | `309551004` | `aesophor` | `王冠中` | aesophor.cs09g@nctu.edu.tw |
 
-## Kernel Progress
+## Progress Overview
 
-- [x] Bootloader [see tag: lab2-bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader)
-- [x] Exception/Interrupt handling
+- [x] Lab1: Hello World
+- [x] Lab2: Booting ([bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader))
+- [x] Lab3: Allocator (pmm)
+- [x] Lab4: Exception and Interrupt Handling
+- [x] Lab5: Multitasking
+- [ ] Lab6: Virtual Filesystem
+- [ ] Lab7: Filesystem Meets Hardware
+- [ ] Lab8: Virtual Memory (vmm)
+
+## Kernel Features
+- [x] I/O: MiniUART (with optional r/w buffers and interrupts)
+- [x] ARM Mailbox
+- [x] Exception & interrupt handling (top/bottom halves)
 - [x] System calls
 - [x] Buddy allocator
 - [x] Dynamic allocator: my own optimized SLOB allocator (a simplified `ptmalloc`)
@@ -17,10 +28,9 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 - [x] Preemptive multitasking (supports user/kernel threads)
 - [x] fork(), exec(), wait(), exit()
 - [ ] POSIX signals
-- [ ] Virtual filesystem
-- [ ] Virtual memory
+- [ ] ...
 
-## Kernel STL Progress
+## Kernel C++20 STL Progress
 
 - [ ] Algorithms
 - [ ] Concepts
