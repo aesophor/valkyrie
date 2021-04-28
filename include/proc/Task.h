@@ -84,8 +84,6 @@ class Task {
       auto child = _active_children.front();
       get_init()._active_children.push_back(child);
       _active_children.pop_front();
-
-      printk("[init] adopted orphan: pid = %d\n", child->_pid);
     }
 
     kfree(_kstack_page.get());
@@ -142,6 +140,7 @@ class Task {
 
  private:
   size_t construct_argv_chain(const char* const _argv[]);
+  int probe_for_argc(const char* const argv[]) const;
 
   static Task* _init;
   static uint32_t _next_pid;

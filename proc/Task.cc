@@ -21,7 +21,6 @@ uint32_t Task::_next_pid = 0;
 
 int Task::do_fork() {
   // Duplicate task
-  printk("fork: saving parent cpu context\n");
   save_context();
 
   size_t ret = 0;
@@ -68,7 +67,7 @@ int Task::do_fork() {
   child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
 
 child_return_to:
-  printf("pid: %d, ret = %d\n", Task::get_current()._pid, ret);
+  //printf("pid: %d, ret = %d\n", Task::get_current()._pid, ret);
   return ret;
 }
 
@@ -152,32 +151,27 @@ int Task::do_wait(int* wstatus) {
 
 
 size_t Task::construct_argv_chain(const char* const _argv[]) {
-  // Construct the argv chain.
+  // Construct the argv chain on the user stack.
   size_t user_sp = _ustack_page.end();
-  int argc = 0;
-  char** addresses = nullptr;
+  int argc = probe_for_argc(_argv);
+  UniquePtr<char*[]> addresses;
 
   // The number of items to write on the stack.
   // i.e. argc itself, `argc` char pointers, and a nullptr sentinel.
-  const size_t nr_items = argc + 2;
+  size_t nr_items;
 
 
   if (_argv) {
-    // Obtain `argc`.
-    for (const char* s = _argv[0]; s; s = _argv[++argc]);
-
-    // Copy all argv to kernel heap.
+    // Back up all argv to the kernel heap.
     String argv[argc];
     for (int i = 0; i < argc; i++) {
       argv[i] = _argv[i];
     }
 
-    addresses = reinterpret_cast<decltype(addresses)>(
-        kmalloc(sizeof(char*) * argc));
+    addresses = make_unique<char*[]>(argc);
 
     for (int i = argc - 1; i >= 0; i--) {
-      size_t len = argv[i].size() + 1;
-      len = round_up_to_multiple_of_n(len, 16);
+      size_t len = round_up_to_multiple_of_n(argv[i].size() + 1, 16);
       user_sp -= len;
       char* s = reinterpret_cast<char*>(user_sp);
       strcpy(s, argv[i].c_str());
@@ -188,6 +182,7 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
 
 
   // Calculate the final user SP value.
+  nr_items = argc + 2;
   user_sp -= nr_items * sizeof(size_t);
 
   // If `user_sp` is misaligned, minus 8 to make it aligned to 16 byte.
@@ -208,9 +203,17 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
   // Write `argv` sentinel.
   *reinterpret_cast<char**>(user_sp + 8 * (argc + 1)) = nullptr;
 
-  kfree(addresses);
-
   return user_sp;
+}
+
+int Task::probe_for_argc(const char* const argv[]) const {
+  if (!argv) {
+    return 0;
+  }
+
+  int argc = 0;
+  for (const char* s = argv[0]; s; s = argv[++argc]);
+  return argc;
 }
 
 }  // namespace valkyrie::kernel

@@ -32,8 +32,12 @@ int main(int argc, char **argv) {
     }
 
     default:  // parent
-      sys_wait(&wstatus);
-      while (1);
+      while (true) {
+        pid = sys_wait(&wstatus);
+        if (pid != -1) {
+          printf("[init] reaped zombie: pid = %d with error_code = %d\n", pid, wstatus);
+        }
+      }
       break;
   }
 
