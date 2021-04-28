@@ -16,8 +16,7 @@ int start_main() {
 int main(int argc, char **argv) {
   init_printf(nullptr, putchar);
 
-  char fmt[64] = "[init] started... pid: %d\n";
-  printf(fmt, sys_getpid());
+  printf("[init] started... pid = %d\n", sys_getpid());
 
   int pid;
   int wstatus;
