@@ -6,7 +6,7 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 | --- | ----------- | --- | --- |
 | `309551004` | `aesophor` | `王冠中` | aesophor.cs09g@nctu.edu.tw |
 
-## Progress
+## Kernel Progress
 
 - [x] Bootloader [see tag: lab2-bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader)
 - [x] Exception/Interrupt handling
@@ -19,6 +19,21 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 - [ ] POSIX signals
 - [ ] Virtual filesystem
 - [ ] Virtual memory
+
+## Kernel STL Progress
+
+- [ ] Algorithms
+- [ ] Concepts
+- [x] Functional
+- [x] UniquePtr + make_unique<>()
+- [x] SharedPtr + make_shared<>() + \*_pointer_cast<>()
+- [ ] WeakPtr
+- [x] DoublyLinkedList
+- [x] String
+- [ ] Vector (?)
+- [x] Deque (the performance is shit ...)
+- [x] Utility (move and forward)
+- [ ] ...
 
 ## Build and Deploy
 
