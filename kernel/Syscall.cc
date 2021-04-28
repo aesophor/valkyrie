@@ -42,19 +42,19 @@ void sys_uart_putchar(const char c) {
 }
 
 int sys_fork() {
-  return Task::get_current().fork();
+  return Task::get_current().do_fork();
 }
 
 int sys_exec(const char* name, const char* const argv[]) {
-  return Task::get_current().exec(name, argv);
+  return Task::get_current().do_exec(name, argv);
 }
 
 int sys_wait(int* wstatus) {
-  return Task::get_current().wait(wstatus);
+  return Task::get_current().do_wait(wstatus);
 }
 
 [[noreturn]] void sys_exit(int error_code) {
-  Task::get_current().exit(error_code);
+  Task::get_current().do_exit(error_code);
 }
 
 int sys_getpid() {

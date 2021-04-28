@@ -27,8 +27,7 @@ int main(int argc, char **argv) {
       break;
 
     case 0: { // child
-      const char* fork_argv[] = {"bin/fork_test", nullptr};
-      sys_exec("bin/fork_test", fork_argv);
+      sys_exec("bin/fork_test", nullptr);
       break;
     }
 

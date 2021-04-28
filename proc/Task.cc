@@ -19,7 +19,7 @@ Task* Task::_init = nullptr;
 uint32_t Task::_next_pid = 0;
 
 
-int Task::fork() {
+int Task::do_fork() {
   // Duplicate task
   printk("fork: saving parent cpu context\n");
   save_context();
@@ -34,11 +34,14 @@ int Task::fork() {
 
 
   {
-    printk("fork: start duplicating task\n");
     auto child = make_unique<Task>(/*parent=*/this, _entry_point, _name);
 
+    // Calculate child's trap frame.
     child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
-    printk("child trap frame = 0x%x\n", child->_trap_frame);
+
+    // Calculate child's user stack pointer.
+    // We should write user SP into the trap frame instead of setting it directly.
+    child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
 
     // Copy kernel stack page content
     child->_kstack_page.copy_from(_kstack_page);
@@ -58,30 +61,17 @@ int Task::fork() {
     TaskScheduler::get_instance().enqueue_task(move(child));
   }
 
+  // The above curly braces are there to prevent the compiler from
+  // inserting a call to UniquePtr<Task>'s destructor at the end of do_fork().
+  // Otherwise there will be a double-free bug.
+
 child_pc:
-  // The child will start executing from here.
-  // However, the `this` pointer (which is stored in x0)
-  // cannot be reassigned. Therefore, in order to
-  // operate on the child, we have to explicitly operate
-  // on the child's task stucture.
-  if (ret == 0) {
-    auto child = &Task::get_current();
-
-    // Calculate child's user SP.
-    size_t child_usp = child->_ustack_page.add_offset(user_sp_offset);
-    child->_trap_frame->sp_el0 = child_usp;
-
-    printf("parent usp: 0x%x\n", parent_usp);
-    printf("_ustack_page = 0x%x, child usp: 0x%x\n", child->_ustack_page, child_usp);
-    printf("setting child usp to 0x%x\n", child_usp);
-  }
-
-  printf("ret = %d\n", ret);
+  printf("pid: %d, ret = %d\n", _pid, ret);
   return ret;
 }
 
 
-int Task::exec(const char* name, const char* const _argv[]) {
+int Task::do_exec(const char* name, const char* const _argv[]) {
   // Update task name
   strcpy(_name, name);
 
@@ -121,7 +111,7 @@ failed:
 }
 
 
-int Task::wait(int* wstatus) {
+int Task::do_wait(int* wstatus) {
   if (_active_children.empty()) {
     return -1;
   }
@@ -144,7 +134,7 @@ int Task::wait(int* wstatus) {
 }
 
 
-[[noreturn]] void Task::exit(int error_code) {
+[[noreturn]] void Task::do_exit(int error_code) {
   _state = Task::State::TERMINATED;
   _error_code = error_code;
   kfree(_elf_dest);
@@ -162,6 +152,10 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
   // Construct the argv chain.
   size_t user_sp = _ustack_page.end();
 
+  if (!_argv) {
+    return user_sp;
+  }
+
   int argc = 0;
   const char* s = _argv[0];
 
@@ -173,6 +167,8 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
 
   for (int i = 0; i < argc; i++) {
     argv[i] = _argv[i];
+    printf("String->%s\n", argv[i].c_str());
+    printf("_argv->%s\n", _argv[i]);
   }
 
   char* addresses[argc];
@@ -194,11 +190,6 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
     new_argv[i] = addresses[i];
   }
   new_argv[argc] = nullptr;
-
-  user_sp -= 8;
-  printk("user_sp = 0x%x\n", user_sp);
-  char*** new_argvp = reinterpret_cast<char***>(user_sp);
-  *new_argvp = &new_argv[0];
 
   user_sp -= 8;
   printk("user_sp = 0x%x -> writing argc = %d\n", user_sp, argc);

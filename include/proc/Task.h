@@ -110,10 +110,10 @@ class Task {
   }
 
 
-  int fork();
-  int exec(const char* name, const char* const _argv[]);
-  int wait(int* wstatus);
-  [[noreturn]] void exit(int error_code);
+  int do_fork();
+  int do_exec(const char* name, const char* const _argv[]);
+  int do_wait(int* wstatus);
+  [[noreturn]] void do_exit(int error_code);
 
 
   Task::State get_state() const { return _state; }
