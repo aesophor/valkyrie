@@ -10,7 +10,7 @@ namespace valkyrie::kernel {
 
 [[noreturn]] void start_init() {
   const char* argv[] = {INIT_PATH, "-o", "omg", nullptr};
-  sys_exec(INIT_PATH, argv);
+  Task::get_current().do_exec(INIT_PATH, argv);
 
   // sys_exec() shouldn't have returned.
   Kernel::panic("no working init found.\n");
