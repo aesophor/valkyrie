@@ -10,10 +10,8 @@ extern "C" int sys_wait(int* wstatus);
 [[noreturn]] void __libc_start_main() {
   // Prepare argc and argv
   asm volatile("ldp x0, x1, [sp]\n\
-                bl main");
-
-  printf("__libc_start_main: calling sys_exit() for pid: %d\n\n", sys_getpid());
-  sys_exit(0);
+                bl main\n\
+                b sys_exit");
 }
 
 void fork_test() {
@@ -49,16 +47,16 @@ void fork_test() {
 int main(int argc, char **argv) {
   init_printf(nullptr, putchar);
 
+  /*
   long long int sp;
   asm volatile("mov %0, sp" : "=r" (sp));
   printf("main(): SP = 0x%x\n", sp);
+  */
 
-  /*
   printf("argc = %d\n", argc);
   for (int i = 0; i < argc; i++) {
     printf("argv[%d] = %s\n", i, argv[i]);
   }
-  */
 
   fork_test();
   return 0;
