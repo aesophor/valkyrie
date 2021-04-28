@@ -20,6 +20,7 @@ const size_t __syscall_table[__NR_syscall] = {
   SYSCALL_DECL(sys_exit),
   SYSCALL_DECL(sys_getpid),
   SYSCALL_DECL(sys_wait),
+  SYSCALL_DECL(sys_sched_yield),
 };
 
 
@@ -59,6 +60,11 @@ int sys_wait(int* wstatus) {
 
 int sys_getpid() {
   return Task::get_current().get_pid();
+}
+
+int sys_sched_yield() {
+  TaskScheduler::get_instance().schedule();
+  return 0;  // always succeeds.
 }
 
 }  // namespace valkyrie::kernel

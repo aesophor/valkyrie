@@ -20,11 +20,13 @@ class TaskScheduler {
   UniquePtr<Task> remove_task(const Task& task);
 
   void schedule();
+  void maybe_reschedule();
   void tick();
 
  private:
   TaskScheduler();
 
+  bool _need_reschedule;
   DoublyLinkedList<UniquePtr<Task>> _runqueue;
 };
 

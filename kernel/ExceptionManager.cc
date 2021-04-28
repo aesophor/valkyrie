@@ -45,6 +45,11 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (likely(ex.ec == 0b10101 && ex.iss == 0)) {
     Task::get_current().set_trap_frame(trap_frame);
+
+    // A process may return from `do_syscall()`,
+    // e.g., a child task created by sys_fork(),
+    // so we should call `Task::get_current()` again
+    // to make sure that we are operating on the correct Task object.
     Task::get_current().get_trap_frame()->x0 = do_syscall(trap_frame->x8,
                                                           trap_frame->x0,
                                                           trap_frame->x1,
@@ -52,11 +57,9 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                           trap_frame->x3,
                                                           trap_frame->x4,
                                                           trap_frame->x5);
-    auto& current = Task::get_current();
-    if (current.get_time_slice() <= 0) {
-      current.set_time_slice(3);
-      TaskScheduler::get_instance().schedule();
-    }
+
+    // User preemption.
+    TaskScheduler::get_instance().maybe_reschedule();
     return;
   }
 

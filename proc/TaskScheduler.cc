@@ -13,7 +13,9 @@ TaskScheduler& TaskScheduler::get_instance() {
   return instance;
 }
 
-TaskScheduler::TaskScheduler() : _runqueue() {}
+TaskScheduler::TaskScheduler()
+    : _need_reschedule(),
+      _runqueue() {}
 
 
 void TaskScheduler::run() {
@@ -75,13 +77,23 @@ void TaskScheduler::schedule() {
   switch_to(&Task::get_current(), _runqueue.front().get());
 }
 
+void TaskScheduler::maybe_reschedule() {
+  if (!_need_reschedule) {
+    return;
+  }
+
+  _need_reschedule = false;
+  Task::get_current().set_time_slice(TASK_TIME_SLICE);
+
+  schedule();
+}
+
 void TaskScheduler::tick() {
   auto& current = Task::get_current();
-  current.reduce_time_slice();
+  current.tick();
 
   if (current.get_time_slice() <= 0) {
-    current.set_time_slice(3);
-    schedule();
+    _need_reschedule = true;
   }
 }
 
