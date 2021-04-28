@@ -25,6 +25,7 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 - [ ] Algorithms
 - [ ] Concepts
 - [x] Functional
+- [x] Iterator (just a very basic one ...)
 - [x] UniquePtr + make_unique<>()
 - [x] SharedPtr + make_shared<>() + \*_pointer_cast<>()
 - [ ] WeakPtr
