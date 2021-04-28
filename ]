@@ -45,15 +45,14 @@ int Task::do_fork() {
   // Enqueue the child task.
   TaskScheduler::get_instance().enqueue_task(move(task));
 
-  // Copy kernel/user stack content
-  child->_kstack_page.copy_from(_kstack_page);
-  child->_ustack_page.copy_from(_ustack_page);
-
-
-  /* ------ You can safely modify the child now ------ */
-
   // Set parent's fork() return value to child's pid.
   ret = child->_pid;
+
+  // Copy kernel stack page content
+  child->_kstack_page.copy_from(_kstack_page);
+
+  // Copy user stack page content
+  child->_ustack_page.copy_from(_ustack_page);
 
   // Copy child's CPU context.
   child->_context = _context;
@@ -61,14 +60,16 @@ int Task::do_fork() {
   child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
   // Calculate child's trap frame.
-  // When the child returns from kernel mode to user mode,
-  // child->_trap_frame->sp_el0 will be restored to the child
-  // and used as the user mode SP.
   child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
+
+  // Calculate child's user stack pointer.
+  // We should write user SP into the trap frame instead of setting it directly.
   child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
 
+
+
 child_return_to:
-  printf("pid: %d, ret = %d\n", Task::get_current()._pid, ret);
+  printf("pid: %d, ret = %d\n", _pid, ret);
   return ret;
 }
 
