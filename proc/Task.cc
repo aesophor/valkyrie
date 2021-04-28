@@ -33,39 +33,41 @@ int Task::do_fork() {
   size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
 
 
-  {
-    auto child = make_unique<Task>(/*parent=*/this, _entry_point, _name);
+  // Duplicate task.
+  auto task = make_unique<Task>(/*parent=*/this, _entry_point, _name);
+  Task* child = task.get();
 
-    // Calculate child's trap frame.
-    child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
-
-    // Calculate child's user stack pointer.
-    // We should write user SP into the trap frame instead of setting it directly.
-    child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
-
-    // Copy kernel stack page content
-    child->_kstack_page.copy_from(_kstack_page);
-
-    // Copy user stack page content
-    child->_ustack_page.copy_from(_ustack_page);
-
-    // Set parent's fork() return value to child's pid.
-    ret = child->_pid;
-
-    // Copy child's CPU context.
-    child->_context = _context;
-    child->_context.lr = reinterpret_cast<uint64_t>(&&child_pc);
-    child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
-
-    // Enqueue the child task.
-    TaskScheduler::get_instance().enqueue_task(move(child));
+  if (!task) {
+    printk("do_fork: failed (out of memory).\n");
+    return -1;
   }
 
-  // The above curly braces are there to prevent the compiler from
-  // inserting a call to UniquePtr<Task>'s destructor at the end of do_fork().
-  // Otherwise there will be a double-free bug.
+  // Enqueue the child task.
+  TaskScheduler::get_instance().enqueue_task(move(task));
 
-child_pc:
+  // Calculate child's trap frame.
+  child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
+
+  // Calculate child's user stack pointer.
+  // We should write user SP into the trap frame instead of setting it directly.
+  child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
+
+  // Copy kernel stack page content
+  child->_kstack_page.copy_from(_kstack_page);
+
+  // Copy user stack page content
+  child->_ustack_page.copy_from(_ustack_page);
+
+  // Set parent's fork() return value to child's pid.
+  ret = child->_pid;
+
+  // Copy child's CPU context.
+  child->_context = _context;
+  child->_context.lr = reinterpret_cast<uint64_t>(&&child_return_to);
+  child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
+
+
+child_return_to:
   printf("pid: %d, ret = %d\n", _pid, ret);
   return ret;
 }
