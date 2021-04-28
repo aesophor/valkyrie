@@ -90,7 +90,10 @@ void ExceptionManager::handle_irq() {
     MiniUART::get_instance().handle_irq();
   } else {
     TimerMultiplexer::get_instance().tick();
-    TaskScheduler::get_instance().tick();
+
+    auto& sched = TaskScheduler::get_instance();
+    sched.tick();
+    sched.maybe_reschedule();
 
     /*
     auto task = []() { printf("ok\n"); };

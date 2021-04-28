@@ -53,6 +53,8 @@ class Task {
         _name() {
     if (unlikely(_pid == 1)) {
       Task::_init = this;
+    } else if (unlikely(_pid == 2)) {
+      Task::_kthreadd = this;
     }
 
     if (parent) {
@@ -114,6 +116,10 @@ class Task {
     return *Task::_init;
   }
 
+  static Task& get_kthreadd() {
+    return *Task::_kthreadd;
+  }
+
   [[gnu::always_inline]] void save_context() {
     switch_to(this, nullptr);
   }
@@ -143,12 +149,26 @@ class Task {
   }
 
 
+  size_t get_children_count() const {
+    return _active_children.size() + _terminated_children.size();
+  }
+
+  size_t get_active_children_count() const {
+    return _active_children.size();
+  }
+
+  size_t get_terminated_children_count() const {
+    return _terminated_children.size();
+  }
+
+
 
  private:
   size_t construct_argv_chain(const char* const _argv[]);
   int probe_for_argc(const char* const argv[]) const;
 
   static Task* _init;
+  static Task* _kthreadd;
   static uint32_t _next_pid;
 
 
