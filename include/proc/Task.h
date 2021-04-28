@@ -12,6 +12,7 @@
 #include <mm/MemoryManager.h>
 #include <proc/TrapFrame.h>
 
+#define TASK_TIME_SLICE    3
 #define TASK_NAME_MAX_LEN 16
 
 namespace valkyrie::kernel {
@@ -44,7 +45,7 @@ class Task {
         _state(Task::State::CREATED),
         _error_code(),
         _pid(Task::_next_pid++),
-        _time_slice(3),
+        _time_slice(TASK_TIME_SLICE),
         _entry_point(reinterpret_cast<void*>(entry_point)),
         _elf_dest(),
         _kstack_page(get_free_page()),
@@ -134,7 +135,12 @@ class Task {
 
   int get_time_slice() const { return _time_slice; }
   void set_time_slice(int time_slice) { _time_slice = time_slice; }
-  void reduce_time_slice() { --_time_slice; }
+
+  void tick() {
+    if (_time_slice > 0) {
+      _time_slice--;
+    }
+  }
 
 
 
