@@ -1,8 +1,9 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_MEMORY_H_
-#define VALKYRIE_MEMORY_H_
+#ifndef VALKYRIE_UNIQUE_LOCK_H_
+#define VALKYRIE_UNIQUE_LOCK_H_
 
-#include <UniquePtr.h>
-#include <SharedPtr.h>
+namespace valkyrie::kernel {
 
-#endif  // VALKYRIE_MEMORY_H_
+}  // namespace valkyrie::kernel
+
+#endif  // VALKYRIE_UNIQUE_LOCK_H_
