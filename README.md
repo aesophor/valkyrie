@@ -9,14 +9,16 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 ## Progress
 
 - [x] Bootloader [see tag: lab2-bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader)
-- [x] Exception/Interrupt Handling
-- [x] System Calls
-- [x] Physical Page Allocator
-- [x] Optimized SLOB Allocator (a minimal version of ptmalloc)
-- [ ] Virtual Memory
-- [ ] Multitasking
-- [ ] Filesystem
-- [ ] Virtual Filesystem
+- [x] Exception/Interrupt handling
+- [x] System calls
+- [x] Buddy allocator
+- [x] Dynamic allocator: my own optimized SLOB allocator (a simplified `ptmalloc`)
+- [ ] Boot memory allocator
+- [x] Preemptive multitasking (supports user/kernel threads)
+- [x] fork(), exec(), wait(), exit()
+- [ ] POSIX signals
+- [ ] Virtual filesystem
+- [ ] Virtual memory
 
 ## Build and Deploy
 
