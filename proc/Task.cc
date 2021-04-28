@@ -12,8 +12,9 @@
 
 namespace valkyrie::kernel {
 
-// The pointer to the init process.
+// The pointer to the init and kthreadd task.
 Task* Task::_init = nullptr;
+Task* Task::_kthreadd = nullptr;
 
 // PID starts at 0 (idle task)
 uint32_t Task::_next_pid = 0;
@@ -113,7 +114,7 @@ failed:
 
 
 int Task::do_wait(int* wstatus) {
-  if (_active_children.empty()) {
+  if (!get_children_count()) {
     return -1;
   }
 

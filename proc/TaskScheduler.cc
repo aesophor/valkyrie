@@ -2,11 +2,16 @@
 #include <proc/TaskScheduler.h>
 
 #include <dev/Console.h>
+#include <kernel/Compiler.h>
+#include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <proc/idle.h>
 #include <proc/start_init.h>
+#include <proc/start_kthreadd.h>
 
 namespace valkyrie::kernel {
+
+extern void foo();
 
 TaskScheduler& TaskScheduler::get_instance() {
   static TaskScheduler instance;
@@ -21,12 +26,17 @@ TaskScheduler::TaskScheduler()
 void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(nullptr, idle, "idle"));
   enqueue_task(make_unique<Task>(nullptr, start_init, "init"));
+  enqueue_task(make_unique<Task>(nullptr, start_kthreadd, "kthreadd"));
+
+  for (int i = 0; i < 5; i++) {
+    create_kernel_thread(foo, "kthread");
+  }
 
   switch_to(/*prev=*/nullptr, /*next=*/_runqueue.front().get());
 }
 
 
-void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
+Task& TaskScheduler::enqueue_task(UniquePtr<Task> task) {
   if (unlikely(!task)) {
     Kernel::panic("sched: task is empty\n");
   }
@@ -37,7 +47,9 @@ void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
       task->get_pid());
 
   task->set_state(Task::State::RUNNABLE);
+
   _runqueue.push_back(move(task));
+  return *_runqueue.back();
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
@@ -68,10 +80,12 @@ void TaskScheduler::schedule() {
     _runqueue.pop_front();
     _runqueue.push_back(move(task));
 
+    /*
     // FIXME: for debugging purpose only. Remove this block later.
     auto& next_task = _runqueue.front();
     printk(">>>> context switch: next: pid = %d [%s]\n", next_task->get_pid(),
                                                          next_task->get_name());
+                                                         */
   }
 
   switch_to(&Task::get_current(), _runqueue.front().get());
