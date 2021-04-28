@@ -154,10 +154,10 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
   // Construct the argv chain on the user stack.
   size_t user_sp = _ustack_page.end();
   int argc = probe_for_argc(_argv);
-  UniquePtr<char*[]> addresses;
+  UniquePtr<char*[]> new_strs;
 
   // The number of items to write on the stack.
-  // i.e. argc itself, `argc` char pointers, and a nullptr sentinel.
+  // i.e. argc itself, $(argc) char pointers, and a nullptr sentinel.
   size_t nr_items;
 
 
@@ -168,15 +168,15 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
       argv[i] = _argv[i];
     }
 
-    addresses = make_unique<char*[]>(argc);
+    new_strs = make_unique<char*[]>(argc);
 
     for (int i = argc - 1; i >= 0; i--) {
       size_t len = round_up_to_multiple_of_n(argv[i].size() + 1, 16);
       user_sp -= len;
+
       char* s = reinterpret_cast<char*>(user_sp);
       strcpy(s, argv[i].c_str());
-      addresses[i] = s;
-      printf("argv[%d] = %s\n", i, s);
+      new_strs[i] = s;
     }
   }
 
@@ -193,11 +193,9 @@ size_t Task::construct_argv_chain(const char* const _argv[]) {
   // Write `argc`.
   *reinterpret_cast<int*>(user_sp) = argc;
 
-  if (_argv) {
-    // Write `argv` pointers.
-    for (int i = 0; i < argc; i++) {
-      *reinterpret_cast<char**>(user_sp + 8 * (i + 1)) = addresses[i];
-    }
+  // Write `argv` pointers.
+  for (int i = 0; i < argc; i++) {
+    *reinterpret_cast<char**>(user_sp + 8 * (i + 1)) = new_strs[i];
   }
 
   // Write `argv` sentinel.
