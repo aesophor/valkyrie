@@ -2,23 +2,50 @@
 #ifndef VALKYRIE_ATOMIC_H_
 #define VALKYRIE_ATOMIC_H_
 
+#include <Utility.h>
+
 namespace valkyrie::kernel {
 
 template <typename>
 class Atomic;
 
+
 // Partial specialization of class `Atomic`
 template <>
-class Atomic<int> {
+class Atomic<bool> {
  public:
-  Atomic();
+  // Default constructor
+  Atomic() : _v() {}
+
+  // Constructor
+  explicit
+  Atomic(bool v) : _v(v) {}
+
+  // Destructor
   ~Atomic() = default;
 
- private:
-  void inc() { __sync_add_and_fetch(&_v, 1); }
-  void dec() { __sync_sub_and_fetch(&_v, 1); }
+  // Copy constructor
+  Atomic(const Atomic& r) = delete;
 
-  int _v;
+  // Copy assignment operator
+  Atomic& operator= (const Atomic& r) = delete;
+
+  // Move constructor
+  Atomic(Atomic&& r) noexcept { *this = move(r); }
+
+  // Move assignment operator
+  Atomic& operator= (Atomic&& r) noexcept {
+    static_cast<void>(__sync_lock_test_and_set(&_v, r._v));
+    return *this;
+  }
+
+  Atomic& operator= (bool v) {
+    static_cast<void>(__sync_lock_test_and_set(&_v, v));
+    return *this;
+  }
+
+ private:
+  volatile bool _v;
 };
 
 }  // namespace valkyrie::kernel
