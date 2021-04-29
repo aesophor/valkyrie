@@ -12,6 +12,7 @@ namespace valkyrie::kernel {
 template <typename>
 class Function;
 
+
 // Partial specialization of class `Function`
 template <typename ReturnType, typename... Args>
 class Function<ReturnType(Args...)> {
