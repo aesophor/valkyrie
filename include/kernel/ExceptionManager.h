@@ -32,8 +32,15 @@ class ExceptionManager final {
   static ExceptionManager& get_instance();
   ~ExceptionManager() = default;
 
-  void enable();
-  void disable();
+  [[gnu::always_inline]] static void enable() {
+    asm volatile("msr DAIFCLR, #0b1111");
+    ExceptionManager::get_instance()._is_enabled = true;
+  }
+
+  [[gnu::always_inline]] static void disable() {
+    ExceptionManager::get_instance()._is_enabled = false;
+    asm volatile("msr DAIFSET, #0b1111");
+  }
 
   static void handle_exception(TrapFrame* trap_frame);
   static void handle_irq();
