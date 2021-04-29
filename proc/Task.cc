@@ -192,6 +192,7 @@ int Task::do_wait(int* wstatus) {
 
 
 [[noreturn]] void Task::do_exit(int error_code) {
+  // Terminate the current task.
   _state = Task::State::TERMINATED;
   _error_code = error_code;
 
@@ -203,6 +204,29 @@ int Task::do_wait(int* wstatus) {
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
+}
+
+
+long Task::do_kill(pid_t pid, Signal signal) {
+  // Send a signal to `pid`.
+  if (auto task = Task::get_by_pid(pid)) {
+    task->_pending_signals.push_back(signal);
+    return 0;
+  }
+
+  printk("sys_kill: failed (pid %d not found)\n", pid);
+  return -1;
+}
+
+
+int Task::do_signal(int signal, void (*handler)()) {
+  if (unlikely(!is_signal_valid(signal))) {
+    printk("do_signal: failed (signal=0x%x is invalid)\n", signal);
+    return -1;
+  }
+
+  _custom_signal_handlers[signal] = handler;
+  return 0;  // TODO: return previous handler's error code.
 }
 
 
@@ -268,6 +292,26 @@ int Task::probe_for_argc(const char* const argv[]) const {
   int argc = 0;
   for (const char* s = argv[0]; s; s = argv[++argc]);
   return argc;
+}
+
+
+void Task::handle_pending_signals() {
+  Signal signal;
+
+  while (!_pending_signals.empty()) {
+    signal = _pending_signals.front();
+    _pending_signals.pop_front();
+
+    if (unlikely(!is_signal_valid(signal))) {
+      Kernel::panic("invalid signal: 0x%x\n", signal);
+    }
+
+    if (_custom_signal_handlers[signal]) {
+      _custom_signal_handlers[signal]();
+    } else {
+      invoke_default_signal_handler(signal);
+    }
+  }
 }
 
 }  // namespace valkyrie::kernel

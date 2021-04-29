@@ -58,6 +58,9 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                           trap_frame->x4,
                                                           trap_frame->x5);
 
+    // Handle pending POSIX signals.
+    Task::get_current().handle_pending_signals();
+
     // User preemption.
     TaskScheduler::get_instance().maybe_reschedule();
     return;

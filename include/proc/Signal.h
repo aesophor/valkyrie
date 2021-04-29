@@ -14,27 +14,34 @@
 
 namespace valkyrie::kernel {
 
-class Signal {
- public:
-  enum Type {
-    SIGHUP = 1,
-    SIGINT,
-    SIGQUIT,
-    SIGFPE = 8,
-    SIGKILL,
-    SIGALRM,
-    SIGTERM,
-    __NR_signals
-  };
-
-  Signal(Signal::Type number, void (*handler)());
-  ~Signal() = default;
-
- private:
-  Signal::Type _number;
-  void (*_handler)();
+enum Signal {
+  SIGINT = 2,
+  SIGKILL = 9,
+  __NR_signals
 };
 
-}  // namespace valkyrie::kernel
+// Default signal handler table
+extern void (*__default_signal_handler_table[Signal::__NR_signals])();
+
+// Individual default signal handler declaration.
+void sigint_default_handler();
+void sigkill_default_handler();
+void sig_unsupported_handler();
+
+
+inline bool is_signal_valid(const int signal) {
+  return signal >= 0 && signal < Signal::__NR_signals;
+}
+
+inline void invoke_default_signal_handler(const Signal signal) {
+  if (!is_signal_valid(signal)) {
+    printk("do_signal_handler: bad signal: (id=0x%x)\n", signal);
+    return;
+  }
+
+  __default_signal_handler_table[signal]();
+}
+
+}  // namespace valkyrie::kernl
 
 #endif  // VALKYRIE_SIGNAL_H_
