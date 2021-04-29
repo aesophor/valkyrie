@@ -28,9 +28,11 @@ void TaskScheduler::run() {
   enqueue_task(make_unique<Task>(nullptr, start_init, "init"));
   enqueue_task(make_unique<Task>(nullptr, start_kthreadd, "kthreadd"));
 
+  /*
   for (int i = 0; i < 5; i++) {
     create_kernel_thread(foo, "kthread");
   }
+  */
 
   switch_to(/*prev=*/nullptr, /*next=*/_runqueue.front().get());
 }

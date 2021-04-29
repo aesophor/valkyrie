@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_TASK_H_
 #define VALKYRIE_TASK_H_
 
-#include <DoublyLinkedList.h>
+#include <List.h>
 #include <Memory.h>
 #include <Types.h>
 #include <dev/Console.h>
@@ -10,6 +10,7 @@
 #include <libs/CString.h>
 #include <mm/Page.h>
 #include <mm/MemoryManager.h>
+#include <proc/Signal.h>
 #include <proc/TrapFrame.h>
 
 #define TASK_TIME_SLICE    3
@@ -50,7 +51,8 @@ class Task {
         _elf_dest(),
         _kstack_page(get_free_page()),
         _ustack_page(get_free_page()),
-        _name() {
+        _name(),
+        _pending_signals() {
     if (unlikely(_pid == 1)) {
       Task::_init = this;
     } else if (unlikely(_pid == 2)) {
@@ -120,6 +122,8 @@ class Task {
     return *Task::_kthreadd;
   }
 
+  static Task* get_by_pid(const pid_t pid);
+
   [[gnu::always_inline]] void save_context() {
     switch_to(this, nullptr);
   }
@@ -132,7 +136,7 @@ class Task {
 
 
   Task::State get_state() const { return _state; }
-  uint32_t get_pid() const { return _pid; }
+  pid_t get_pid() const { return _pid; }
   TrapFrame* get_trap_frame() const { return _trap_frame; }
   const char* get_name() const { return _name; }
 
@@ -160,7 +164,11 @@ class Task {
   size_t get_terminated_children_count() const {
     return _terminated_children.size();
   }
+  
 
+  void add_pending_signal(const Signal::Type signal) {
+    _pending_signals.push_back(signal);
+  }
 
 
  private:
@@ -169,7 +177,7 @@ class Task {
 
   static Task* _init;
   static Task* _kthreadd;
-  static uint32_t _next_pid;
+  static pid_t _next_pid;
 
 
   struct Context {
@@ -189,11 +197,11 @@ class Task {
   } _context;
 
   Task* _parent;
-  DoublyLinkedList<Task*> _active_children;
-  DoublyLinkedList<UniquePtr<Task>> _terminated_children;
+  List<Task*> _active_children;
+  List<UniquePtr<Task>> _terminated_children;
   Task::State _state;
   int _error_code;
-  uint32_t _pid;
+  pid_t _pid;
   int _time_slice;
   void* _entry_point;
   void* _elf_dest;
@@ -201,6 +209,8 @@ class Task {
   Page _ustack_page;
   TrapFrame* _trap_frame;
   char _name[TASK_NAME_MAX_LEN];
+
+  List<Signal::Type> _pending_signals;
 };
 
 }  // namespace valkyrie::kernel

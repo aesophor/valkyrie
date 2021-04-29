@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_DOUBLY_LINKED_LIST_H_
-#define VALKYRIE_DOUBLY_LINKED_LIST_H_
+#ifndef VALKYRIE_LIST_H_
+#define VALKYRIE_LIST_H_
 
 #include <Functional.h>
 #include <Memory.h>
@@ -10,15 +10,15 @@ namespace valkyrie::kernel {
 
 // Linux kernel doubly linked list
 template <typename T>
-class DoublyLinkedList {
+class List {
  public:
   // Constructor
-  DoublyLinkedList()
+  List()
       : _head(make_unique<Node>()),
         _size() {}
 
   // Destructor
-  ~DoublyLinkedList() {
+  ~List() {
     Node* ptr = _head->next;
     while (ptr != _head.get()) {
       Node* next = ptr->next;
@@ -26,6 +26,8 @@ class DoublyLinkedList {
       ptr = next;
     }
   }
+
+  operator bool() const { return !empty(); }
 
 
   template <typename U>
@@ -68,13 +70,26 @@ class DoublyLinkedList {
   }
 
   void remove_if(Function<bool (T&)> predicate) {
-    Node* node = _head->next;
-    while (node != _head.get()) {
+    for (Node* node = _head->next; node != _head.get(); node = node->next) {
       if (predicate(node->data)) {
         list_del_entry(node);
         return;
       }
-      node = node->next;
+    }
+  }
+
+  T* find_if(Function<bool (T&)> predicate) {
+    for (Node* node = _head->next; node != _head.get(); node = node->next) {
+      if (predicate(node->data)) {
+        return &(node->data);
+      }
+    }
+    return nullptr;
+  }
+
+  void for_each(Function<void (T&)> callback) {
+    for (Node* node = _head->next; node != _head.get(); node = node->next) {
+      callback(node->data);
     }
   }
 
@@ -156,4 +171,4 @@ class DoublyLinkedList {
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_DOUBLY_LINKED_LIST_H_
+#endif  // VALKYRIE_LIST_H_
