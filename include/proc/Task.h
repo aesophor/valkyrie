@@ -52,7 +52,8 @@ class Task {
         _kstack_page(get_free_page()),
         _ustack_page(get_free_page()),
         _name(),
-        _pending_signals() {
+        _pending_signals(),
+        _custom_signal_handlers() {
     if (unlikely(_pid == 1)) {
       Task::_init = this;
     } else if (unlikely(_pid == 2)) {
@@ -133,6 +134,10 @@ class Task {
   int do_exec(const char* name, const char* const _argv[]);
   int do_wait(int* wstatus);
   [[noreturn]] void do_exit(int error_code);
+  long do_kill(pid_t pid, Signal signal);
+  int do_signal(int signal, void (*handler)());
+
+  void handle_pending_signals();
 
 
   Task::State get_state() const { return _state; }
@@ -165,11 +170,6 @@ class Task {
     return _terminated_children.size();
   }
   
-
-  void add_pending_signal(const Signal::Type signal) {
-    _pending_signals.push_back(signal);
-  }
-
 
  private:
   size_t construct_argv_chain(const char* const _argv[]);
@@ -210,7 +210,9 @@ class Task {
   TrapFrame* _trap_frame;
   char _name[TASK_NAME_MAX_LEN];
 
-  List<Signal::Type> _pending_signals;
+  // POSIX signals
+  List<Signal> _pending_signals;
+  void (*_custom_signal_handlers[Signal::__NR_signals])();
 };
 
 }  // namespace valkyrie::kernel

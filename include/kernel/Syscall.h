@@ -41,6 +41,11 @@ int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
 int sys_signal(int signal, void (*handler)());
 
+
+inline bool is_syscall_id_valid(const uint64_t id) {
+  return id < Syscall::__NR_syscall;
+}
+
 // Indirect system call
 //
 // A system call is issued using the `svc 0` instruction.
@@ -50,7 +55,7 @@ int sys_signal(int signal, void (*handler)());
 template <typename... Args>
 size_t do_syscall(const uint64_t id, Args... args) {
   // Check if syscall id is valid.
-  if (unlikely(id >= Syscall::__NR_syscall)) {
+  if (unlikely(!is_syscall_id_valid(id))) {
     printk("bad system call: (id=0x%x)\n", id);
     return -1;
   }

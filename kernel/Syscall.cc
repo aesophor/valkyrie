@@ -9,9 +9,9 @@
 namespace valkyrie::kernel {
 
 #define SYSCALL_DECL(func) \
-  reinterpret_cast<size_t>(func)
+  reinterpret_cast<const size_t>(func)
 
-const size_t __syscall_table[__NR_syscall] = {
+const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_uart_read),
   SYSCALL_DECL(sys_uart_write),
   SYSCALL_DECL(sys_uart_putchar),
@@ -70,16 +70,11 @@ int sys_sched_yield() {
 }
 
 long sys_kill(pid_t pid, int signal) {
-  if (auto task = Task::get_by_pid(pid)) {
-    task->add_pending_signal(static_cast<Signal::Type>(signal));
-    return 0;
-  }
-  return -1;
+  return Task::get_current().do_kill(pid, static_cast<Signal>(signal));
 }
 
 int sys_signal(int signal, void (*handler)()) {
-  printk("not implemented yet.\n");
-  return 0;
+  return Task::get_current().do_signal(signal, handler);
 }
 
 }  // namespace valkyrie::kernel
