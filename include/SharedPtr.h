@@ -19,6 +19,11 @@ class SharedPtr {
       : _ctrl(),
         _alias() {}
 
+  // Constructor (from a nullptr_t)
+  SharedPtr(nullptr_t)
+      : _ctrl(),
+        _alias() {}
+
   // Constructor (from a raw pointer of type T)
   explicit
   SharedPtr(T* p)
@@ -29,11 +34,6 @@ class SharedPtr {
   explicit
   SharedPtr(UniquePtr<T>&& r)
       : _ctrl(new ControlBlock(r.release(), 1)),
-        _alias() {}
-
-  // Constructor (from a nullptr_t)
-  SharedPtr(nullptr_t)
-      : _ctrl(),
         _alias() {}
 
   // Aliasing Constructor

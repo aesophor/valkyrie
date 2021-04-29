@@ -26,6 +26,7 @@ class VirtualFileSystem final {
   int read(File* file, void* buf, size_t len);
 
   VirtualFileSystem::Mount& get_rootfs();
+  List<SharedPtr<File>>& get_opened_files();
 
  private:
   VirtualFileSystem();

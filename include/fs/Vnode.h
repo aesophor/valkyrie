@@ -15,11 +15,13 @@ class Vnode {
   virtual ~Vnode() = default;
 
 
-  virtual void add_child(UniquePtr<Vnode> child) = 0;
-  virtual UniquePtr<Vnode> remove_child(const String& name) = 0;
+  virtual void add_child(SharedPtr<Vnode> child) = 0;
+  virtual SharedPtr<Vnode> remove_child(const String& name) = 0;
 
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
+
+  virtual char* get_content() const = 0;
 
 
   bool is_directory() const { return (_mode & S_IFMT) == S_IFDIR; }

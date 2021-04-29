@@ -43,6 +43,10 @@ void Kernel::run() {
 
   _vfs.get_rootfs().fs->show();
 
+  File* f = _vfs.open("readme.txt", 0);
+  printk("%s", f->vnode->get_content());
+  _vfs.close(f);
+
 
   /*
   printk("starting task scheduler...\n");

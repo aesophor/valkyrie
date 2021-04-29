@@ -1,8 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <fs/VirtualFileSystem.h>
 
+#include <Algorithm.h>
 #include <fs/File.h>
 #include <fs/Stat.h>
+#include <fs/Vnode.h>
 
 namespace valkyrie::kernel {
 
@@ -34,10 +36,10 @@ File* VirtualFileSystem::open(const String& pathname, int flags) {
     return nullptr;
   }
 
-  Vnode* vnode = rootfs->get_vnode_by_pathname(pathname);
+  Vnode* vnode = rootfs->get_vnode(pathname);
 
   if ((flags & O_CREAT) && !vnode) {
-    vnode = rootfs->create(pathname, 0, 0, 0, 0);
+    vnode = rootfs->create(pathname, nullptr, 0, 0, 0, 0);
   }
 
   auto it = _opened_files.find_if([vnode](const auto& f) {
@@ -84,11 +86,18 @@ int VirtualFileSystem::write(File* file, const void* buf, size_t len) {
 int VirtualFileSystem::read(File* file, void* buf, size_t len) {
   // 1. read min(len, readable file data size) byte to buf from the opened file.
   // 2. return read size or error code if an error occurs.
+  len = min(len, static_cast<decltype(len)>(file->vnode->get_size()));
+  memcpy(buf, file->vnode->get_content(), len);
+  return len;
 }
 
 
 VirtualFileSystem::Mount& VirtualFileSystem::get_rootfs() {
   return _rootfs;
+}
+
+List<SharedPtr<File>>& VirtualFileSystem::get_opened_files() {
+  return _opened_files;
 }
 
 }  // namespace valkyrie::kernel
