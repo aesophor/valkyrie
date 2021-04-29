@@ -7,12 +7,9 @@
 namespace valkyrie::kernel {
 
 [[noreturn]] void idle() {
-  auto& exmgr = ExceptionManager::get_instance();
-  auto& sched = TaskScheduler::get_instance();
-
   while (true) {
-    exmgr.enable();
-    sched.schedule();
+    ExceptionManager::enable();
+    TaskScheduler::get_instance().schedule();
   }
 }
 
