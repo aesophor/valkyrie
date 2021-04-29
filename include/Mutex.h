@@ -5,19 +5,35 @@
 #ifndef VALKYRIE_MUTEX_H_
 #define VALKYRIE_MUTEX_H_
 
+#include <kernel/ExceptionManager.h>
+
 namespace valkyrie::kernel {
 
 class Mutex {
  public:
-  Mutex();
-  ~Mutex();
+  Mutex() : _is_locked() {}
+  ~Mutex() {}
 
-  void lock();
-  void try_lock();
-  void unlock();
+  // Locks the mutex, blocks if the mutex is not available
+  [[gnu::always_inline]] void lock() {
+    ExceptionManager::disable();
+    _is_locked = true;
+  }
+
+  // Tries to lock the mutex,
+  // returns if the mutex is not available.
+  [[gnu::always_inline]] void try_lock() {
+
+  }
+
+  // Unlocks the mutex.
+  [[gnu::always_inline]] void unlock() {
+    _is_locked = false;
+    ExceptionManager::enable();
+  }
 
  private:
-  bool _is_locked;
+  volatile bool _is_locked;
 };
 
 }  // namespace valkyrie::kernel

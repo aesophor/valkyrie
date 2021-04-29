@@ -1,6 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <proc/Task.h>
 
+#include <Mutex.h>
+#include <UniqueLock.h>
 #include <String.h>
 #include <fs/ELF.h>
 #include <fs/Initramfs.h>
@@ -72,6 +74,9 @@ int Task::do_fork() {
 
 
   // Duplicate task.
+  Mutex m;
+  m.lock();
+
   auto task = make_unique<Task>(/*parent=*/this, _entry_point, _name);
   Task* child = task.get();
 
@@ -99,7 +104,8 @@ int Task::do_fork() {
   // Copy kernel/user stack content
   child->_kstack_page.copy_from(_kstack_page);
   child->_ustack_page.copy_from(_ustack_page);
-
+  
+  m.unlock();
 
   /* ------ You can safely modify the child now ------ */
 
@@ -198,9 +204,12 @@ int Task::do_wait(int* wstatus) {
 
   kfree(_elf_dest);
 
+  Mutex m;
+  m.lock();
   auto& sched = TaskScheduler::get_instance();
   _parent->_active_children.remove(this);
   _parent->_terminated_children.push_back(sched.remove_task(*this));
+  m.unlock();
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");

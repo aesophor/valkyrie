@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <Mutex.h>
 #include <proc/Task.h>
 
 namespace valkyrie::kernel {
@@ -33,6 +34,7 @@ class TaskScheduler {
 
   bool _need_reschedule;
   List<UniquePtr<Task>> _runqueue;
+  Mutex _m;
 };
 
 }  // namespace valkyrie::kernel
