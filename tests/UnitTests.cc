@@ -1,7 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <Deque.h>
-#include <DoublyLinkedList.h>
 #include <Functional.h>
+#include <List.h>
 #include <Memory.h>
 #include <String.h>
 #include <dev/Console.h>
@@ -28,7 +28,7 @@ class Derived : public Base {
 void __run_unit_tests() {
   /*
   {
-    DoublyLinkedList<int> list;
+    List<int> list;
     list.push_back(3);
     list.push_back(5);
     list.push_back(7);

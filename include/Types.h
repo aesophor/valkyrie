@@ -19,6 +19,8 @@ using int8_t = char;
 
 using size_t = unsigned long;
 
+using pid_t = uint32_t;
+
 
 
 // Template metaprogramming... here we go...

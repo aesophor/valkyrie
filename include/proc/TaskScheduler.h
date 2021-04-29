@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_TASK_SCHEDULER_H_
 #define VALKYRIE_TASK_SCHEDULER_H_
 
-#include <DoublyLinkedList.h>
+#include <List.h>
 #include <Memory.h>
 #include <proc/Task.h>
 
@@ -32,7 +32,7 @@ class TaskScheduler {
   TaskScheduler();
 
   bool _need_reschedule;
-  DoublyLinkedList<UniquePtr<Task>> _runqueue;
+  List<UniquePtr<Task>> _runqueue;
 };
 
 }  // namespace valkyrie::kernel

@@ -20,6 +20,8 @@ enum Syscall {
   SYS_GETPID,
   SYS_WAIT,
   SYS_SCHED_YIELD,
+  SYS_KILL,
+  SYS_SIGNAL,
   __NR_syscall
 };
 
@@ -36,6 +38,8 @@ int sys_exec(const char* name, const char *const argv[]);
 int sys_getpid();
 int sys_wait(int* wstatus);
 int sys_sched_yield();
+long sys_kill(pid_t pid, int signal);
+int sys_signal(int signal, void (*handler)());
 
 // Indirect system call
 //

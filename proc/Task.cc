@@ -4,6 +4,7 @@
 #include <String.h>
 #include <fs/ELF.h>
 #include <fs/Initramfs.h>
+#include <kernel/Compiler.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
@@ -18,6 +19,43 @@ Task* Task::_kthreadd = nullptr;
 
 // PID starts at 0 (idle task)
 uint32_t Task::_next_pid = 0;
+
+
+Task* Task::get_by_pid(const pid_t pid) {
+  if (pid == 1) {
+    return Task::_init;
+  } else if (pid == 2) {
+    return Task::_kthreadd;
+  }
+
+  // Process tree BFS
+  List<Task*> q;
+  q.push_back(Task::_init);
+
+  while (!q.empty()) {
+    size_t size = q.size();
+
+    for (size_t i = 0; i < size; i++) {
+      Task* task = q.front();
+      q.pop_front();
+
+      auto result = task->_active_children.find_if([pid](auto t) {
+        return t->_pid == pid;
+      });
+
+      if (result) {
+        return *result;
+      }
+
+      // Push all children onto the queue.
+      task->_active_children.for_each([&q](auto t) {
+        q.push_back(t);
+      });
+    }
+  }
+  
+  return nullptr;
+}
 
 
 int Task::do_fork() {
@@ -38,8 +76,21 @@ int Task::do_fork() {
   Task* child = task.get();
 
   if (!task) {
-    printk("do_fork: failed (out of memory).\n");
-    return -1;
+    printk("do_fork: task class allocation failed (out of memory).\n");
+    ret = -1;
+    goto out;
+  }
+
+  if (!task->_kstack_page.get()) {
+    printk("do_fork: kernel stack allocation failed (out of memory).\n");
+    ret = -1;
+    goto out;
+  }
+
+  if (!task->_ustack_page.get()) {
+    printk("do_fork: user stack allocation failed (out of memory).\n");
+    ret = -1;
+    goto out;
   }
 
   // Enqueue the child task.
@@ -57,7 +108,7 @@ int Task::do_fork() {
 
   // Copy child's CPU context.
   child->_context = _context;
-  child->_context.lr = reinterpret_cast<uint64_t>(&&child_return_to);
+  child->_context.lr = reinterpret_cast<uint64_t>(&&out);
   child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
   // Calculate child's trap frame.
@@ -67,7 +118,7 @@ int Task::do_fork() {
   child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
   child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
 
-child_return_to:
+out:
   //printf("pid: %d, ret = %d\n", Task::get_current()._pid, ret);
   return ret;
 }
@@ -90,12 +141,16 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   ELF elf(Initramfs::get_instance().read(name));
   _elf_dest = kmalloc(elf.get_size() + 0x1000);
   void* dest = reinterpret_cast<char*>(_elf_dest) + 0x1000 - 0x10;
-  printk("loading ELF at 0x%x\n", dest);
 
   if (!elf.is_valid()) {
     goto failed;
   }
 
+  if (!_elf_dest) {
+    goto failed;
+  }
+
+  printk("loading ELF at 0x%x\n", dest);
   elf.load_at(dest);
 
   // Jump to the entry point.

@@ -21,6 +21,8 @@ const size_t __syscall_table[__NR_syscall] = {
   SYSCALL_DECL(sys_getpid),
   SYSCALL_DECL(sys_wait),
   SYSCALL_DECL(sys_sched_yield),
+  SYSCALL_DECL(sys_kill),
+  SYSCALL_DECL(sys_signal),
 };
 
 
@@ -65,6 +67,19 @@ int sys_getpid() {
 int sys_sched_yield() {
   TaskScheduler::get_instance().schedule();
   return 0;  // always succeeds.
+}
+
+long sys_kill(pid_t pid, int signal) {
+  if (auto task = Task::get_by_pid(pid)) {
+    task->add_pending_signal(static_cast<Signal::Type>(signal));
+    return 0;
+  }
+  return -1;
+}
+
+int sys_signal(int signal, void (*handler)()) {
+  printk("not implemented yet.\n");
+  return 0;
 }
 
 }  // namespace valkyrie::kernel
