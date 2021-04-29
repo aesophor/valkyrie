@@ -24,17 +24,6 @@ ExceptionManager::ExceptionManager()
 }
 
 
-void ExceptionManager::enable() {
-  asm volatile("msr DAIFCLR, #0b1111");
-  _is_enabled = true;
-}
-
-void ExceptionManager::disable() {
-  asm volatile("msr DAIFSET, #0b1111");
-  _is_enabled = false;
-}
-
-
 void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   uint64_t spsr_el1;
   asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
