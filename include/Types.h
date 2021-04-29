@@ -15,6 +15,7 @@ using int16_t = short;
 using uint8_t = unsigned char;
 using int8_t = char;
 using size_t = unsigned long;
+using nullptr_t = decltype(nullptr);
 
 // Process related types
 using pid_t = uint32_t;

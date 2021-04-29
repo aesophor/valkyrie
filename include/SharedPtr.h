@@ -31,6 +31,11 @@ class SharedPtr {
       : _ctrl(new ControlBlock(r.release(), 1)),
         _alias() {}
 
+  // Constructor (from a nullptr_t)
+  SharedPtr(nullptr_t)
+      : _ctrl(),
+        _alias() {}
+
   // Aliasing Constructor
   // It allows us to construct a new SharedPtr instance
   // that shares ownership with another SharedPtr `r`,
