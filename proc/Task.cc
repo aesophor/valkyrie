@@ -58,6 +58,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
   _fd_table[1] = File::opened;
   _fd_table[2] = File::opened;
 
+  /*
   printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
       this,
       _name,
@@ -65,14 +66,17 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _entry_point,
       _kstack_page.begin(),
       _ustack_page.begin());
+  */
 }
 
 
 Task::~Task() {
+  /*
   printk("destructing thread 0x%x [%s] (pid = %d)\n",
         this,
         _name,
         _pid);
+  */
 
   // If the current task still has running children,
   // make the init task adopt these orphans.
@@ -228,12 +232,12 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
     goto failed;
   }
 
-  printk("loading ELF at 0x%x\n", dest);
+  //printk("loading ELF at 0x%x\n", dest);
   elf.load_at(dest);
 
   // Jump to the entry point.
-  printk("executing new program: %s, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
-         _name, _kstack_page.begin(), _ustack_page.begin());
+  //printk("executing new program: %s, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
+  //       _name, _kstack_page.begin(), _ustack_page.begin());
 
   ExceptionManager::get_instance()
     .downgrade_exception_level(0,

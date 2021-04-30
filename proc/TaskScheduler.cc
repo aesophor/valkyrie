@@ -37,20 +37,24 @@ void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
     Kernel::panic("sched: task is empty\n");
   }
 
+  /*
   printk("sched: adding thread to the runqueue 0x%x [%s] (pid = %d)\n",
       task.get(),
       task->get_name(),
       task->get_pid());
+  */
 
   task->set_state(Task::State::RUNNABLE);
   _runqueue.push_back(move(task));
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
+  /*
   printk("sched: removing thread from the runqueue 0x%x [%s] (pid = %d)\n",
       &task,
       task.get_name(),
       task.get_pid());
+  */
 
   UniquePtr<Task> removed_task;
 

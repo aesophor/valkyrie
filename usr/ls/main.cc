@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
   while ((ret = read(fd, reinterpret_cast<char*>(&dentry), sizeof(dentry)))) {
     printf("%s ", dentry.name);
   }
+  printf("\n");
 
 out:
   return ret;

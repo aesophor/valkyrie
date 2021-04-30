@@ -21,7 +21,6 @@ bool ELF::is_valid() const {
 void ELF::load_at(void* dest) const {
   //size_t p = reinterpret_cast<size_t>(dest);
   //size_t base = p;
-  printk("memcpy(0x%x, 0x%x, 0x%x);\n", dest, _header, _size);
   memcpy(dest, _header, _size);
 
   /*
