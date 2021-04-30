@@ -12,26 +12,33 @@ int main(int argc, char **argv) {
 int get_argc(const char* s) {
   size_t len = strlen(s);
   int ret = 0;
-  bool last_char_is_space = true;
 
+  size_t begin = 0;
   for (size_t i = 0; i < len; i++) {
-    if (s[i] != ' ' && !last_char_is_space) {
-      ret++;
+    char c = s[i];
+    if (c == ' ') {
+      size_t len = i - begin;
+      if (len) {
+        ret++;
+      }
+      begin = i + 1;
     }
-    last_char_is_space = s[i] == ' ';
   }
 
+  size_t tail_len = len - begin;
+  if (tail_len) {
+    ret++;
+  }
   return ret;
 }
 
 // Makes the current argument terminate by a NULL byte,
 // and returns the pointer to the next argument.
 char* get_next_arg(char* s) {
-  char* ptr = s;
-  while (*ptr && *ptr != ' ') ptr++;
-  *ptr++ = 0;
-  while (*ptr && *ptr == ' ') ptr++;
-  return ptr;
+  while (*s && *s != ' ') s++;
+  *s++ = 0;
+  while (*s && *s == ' ') s++;
+  return s;
 }
 
 int run_shell(const char* username) {
@@ -48,6 +55,7 @@ int run_shell(const char* username) {
 
     argc = get_argc(buf);
     str = buf;
+    while (*str && *str == ' ' && str < buf + sizeof(buf)) str++;
 
     char* arguments[argc + 1];
     arguments[0] = str;
@@ -57,13 +65,14 @@ int run_shell(const char* username) {
     }
     arguments[argc] = nullptr;
 
+
     if (!strlen(buf)) {
       continue;
 
     } else if (!strncmp(buf, "exit", sizeof(buf))) {
       break;
 
-    } else if (!strncmp(buf, "$?", sizeof(buf))) {
+    } else if (!strncmp(buf, "echo $?", sizeof(buf))) {
       printf("%d\n", wstatus);
 
     } else if (access(arguments[0], 0) != -1) {
@@ -89,7 +98,7 @@ int run_shell(const char* username) {
       }
 
     } else {
-      printf("sh: command not found: %s\n", buf);
+      printf("sh: command not found: %s\n", arguments[0]);
     }
   }
 

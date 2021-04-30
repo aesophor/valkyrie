@@ -7,6 +7,7 @@
 #include <Types.h>
 #include <dev/Console.h>
 #include <fs/File.h>
+#include <fs/Vnode.h>
 #include <kernel/Compiler.h>
 #include <libs/CString.h>
 #include <mm/Page.h>
@@ -150,6 +151,9 @@ class Task {
 
   // Per-process file descriptors
   SharedPtr<File> _fd_table[NR_TASK_FD_LIMITS];
+
+  // Current working directory
+  Vnode* _cwd_vnode;
 };
 
 }  // namespace valkyrie::kernel

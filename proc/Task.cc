@@ -37,7 +37,8 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _name(),
       _pending_signals(),
       _custom_signal_handlers(),
-      _fd_table() {
+      _fd_table(),
+      _cwd_vnode(VFS::get_instance().get_rootfs().get_root_vnode().get()) {
 
   if (unlikely(_pid == 1)) {
     Task::_init = this;
@@ -210,7 +211,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   _elf_dest = nullptr;
 
   // Load the specified file from the filesystem.
-  SharedPtr<File> file = VirtualFileSystem::get_instance().open(name, 0);
+  SharedPtr<File> file = VFS::get_instance().open(name, 0);
   
   if (!file) {
     printk("exec failed: pid = %d [%s]\n", _pid, _name);
@@ -218,8 +219,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   }
 
   ELF elf({ file->vnode->get_content(), file->vnode->get_size() });
-
-  VirtualFileSystem::get_instance().close(move(file));
+  VFS::get_instance().close(move(file));
 
   _elf_dest = kmalloc(elf.get_size() + 0x1000);
   void* dest = reinterpret_cast<char*>(_elf_dest) + 0x1000 - 0x10;

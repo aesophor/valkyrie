@@ -10,14 +10,14 @@
 
 namespace valkyrie::kernel {
 
-class VirtualFileSystem final {
+class VFS final {
  public:
   struct Mount final {
     UniquePtr<FileSystem> fs;
   };
 
-  static VirtualFileSystem& get_instance();
-  ~VirtualFileSystem() = default;
+  static VFS& get_instance();
+  ~VFS() = default;
 
   bool mount_rootfs(UniquePtr<FileSystem> fs,
                     const CPIOArchive& archive);
@@ -35,11 +35,11 @@ class VirtualFileSystem final {
   int read(SharedPtr<File> file, void* buf, size_t len);
   int access(const String& pathname, int options);
 
-  VirtualFileSystem::Mount& get_rootfs();
+  FileSystem& get_rootfs();
   List<SharedPtr<File>>& get_opened_files();
 
  private:
-  VirtualFileSystem();
+  VFS();
 
   // Retrieves the target vnode by `pathname`.
   SharedPtr<Vnode> resolve_path(const String& pathname,

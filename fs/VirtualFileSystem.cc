@@ -13,19 +13,19 @@
 
 namespace valkyrie::kernel {
 
-VirtualFileSystem& VirtualFileSystem::get_instance() {
-  static VirtualFileSystem instance;
+VFS& VFS::get_instance() {
+  static VFS instance;
   return instance;
 }
 
 
-VirtualFileSystem::VirtualFileSystem()
+VFS::VFS()
     : _rootfs(),
       _opened_files() {}
 
 
-bool VirtualFileSystem::mount_rootfs(UniquePtr<FileSystem> fs,
-                                     const CPIOArchive& archive) {
+bool VFS::mount_rootfs(UniquePtr<FileSystem> fs,
+                       const CPIOArchive& archive) {
   _rootfs = { move(fs) };
 
   if (!archive.is_valid()) {
@@ -42,12 +42,12 @@ bool VirtualFileSystem::mount_rootfs(UniquePtr<FileSystem> fs,
 }
 
 
-SharedPtr<Vnode> VirtualFileSystem::create(const String& pathname,
-                                           const char* content,
-                                           size_t size,
-                                           mode_t mode,
-                                           uid_t uid,
-                                           gid_t gid) {
+SharedPtr<Vnode> VFS::create(const String& pathname,
+                             const char* content,
+                             size_t size,
+                             mode_t mode,
+                             uid_t uid,
+                             gid_t gid) {
   if (pathname == "." || pathname == "..") {
     return nullptr;
   }
@@ -73,7 +73,7 @@ SharedPtr<Vnode> VirtualFileSystem::create(const String& pathname,
   return parent->create_child(basename, content, size, mode, 0, 0);
 }
 
-SharedPtr<File> VirtualFileSystem::open(const String& pathname, int options) {
+SharedPtr<File> VFS::open(const String& pathname, int options) {
   // Lookup pathname from the root vnode.
   SharedPtr<Vnode> target = resolve_path(pathname);
 
@@ -106,7 +106,7 @@ SharedPtr<File> VirtualFileSystem::open(const String& pathname, int options) {
   return _opened_files.back();
 }
 
-int VirtualFileSystem::close(SharedPtr<File> file) {
+int VFS::close(SharedPtr<File> file) {
   if (!file) {
     return -1;
   }
@@ -136,7 +136,7 @@ int VirtualFileSystem::close(SharedPtr<File> file) {
   return 0;
 }
 
-int VirtualFileSystem::write(SharedPtr<File> file, const void* buf, size_t len) {
+int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
   // 1. write len byte from buf to the opened file.
   // 2. return written size or error code if an error occurs.
   if (!file) {
@@ -158,7 +158,7 @@ int VirtualFileSystem::write(SharedPtr<File> file, const void* buf, size_t len) 
   return len;
 }
 
-int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
+int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
   // 1. read min(len, readable file data size) byte to buf from the opened file.
   // 2. return read size or error code if an error occurs.
   if (!file) {
@@ -195,7 +195,7 @@ int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
   return len;
 }
 
-int VirtualFileSystem::access(const String& pathname, int options) {
+int VFS::access(const String& pathname, int options) {
   // Check user's permission for a file.
   // FIXME: currently it simply checks if the file exists...
   SharedPtr<Vnode> target = resolve_path(pathname);
@@ -208,7 +208,7 @@ int VirtualFileSystem::access(const String& pathname, int options) {
 }
 
 
-SharedPtr<Vnode> VirtualFileSystem::resolve_path(const String& pathname,
+SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
                                                  SharedPtr<Vnode>* out_parent,
                                                  String* out_basename) const {
   List<String> components = pathname.split('/');
@@ -266,11 +266,11 @@ SharedPtr<Vnode> VirtualFileSystem::resolve_path(const String& pathname,
 }
 
 
-VirtualFileSystem::Mount& VirtualFileSystem::get_rootfs() {
-  return _rootfs;
+FileSystem& VFS::get_rootfs() {
+  return *_rootfs.fs;
 }
 
-List<SharedPtr<File>>& VirtualFileSystem::get_opened_files() {
+List<SharedPtr<File>>& VFS::get_opened_files() {
   return _opened_files;
 }
 

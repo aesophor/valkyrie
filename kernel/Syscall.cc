@@ -34,7 +34,14 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
 
 
 int sys_read(int fd, void* buf, size_t count) {
-  auto& vfs = VirtualFileSystem::get_instance();
+  // TODO: define stdin...
+  if (fd == 0) {
+    char* s = reinterpret_cast<char*>(buf);
+    for (size_t i = 0; i < count; i++) {
+      s[i] = getchar();
+    }
+    return count;
+  }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
 
@@ -43,11 +50,18 @@ int sys_read(int fd, void* buf, size_t count) {
     return -1;
   }
 
-  return vfs.read(file, buf, count);
+  return VFS::get_instance().read(file, buf, count);
 }
 
 int sys_write(int fd, const void* buf, size_t count) {
-  auto& vfs = VirtualFileSystem::get_instance();
+  // TODO: define stdout and stderr...
+  if (fd == 1 || fd == 2) {
+    const char* s = reinterpret_cast<const char*>(buf);
+    for (size_t i = 0; i < count; i++) {
+      putchar(s[i]);
+    }
+    return count;
+  }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
 
@@ -56,13 +70,11 @@ int sys_write(int fd, const void* buf, size_t count) {
     return -1;
   }
 
-  return vfs.write(file, buf, count);
+  return VFS::get_instance().write(file, buf, count);
 }
 
 int sys_open(const char* pathname, int options) {
-  auto& vfs = VirtualFileSystem::get_instance();
-
-  SharedPtr<File> file = vfs.open(pathname, options);
+  SharedPtr<File> file = VFS::get_instance().open(pathname, options);
 
   if (!file) {
     if (options & O_CREAT) {
@@ -77,8 +89,6 @@ int sys_open(const char* pathname, int options) {
 }
 
 int sys_close(int fd) {
-  auto& vfs = VirtualFileSystem::get_instance();
-
   SharedPtr<File> file = Task::current()->release_fd_and_get_file(fd);
 
   if (!file) {
@@ -86,7 +96,7 @@ int sys_close(int fd) {
     return -1;
   }
 
-  return vfs.close(file);
+  return VFS::get_instance().close(file);
 }
 
 size_t sys_uart_read(char buf[], size_t size) {
@@ -154,7 +164,7 @@ int sys_signal(int signal, void (*handler)()) {
 }
 
 int sys_access(const char* pathname, int options) {
-  return VirtualFileSystem::get_instance().access(pathname, options);
+  return VFS::get_instance().access(pathname, options);
 }
 
 }  // namespace valkyrie::kernel

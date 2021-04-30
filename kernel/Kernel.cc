@@ -17,7 +17,7 @@ Kernel::Kernel()
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
       _task_scheduler(TaskScheduler::get_instance()),
-      _vfs(VirtualFileSystem::get_instance()) {}
+      _vfs(VFS::get_instance()) {}
 
 
 void Kernel::run() {

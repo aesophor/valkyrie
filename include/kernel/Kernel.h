@@ -39,7 +39,7 @@ class Kernel {
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
   TaskScheduler& _task_scheduler;
-  VirtualFileSystem& _vfs;
+  VFS& _vfs;
 };
 
 

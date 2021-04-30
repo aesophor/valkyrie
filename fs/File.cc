@@ -6,7 +6,7 @@
 namespace valkyrie::kernel {
 
 const SharedPtr<File> File::opened
-  = make_shared<File>(*VirtualFileSystem::get_instance().get_rootfs().fs, nullptr, 0);
+  = make_shared<File>(VFS::get_instance().get_rootfs(), nullptr, 0);
 
 
 File::File(FileSystem& fs, SharedPtr<Vnode> vnode, int options)
