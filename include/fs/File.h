@@ -23,7 +23,6 @@ struct File final {
   File(FileSystem& fs, SharedPtr<Vnode> vnode, int options);
 
   FileSystem& fs;  // the filesystem to which this file belong.
-  List<SharedPtr<Vnode>>::Iterator child_it;
   SharedPtr<Vnode> vnode;
   size_t pos;  // the next r/w position of this opened file.
   int options;

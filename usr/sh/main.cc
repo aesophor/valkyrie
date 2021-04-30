@@ -10,6 +10,12 @@ int main(int argc, char **argv) {
 }
 
 
+char* get_next_arg(char* s, size_t* out_len) {
+  char* ptr = s;
+  while (*ptr != ' ') ptr++;
+  return
+}
+
 int run_shell(const char* username) {
   char buf[256];
 
@@ -23,9 +29,6 @@ int run_shell(const char* username) {
 
     } else if (!strncmp(buf, "exit", sizeof(buf))) {
       break;
-
-    } else if (!strncmp(buf, "yield", sizeof(buf))) {
-      sched_yield();
 
     } else if (access(buf, 0) != -1) {
       int pid;

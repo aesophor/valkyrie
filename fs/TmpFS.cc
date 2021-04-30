@@ -71,8 +71,17 @@ SharedPtr<Vnode> TmpFSVnode::get_child(const String& name) {
   return (it != _children.end()) ? *it : nullptr;
 }
 
-List<SharedPtr<Vnode>>::Iterator TmpFSVnode::get_child_iterator() {
-  return _children.begin().polymorph<SharedPtr<Vnode>>();
+SharedPtr<Vnode> TmpFSVnode::get_ith_child(size_t i) {
+  for (auto it = _children.begin(); it != _children.end(); it++) {
+    if (it.index() == i) {
+      return *it;
+    }
+  }
+  return nullptr;
+}
+
+size_t TmpFSVnode::get_children_count() const {
+  return _children.size();
 }
 
 

@@ -2,10 +2,39 @@
 #include <vlibc.h>
 #include <cstring.h>
 
+#define DENTRY_NAME_LEN 16
+
+struct DirectoryEntry {
+  char name[DENTRY_NAME_LEN];
+};
+
 int main(int argc, char **argv) {
+  int fd;
+  int ret;
+  DirectoryEntry dentry;
+
   init_printf(nullptr, __libc_putchar);
 
+  if (argc < 1) {
+    printf("ls: argv[0] should be the path to ls\n");
+    ret = -1;
+    goto out;
+  }
 
+  if (argc == 1) {
+    argv[1] = "/";
+  }
 
-  return 0;
+  if ((fd = open(argv[1], 0)) == -1) {
+    printf("ls: cannot access '%s': No such file or directory\n", argv[1]);
+    ret = 2;
+    goto out;
+  }
+
+  while ((ret = read(fd, reinterpret_cast<char*>(&dentry), sizeof(dentry)))) {
+    printf("%s ", dentry.name);
+  }
+
+out:
+  return ret;
 }

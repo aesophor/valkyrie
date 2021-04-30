@@ -169,17 +169,21 @@ int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
     size_t readable_size = file->vnode->get_size() - file->pos;
     len = min(len, readable_size);
     memcpy(buf, file->vnode->get_content() + file->pos, len);
+    file->pos += len;
 
   } else if (file->vnode->is_directory()) {
 
-    if (file->child_it.is_end()) {
-      file->child_it = file->vnode->get_child_iterator();  // reset iterator
+    // Here `file->pos` is used as the index of the last iterated child.
+    // FIXME: lol this is fooking slow, but i'm too busy this week...
+    if (file->pos >= file->vnode->get_children_count()) {
+      file->pos = 0;
       len = 0;
     } else {
       DirectoryEntry e;
-      auto& next_child = *(file->child_it++);
-      strncpy(e.name, next_child->get_name().c_str(), sizeof(e.name));
+      SharedPtr<Vnode> child_vnode = file->vnode->get_ith_child(file->pos);
+      strncpy(e.name, child_vnode->get_name().c_str(), sizeof(e.name));
       memcpy(buf, reinterpret_cast<char*>(&e), sizeof(e));
+      file->pos++;
       len = sizeof(e);
     }
 
@@ -188,7 +192,6 @@ int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
     return -1;
   }
 
-  file->pos += len;
   return len;
 }
 
@@ -209,6 +212,18 @@ SharedPtr<Vnode> VirtualFileSystem::resolve_path(const String& pathname,
                                                  SharedPtr<Vnode>* out_parent,
                                                  String* out_basename) const {
   List<String> components = pathname.split('/');
+
+  if (components.empty()) {
+    if (out_parent) {
+      *out_parent = nullptr;
+    }
+
+    if (out_basename) {
+      *out_basename = "";
+    }
+
+    return _rootfs.fs->get_root_vnode();
+  }
 
   // If `pathname` is something like "/bin",
   // then we can simply check if "bin" exists under the root vnode.

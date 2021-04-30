@@ -315,12 +315,6 @@ class ListIterator {
   }
 
 
-  template <typename T>
-  typename List<T>::Iterator polymorph() const {
-    return typename List<T>::Iterator {_list, _current, _index};
-  }
-
-
  private:
   // Constructor
   ListIterator(List<ValueType>& list,

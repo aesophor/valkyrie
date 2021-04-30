@@ -35,7 +35,8 @@ class Vnode {
   virtual void add_child(SharedPtr<Vnode> child) = 0;
   virtual SharedPtr<Vnode> remove_child(const String& name) = 0;
   virtual SharedPtr<Vnode> get_child(const String& name) = 0;
-  virtual List<SharedPtr<Vnode>>::Iterator get_child_iterator() = 0;
+  virtual SharedPtr<Vnode> get_ith_child(size_t i) = 0;
+  virtual size_t get_children_count() const = 0;
 
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
