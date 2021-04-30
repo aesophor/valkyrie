@@ -83,7 +83,7 @@ class Function<ReturnType(Args...)> {
   };
 
   template <typename T>
-  class CallableImpl : public CallableIface {
+  class CallableImpl final : public CallableIface {
    public:
     explicit CallableImpl(const T& t) : _t(t) {}
     virtual ~CallableImpl() = default;
