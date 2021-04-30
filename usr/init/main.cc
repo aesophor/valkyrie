@@ -16,13 +16,12 @@ extern "C" int sys_wait(int* wstatus);
 int main(int argc, char **argv) {
   init_printf(nullptr, putchar);
 
+  printf("[init] started... pid = %d\n", sys_getpid());
   printf("argc = %d\n", argc);
   printf("argv = 0x%x\n", argv);
   for (int i = 0; i < argc; i++) {
     printf("argv[%d] (0x%x) = %s\n", i, argv[i], argv[i]);
   }
-
-  printf("[init] started... pid = %d\n", sys_getpid());
 
   int pid;
   int wstatus;
