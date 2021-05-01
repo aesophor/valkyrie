@@ -4,18 +4,21 @@
 
 #include <Types.h>
 #include <Utility.h>
+#include <fs/TmpFS.h>
 
 #define CPIO_ARCHIVE_ADDR 0x8000000
 
 namespace valkyrie::kernel {
 
-class CPIOArchive {
+class CPIOArchive final {
  public:
   explicit CPIOArchive(const size_t base_addr);
   ~CPIOArchive() = default;
 
   Pair<const char*, size_t>
   get_entry_content_and_size(const char* name) const;
+  
+  void populate_root_filesystem(TmpFS& tmpfs);
 
  private:
   struct [[gnu::packed]] Header final {
@@ -40,6 +43,7 @@ class CPIOArchive {
     DirectoryEntry(const char* ptr);
 
     operator bool() const;
+    bool is_valid() const;
 
     const CPIOArchive::Header* header;
     const char* pathname;
@@ -48,7 +52,8 @@ class CPIOArchive {
     size_t content_len;
   };
 
-  const char* _base_addr;
+  const char* const _base_addr;
+  const char* _ptr;
 };
 
 }  // namespace valkyrie::kernel

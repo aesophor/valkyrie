@@ -15,6 +15,7 @@ Kernel::Kernel()
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
       _task_scheduler(TaskScheduler::get_instance()),
+      _root_filesystem(),
       _initramfs(Initramfs::get_instance()) {}
 
 
@@ -29,6 +30,9 @@ void Kernel::run() {
   printk("enabling timer interrupts\n");
   _timer_multiplexer.get_arm_core_timer().enable();
   */
+
+  printk("initializing root filesystem...\n");
+  _initramfs._archive.populate_root_filesystem(_root_filesystem);
 
   printk("starting task scheduler...\n");
   _task_scheduler.run();

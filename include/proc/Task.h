@@ -25,9 +25,9 @@ class TrapFrame;
 extern "C" void switch_to(Task* prev, Task* next);
 
 class Task {
- public:
   friend class TaskScheduler;
 
+ public:
   enum class State {
     CREATED,
     RUNNABLE,

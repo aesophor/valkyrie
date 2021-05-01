@@ -43,6 +43,7 @@ void __run_unit_tests() {
 
   */
 
+
   {
     Deque<UniquePtr<Derived>> q;
     auto d = make_unique<Derived>();

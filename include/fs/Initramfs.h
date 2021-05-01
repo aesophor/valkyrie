@@ -13,11 +13,11 @@ class Initramfs {
   ~Initramfs() = default;
 
   Pair<const char*, size_t> read(const char* name) const;
+  CPIOArchive _archive;
 
  private:
   Initramfs();
 
-  CPIOArchive _archive;
 };
 
 }  // namespace valkyrie::kernel

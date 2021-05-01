@@ -26,12 +26,12 @@ void* SlobAllocator::allocate(size_t requested_size) {
   }
 
   requested_size = normalize_size(requested_size + sizeof(Slob));
-  int index = get_bin_index(requested_size);
+  int idx = get_bin_index(requested_size);
 
   Slob* victim = nullptr;
 
   // Search for an exact-fit free chunk from the corresponding bin.
-  if (index < NR_BINS && (victim = _bins[index])) {
+  if (idx < NR_BINS && (victim = _bins[idx])) {
     victim->set_allocated(true);
     bin_del_head(victim);
     goto out;
@@ -47,9 +47,9 @@ void* SlobAllocator::allocate(size_t requested_size) {
 
   // Search larger free chunks, and attempt to split an exact-fit chunk
   // from a larger free chunk.
-  for (; index < NR_BINS; index++) {
-    if (_bins[index]) {
-      victim = split_chunk(_bins[index], requested_size);
+  for (; idx < NR_BINS; idx++) {
+    if (_bins[idx]) {
+      victim = split_chunk(_bins[idx], requested_size);
       goto out;
     }
   }

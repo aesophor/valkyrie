@@ -8,9 +8,9 @@ namespace valkyrie::kernel {
 
 template <typename Container, typename ValueType>
 class BasicIterator {
- public:
   friend Container;
 
+ public:
   // Destructor
   ~BasicIterator() = default;
 
