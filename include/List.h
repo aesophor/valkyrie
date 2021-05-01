@@ -9,13 +9,19 @@
 
 namespace valkyrie::kernel {
 
+// Forward declaration
+template <typename ValueType>
+class ListIterator;
+
 // Linux kernel doubly linked list
 template <typename T>
 class List {
+  template <typename ValueType> friend class ListIterator;
+
  public:
   using ValueType = T;
-  using ConstIterator = NonContiguousIterator<const List, const ValueType>;
-  using Iterator = NonContiguousIterator<List, ValueType>;
+  using ConstIterator = ListIterator<const ValueType>;
+  using Iterator = ListIterator<ValueType>;
 
   // Constructor
   List()
@@ -69,7 +75,7 @@ class List {
   operator bool() const { return !empty(); }
 
   Iterator begin() { return Iterator::begin(*this); }
-  Iterator end() { return Iterator::begin(*this); }
+  Iterator end() { return Iterator::end(*this); }
   ConstIterator begin() const { return ConstIterator::begin(*this); }
   ConstIterator end() const { return ConstIterator::end(*this); }
 
@@ -214,6 +220,71 @@ class List {
 
   UniquePtr<Node> _head;
   size_t _size;
+};
+
+
+
+template <typename ValueType>
+class ListIterator {
+  template <typename T> friend class List;
+
+ public:
+  // Destructor
+  ~ListIterator() = default;
+
+  // Copy constructor
+  ListIterator(const ListIterator& r)
+      : _list(r._list),
+        _current(r._current) {}
+
+  // Copy assignment operator
+  ListIterator& operator =(const ListIterator& r) {
+    _current = r._current;
+    return *this;
+  }
+
+  bool operator ==(const ListIterator& r) const { return _current == r._current; }
+  bool operator !=(const ListIterator& r) const { return _current != r._current; }
+
+  const ValueType& operator*() const { return _current->data; }
+  const ValueType* operator->() const { return &(_current->data); }
+
+  ValueType& operator*() { return _current->data; }
+  ValueType* operator->() { return &(_current->data); }
+
+  ListIterator operator ++() {
+    _current = _current->next;
+    return *this;
+  }
+
+  ListIterator operator --() {
+    _current = _current->prev;
+    return *this;
+  }
+
+  bool is_end() const {
+    return _current == _list._head.get();
+  }
+
+
+ private:
+  // Constructor
+  ListIterator(List<ValueType>& list,
+               typename List<ValueType>::Node* current)
+      : _list(list),
+        _current(current) {}
+
+
+  static ListIterator begin(List<ValueType>& list) {
+    return {list, list._head->next};
+  }
+
+  static ListIterator end(List<ValueType>& list) {
+    return {list, list._head.get()};
+  }
+
+  List<ValueType>& _list;
+  typename List<ValueType>::Node* _current;
 };
 
 }  // namespace valkyrie::kernel

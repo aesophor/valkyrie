@@ -72,11 +72,17 @@ void TmpFS::create_dentry(const String& pathname,
                           gid_t gid) {
   List<String> components = pathname.split('/');
 
+  /*
   components.for_each([](const auto& s) {
     printk("%s\n", s.c_str());
   });
+  */
 
+  for (const auto& s : components) {
+    printk("%s\n", s.c_str());
+  }
 
+  /*
   TmpFSInode* ptr = _root_inode.get();
   int level = 0;
 
@@ -85,6 +91,7 @@ void TmpFS::create_dentry(const String& pathname,
       return inode_uptr->_name == components[level];
     });
   }
+  */
 }
 
 }  // namespace valkyrie::kernel
