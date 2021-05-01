@@ -175,6 +175,8 @@ class SharedPtr<T[]> : private SharedPtr<T> {
   }
 
   T& operator [](size_t i) { return get()[i]; }
+  const T& operator [](size_t i) const { return get()[i]; }
+
   using SharedPtr<T>::operator ->;
   using SharedPtr<T>::operator *;
   using SharedPtr<T>::operator bool;

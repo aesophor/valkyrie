@@ -99,6 +99,8 @@ class UniquePtr<T[]> : private UniquePtr<T> {
   }
 
   T& operator [](size_t i) { return get()[i]; }
+  const T& operator [](size_t i) const { return get()[i]; }
+
   using UniquePtr<T>::operator ->;
   using UniquePtr<T>::operator *;
   using UniquePtr<T>::operator bool;
