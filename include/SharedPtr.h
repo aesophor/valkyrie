@@ -9,6 +9,10 @@ namespace valkyrie::kernel {
 
 template <typename T>
 class SharedPtr {
+  // Friend declaration (used by the aliasing constructor).
+  template <typename U>
+  friend class SharedPtr;
+
  public:
   // Default constructor
   SharedPtr()
@@ -31,7 +35,6 @@ class SharedPtr {
   // It allows us to construct a new SharedPtr instance
   // that shares ownership with another SharedPtr `r`,
   // but with a different pointer value.
-  template <typename U> friend class SharedPtr;
   template <typename U>
   SharedPtr(const SharedPtr<U>& r, T* alias_ptr)
       : _ctrl(reinterpret_cast<ControlBlock*>(r._ctrl)),

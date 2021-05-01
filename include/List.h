@@ -3,7 +3,6 @@
 #define VALKYRIE_LIST_H_
 
 #include <Functional.h>
-#include <Iterator.h>
 #include <Memory.h>
 #include <kernel/Compiler.h>
 
@@ -16,7 +15,9 @@ class ListIterator;
 // Linux kernel doubly linked list
 template <typename T>
 class List {
-  template <typename ValueType> friend class ListIterator;
+  // Friend declaration
+  template <typename ValueType>
+  friend class ListIterator;
 
  public:
   using ValueType = T;
