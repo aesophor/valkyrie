@@ -165,10 +165,18 @@ class List {
 
  protected:
   struct Node final {
-    Node() : prev(this), next(this), data() {}
+    // Default constructor
+    Node()
+        : prev(this),
+          next(this),
+          data() {}
 
+    // Universal reference constructor
     template <typename U>
-    Node(U&& val) : prev(), next(), data(forward<U>(val)) {}
+    Node(U&& val)
+        : prev(),
+          next(),
+          data(forward<U>(val)) {}
 
     Node* prev;
     Node* next;
