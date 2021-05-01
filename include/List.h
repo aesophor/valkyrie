@@ -276,12 +276,26 @@ class ListIterator {
   ValueType& operator *() { return _current->data; }
   ValueType* operator ->() { return &(_current->data); }
 
-  ListIterator operator ++() {
+  // Prefix increment
+  ListIterator& operator ++() {
     _current = _current->next;
     return *this;
   }
 
-  ListIterator operator --() {
+  // Prefix decrement
+  ListIterator& operator --() {
+    _current = _current->prev;
+    return *this;
+  }
+
+  // Postfix increment
+  ListIterator operator ++(int) {
+    _current = _current->next;
+    return *this;
+  }
+
+  // Postfix decrement
+  ListIterator operator --(int) {
     _current = _current->prev;
     return *this;
   }

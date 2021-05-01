@@ -38,12 +38,26 @@ class ContiguousIterator {
   ValueType& operator*() { return _container[_index]; }
   ValueType* operator->() { return &_container[_index]; }
 
-  ContiguousIterator operator ++() {
+  // Prefix increment
+  ContiguousIterator& operator ++() {
     ++_index;
     return *this;
   }
 
-  ContiguousIterator operator --() {
+  // Prefix decrement
+  ContiguousIterator& operator --() {
+    --_index;
+    return *this;
+  }
+
+  // Postfix increment
+  ContiguousIterator operator ++(int) {
+    ++_index;
+    return *this;
+  }
+
+  // Postfix decrement
+  ContiguousIterator operator --(int) {
     --_index;
     return *this;
   }
