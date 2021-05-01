@@ -27,6 +27,25 @@ class List {
     }
   }
 
+  // Copy constructor
+  List(const List& r) {
+    *this = r;  // delegate to copy assignment operator
+  }
+
+  // Copy assignment operator
+  List& operator =(const List& r) {
+    _head = make_unique<Node>();
+    _size = 0;
+
+    // Deep copy this list.
+    r.for_each([this](const auto& val) {
+      push_back(val);
+    });
+
+    return *this;
+  }
+
+
   operator bool() const { return !empty(); }
 
 
@@ -78,7 +97,7 @@ class List {
     }
   }
 
-  T* find_if(Function<bool (T&)> predicate) {
+  T* find_if(Function<bool (T&)> predicate) const {
     for (Node* node = _head->next; node != _head.get(); node = node->next) {
       if (predicate(node->data)) {
         return &(node->data);
@@ -87,7 +106,10 @@ class List {
     return nullptr;
   }
 
-  void for_each(Function<void (T&)> callback) {
+  // FIXME: You might spot something weird here...
+  // for_each is marked const, but `callback` takes a non-const lvalue ref
+  // as argument. Not sure if this is a bug of g++...
+  void for_each(Function<void (T&)> callback) const {
     for (Node* node = _head->next; node != _head.get(); node = node->next) {
       callback(node->data);
     }
