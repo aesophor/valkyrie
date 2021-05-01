@@ -44,6 +44,8 @@ void CPIOArchive::populate_root_filesystem(TmpFS& tmpfs) {
   while ((dentry = CPIOArchive::DirectoryEntry(ptr))) {
     printf(" <%s> = %d\n", dentry.pathname, dentry.content_len);
 
+    tmpfs.create_dentry(dentry.pathname, dentry.content_len, 0, 0, 0);
+
     // Advance `ptr` until it reaches the next header.
     ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
     while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;

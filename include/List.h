@@ -3,6 +3,7 @@
 #define VALKYRIE_LIST_H_
 
 #include <Functional.h>
+#include <Iterator.h>
 #include <Memory.h>
 #include <kernel/Compiler.h>
 
@@ -12,6 +13,10 @@ namespace valkyrie::kernel {
 template <typename T>
 class List {
  public:
+  using ValueType = T;
+  using ConstIterator = NonContiguousIterator<const List, const ValueType>;
+  using Iterator = NonContiguousIterator<List, ValueType>;
+
   // Constructor
   List()
       : _head(make_unique<Node>()),
@@ -33,7 +38,7 @@ class List {
   }
 
   // Copy assignment operator
-  List& operator= (const List& r) {
+  List& operator =(const List& r) {
     _head = make_unique<Node>();
     _size = 0;
 
@@ -53,7 +58,7 @@ class List {
   }
 
   // Move assignment operator
-  List& operator= (List&& r) noexcept {
+  List& operator =(List&& r) noexcept {
     _head.swap(r._head);
     _size = r._size;
     r._size = 0;
@@ -62,6 +67,11 @@ class List {
 
 
   operator bool() const { return !empty(); }
+
+  Iterator begin() { return Iterator::begin(*this); }
+  Iterator end() { return Iterator::begin(*this); }
+  ConstIterator begin() const { return ConstIterator::begin(*this); }
+  ConstIterator end() const { return ConstIterator::end(*this); }
 
 
   template <typename U>

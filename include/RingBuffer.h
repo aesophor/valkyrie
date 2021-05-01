@@ -14,8 +14,8 @@ template <typename T>
 class RingBuffer {
  public:
   using ValueType = T;
-  using ConstIterator = BasicIterator<const RingBuffer, const ValueType>;
-  using Iterator = BasicIterator<RingBuffer, ValueType>;
+  using ConstIterator = ContiguousIterator<const RingBuffer, const ValueType>;
+  using Iterator = ContiguousIterator<RingBuffer, ValueType>;
 
   // Constructor
   explicit

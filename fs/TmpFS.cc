@@ -64,4 +64,27 @@ int TmpFS::read(File* file, void* buf, size_t len) {
 
 }
 
+
+void TmpFS::create_dentry(const String& pathname,
+                          size_t size,
+                          mode_t mode,
+                          uid_t uid,
+                          gid_t gid) {
+  List<String> components = pathname.split('/');
+
+  components.for_each([](const auto& s) {
+    printk("%s\n", s.c_str());
+  });
+
+
+  TmpFSInode* ptr = _root_inode.get();
+  int level = 0;
+
+  while (level < components.size() && ptr) {
+    auto target = ptr->_children.find_if([&components, level](const auto& inode_uptr) {
+      return inode_uptr->_name == components[level];
+    });
+  }
+}
+
 }  // namespace valkyrie::kernel

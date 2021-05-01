@@ -12,8 +12,8 @@ namespace valkyrie::kernel {
 class String {
  public:
   using ValueType = char;
-  using ConstIterator = BasicIterator<const String, const ValueType>;
-  using Iterator = BasicIterator<String, ValueType>;
+  using ConstIterator = ContiguousIterator<const String, const ValueType>;
+  using Iterator = ContiguousIterator<String, ValueType>;
 
   // Default constructor
   String() : _s() {}

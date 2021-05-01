@@ -39,6 +39,7 @@ class TmpFSInode final : public Inode {
 
 class TmpFS final {
   friend class TmpFSInode;
+  friend class CPIOArchive;  // FIXME: wtf
 
  public:
   TmpFS();
@@ -50,6 +51,8 @@ class TmpFS final {
   virtual int read(File* file, void* buf, size_t len);
 
  private:
+  void create_dentry(const String& pathname, size_t size, mode_t mode, uid_t uid, gid_t gid);
+
   uint64_t _next_inode_index;
   UniquePtr<TmpFSInode> _root_inode;
 };
