@@ -86,6 +86,12 @@ class RingBuffer {
   T& front() { return _data[_head]; }
   T& back() { return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1]; }
 
+  const T& front() const { return _data[_head]; }
+  const T& back() const {
+    return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1];
+  }
+
+
  protected:
   UniquePtr<T[]> _data;
   int _head;

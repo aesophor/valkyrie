@@ -159,6 +159,8 @@ class List {
 
   T& front() { return _head->next->data; }
   T& back() { return _head->prev->data; }
+  const T& front() const { return _head->next->data; }
+  const T& back() const { return _head->prev->data; }
 
 
  protected:

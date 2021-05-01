@@ -145,10 +145,12 @@ class Deque {
   size_t size() const { return _size; }
   size_t capacity() const { return _capacity; }
   bool empty() const { return _size == 0; }
-
   const T& at(int index) const { return _data.get()[index]; }
+
   T& front() { return _data[0]; }
   T& back() { return _data[_size - 1]; }
+  const T& front() const { return _data[0]; }
+  const T& back() const { return _data[_size - 1]; }
 
  private:
   UniquePtr<T[]> _data;

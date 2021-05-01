@@ -116,6 +116,11 @@ class String {
   const char& at(size_t i) const { return _s[i]; }
   const char* c_str() const { return _s.get(); }
 
+  char& front() { return _s[0]; }
+  char& back() { return _s[size() - 1]; }
+  const char& front() const { return _s[0]; }
+  const char& back() const { return _s[size() - 1]; }
+
  private:
   UniquePtr<char[]> _s;
 };
