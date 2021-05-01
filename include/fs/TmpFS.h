@@ -15,6 +15,7 @@ class TmpFS;
 
 
 class TmpFSInode final : public Inode {
+  // Friend declaration
   friend class TmpFS;
 
  public:
@@ -38,6 +39,7 @@ class TmpFSInode final : public Inode {
 
 
 class TmpFS final {
+  // Friend declaration
   friend class TmpFSInode;
   friend class CPIOArchive;  // FIXME: wtf
 

@@ -227,7 +227,9 @@ class List {
 
 template <typename ValueType>
 class ListIterator {
-  template <typename T> friend class List;
+  // Friend declaration
+  template <typename T>
+  friend class List;
 
  public:
   // Destructor

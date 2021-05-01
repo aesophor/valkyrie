@@ -25,6 +25,7 @@ class TrapFrame;
 extern "C" void switch_to(Task* prev, Task* next);
 
 class Task {
+  // Friend declaration
   friend class TaskScheduler;
 
  public:
