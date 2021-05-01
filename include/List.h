@@ -33,7 +33,7 @@ class List {
   }
 
   // Copy assignment operator
-  List& operator =(const List& r) {
+  List& operator= (const List& r) {
     _head = make_unique<Node>();
     _size = 0;
 
@@ -42,6 +42,21 @@ class List {
       push_back(val);
     });
 
+    return *this;
+  }
+
+  // Move constructor
+  List(List&& r) noexcept
+      : _head(make_unique<Node>()),
+        _size() {
+    *this = move(r);  // delegate to move assignment operator
+  }
+
+  // Move assignment operator
+  List& operator= (List&& r) noexcept {
+    _head.swap(r._head);
+    _size = r._size;
+    r._size = 0;
     return *this;
   }
 
