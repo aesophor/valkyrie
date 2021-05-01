@@ -50,10 +50,9 @@ class List {
     _size = 0;
 
     // Deep copy this list.
-    r.for_each([this](const auto& val) {
-      push_back(val);
-    });
-
+    for (const auto& data : r) {
+      push_back(data);
+    }
     return *this;
   }
 
@@ -129,21 +128,33 @@ class List {
     }
   }
 
-  T* find_if(Function<bool (T&)> predicate) const {
-    for (Node* node = _head->next; node != _head.get(); node = node->next) {
-      if (predicate(node->data)) {
-        return &(node->data);
+  T* find_if(Function<bool (T&)> predicate) {
+    for (auto& data : *this) {
+      if (predicate(data)) {
+        return &data;
       }
     }
     return nullptr;
   }
 
-  // FIXME: You might spot something weird here...
-  // for_each is marked const, but `callback` takes a non-const lvalue ref
-  // as argument. Not sure if this is a bug of g++...
-  void for_each(Function<void (T&)> callback) const {
-    for (Node* node = _head->next; node != _head.get(); node = node->next) {
-      callback(node->data);
+  const T* find_if(Function<bool (const T&)> predicate) const {
+    for (const auto& data : *this) {
+      if (predicate(data)) {
+        return &data;
+      }
+    }
+    return nullptr;
+  }
+
+  void for_each(Function<void (T&)> callback) {
+    for (auto& data : *this) {
+      callback(data);
+    }
+  }
+
+  void for_each(Function<void (const T&)> callback) const {
+    for (const auto& data : *this) {
+      callback(data);
     }
   }
 
@@ -259,11 +270,11 @@ class ListIterator {
   bool operator ==(const ListIterator& r) const { return _current == r._current; }
   bool operator !=(const ListIterator& r) const { return _current != r._current; }
 
-  const ValueType& operator*() const { return _current->data; }
-  const ValueType* operator->() const { return &(_current->data); }
+  const ValueType& operator *() const { return _current->data; }
+  const ValueType* operator ->() const { return &(_current->data); }
 
-  ValueType& operator*() { return _current->data; }
-  ValueType* operator->() { return &(_current->data); }
+  ValueType& operator *() { return _current->data; }
+  ValueType* operator ->() { return &(_current->data); }
 
   ListIterator operator ++() {
     _current = _current->next;
