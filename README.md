@@ -1,10 +1,10 @@
-## NYCU, Operating System Capstone, Spring 2021
-
-Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html
+## [NYCU, Operating System Capstone, Spring 2021](https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html)
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
 | `309551004` | `aesophor` | `王冠中` | aesophor.cs09g@nctu.edu.tw |
+
+看起來是在寫 kernel，但其實都在自幹 STL...
 
 ## Progress Overview
 
