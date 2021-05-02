@@ -24,10 +24,10 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 - [x] Buddy allocator
 - [x] Dynamic allocator - my own optimized SLOB allocator (a simplified `ptmalloc`)
 - [ ] Boot memory allocator
-- [x] Multitasking - user/kernel threads
+- [x] User / Kernel threads
+- [x] Multitasking - sys_fork(), sys_exec(), sys_wait(), sys_exit()
 - [x] User tasks preemption
 - [ ] Kernel preemption - protect critical sections
-- [x] sys_fork(), sys_exec(), sys_wait(), sys_exit()
 - [ ] POSIX signals and custom signal handlers - sys_kill(), sys_signal(), sys_rt_sigreturn()
 - [ ] Wait Queues
 - [ ] Virtual Filesystem - sys_open(), sys_close(), sys_write(), sys_read()
