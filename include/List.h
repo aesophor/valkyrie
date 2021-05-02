@@ -128,22 +128,22 @@ class List {
     }
   }
 
-  T* find_if(Function<bool (T&)> predicate) {
-    for (auto& data : *this) {
-      if (predicate(data)) {
-        return &data;
+  Iterator find_if(Function<bool (T&)> predicate) {
+    for (Iterator it = begin(); it != end(); it++) {
+      if (predicate(*it)) {
+        return it;
       }
     }
-    return nullptr;
+    return end();
   }
 
-  const T* find_if(Function<bool (const T&)> predicate) const {
-    for (const auto& data : *this) {
-      if (predicate(data)) {
-        return &data;
+  ConstIterator find_if(Function<bool (const T&)> predicate) const {
+    for (ConstIterator it = begin(); it != end(); it++) {
+      if (predicate(*it)) {
+        return it;
       }
     }
-    return nullptr;
+    return end();
   }
 
   void for_each(Function<void (T&)> callback) {
