@@ -18,28 +18,32 @@ Lab Specification: https://grasslab.github.io/NYCU_Operating_System_Capstone/ind
 - [ ] Lab8: Virtual Memory (vmm)
 
 ## Kernel Features
-- [x] I/O: MiniUART (with optional r/w buffers and interrupts)
-- [x] ARM Mailbox
-- [x] Exception & interrupt handling (top/bottom halves)
-- [x] System calls
+- [x] I/O: MiniUART - supports sync/async I/O
+- [x] ARM Mailbox API
+- [x] Exception & interrupt handling - top/bottom halves, tasklets
 - [x] Buddy allocator
-- [x] Dynamic allocator: my own optimized SLOB allocator (a simplified `ptmalloc`)
+- [x] Dynamic allocator - my own optimized SLOB allocator (a simplified `ptmalloc`)
 - [ ] Boot memory allocator
-- [x] Preemptive multitasking (supports user/kernel threads)
-- [x] fork(), exec(), wait(), exit()
-- [ ] POSIX signals
+- [x] Multitasking - user/kernel threads
+- [x] User task preemption
+- [ ] Kernel preemption - protect critical sections
+- [x] sys_fork(), sys_exec(), sys_wait(), sys_exit()
+- [ ] POSIX signals and custom signal handlers - sys_kill(), sys_signal(), sys_rt_sigreturn()
+- [ ] Wait Queues
+- [ ] Virtual Filesystem - sys_open(), sys_close(), sys_write(), sys_read()
+- [ ] tmpfs
 - [ ] ...
 
 ## Kernel C++20 STL Progress
 
-- [ ] Algorithms
+- [ ] Algorithm
 - [ ] Concepts
 - [x] Functional
-- [x] Iterator (just a very basic one ...)
+- [x] Iterator
 - [x] UniquePtr + make_unique<>()
 - [x] SharedPtr + make_shared<>() + \*_pointer_cast<>()
 - [ ] WeakPtr
-- [x] DoublyLinkedList
+- [x] List
 - [x] String
 - [ ] Vector (?)
 - [x] Deque (the performance is shit ...)
