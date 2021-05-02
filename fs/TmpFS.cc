@@ -10,9 +10,7 @@ TmpFSInode::TmpFSInode(TmpFS& fs, TmpFSInode* parent, const String& name)
     : Inode(fs._next_inode_index++),
       _name(name),
       _parent(parent),
-      _children() {
-  printk("alloc tmpfs inode: %s\n", name.c_str());
-}
+      _children() {}
 
 
 void TmpFSInode::add_child(UniquePtr<Inode> child) {
@@ -97,7 +95,9 @@ int TmpFS::read(File* file, void* buf, size_t len) {
 
 
 void TmpFS::show() const {
+  printf("\n----- dumping rootfs tree -----\n");
   debug_show_dfs_helper(_root_inode.get(), -1);
+  printf("----- end dumping rootfs tree -----\n");
 }
 
 Inode& TmpFS::get_root_inode() {
