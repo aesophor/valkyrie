@@ -37,14 +37,14 @@ CPIOArchive::get_entry_content_and_size(const char* name) const {
 }
 
 
-void CPIOArchive::populate_root_filesystem(TmpFS& tmpfs) {
+void CPIOArchive::populate(FileSystem& fs) {
   const char* ptr = _base_addr;
   CPIOArchive::DirectoryEntry dentry;
 
   while ((dentry = CPIOArchive::DirectoryEntry(ptr))) {
     printf(" <%s> = %d\n", dentry.pathname, dentry.content_len);
 
-    tmpfs.create_dentry(dentry.pathname, dentry.content_len, 0, 0, 0);
+    fs.create(dentry.pathname, dentry.content_len, 0, 0, 0);
 
     // Advance `ptr` until it reaches the next header.
     ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;

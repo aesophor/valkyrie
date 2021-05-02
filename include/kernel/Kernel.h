@@ -5,8 +5,8 @@
 #include <dev/Console.h>
 #include <dev/Mailbox.h>
 #include <dev/MiniUART.h>
-#include <fs/Initramfs.h>
 #include <fs/TmpFS.h>
+#include <fs/VirtualFileSystem.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/TimerMultiplexer.h>
 #include <mm/MemoryManager.h>
@@ -36,8 +36,7 @@ class Kernel {
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
   TaskScheduler& _task_scheduler;
-  TmpFS _root_filesystem;
-  Initramfs& _initramfs;
+  VirtualFileSystem& _vfs;
 };
 
 

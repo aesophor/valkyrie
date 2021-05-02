@@ -4,7 +4,7 @@
 
 #include <Types.h>
 #include <Utility.h>
-#include <fs/TmpFS.h>
+#include <fs/FileSystem.h>
 
 #define CPIO_ARCHIVE_ADDR 0x8000000
 
@@ -18,7 +18,7 @@ class CPIOArchive final {
   Pair<const char*, size_t>
   get_entry_content_and_size(const char* name) const;
   
-  void populate_root_filesystem(TmpFS& tmpfs);
+  void populate(FileSystem& fs);
 
  private:
   struct [[gnu::packed]] Header final {

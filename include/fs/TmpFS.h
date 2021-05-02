@@ -6,6 +6,7 @@
 #include <Memory.h>
 #include <String.h>
 #include <fs/File.h>
+#include <fs/FileSystem.h>
 #include <fs/Inode.h>
 
 namespace valkyrie::kernel {
@@ -38,7 +39,7 @@ class TmpFSInode final : public Inode {
 };
 
 
-class TmpFS final {
+class TmpFS final : public FileSystem {
   // Friend declaration
   friend class TmpFSInode;
   friend class CPIOArchive;  // FIXME: wtf
@@ -47,15 +48,16 @@ class TmpFS final {
   TmpFS();
   virtual ~TmpFS() = default;
 
-  virtual File* open(const String& pathname, int flags);
-  virtual int close(File* file);
-  virtual int write(File* file, const void* buf, size_t len);
-  virtual int read(File* file, void* buf, size_t len);
+  virtual void create(const String& pathname, size_t size, mode_t mode, uid_t uid, gid_t gid) override;
+  virtual File* open(const String& pathname, int flags) override;
+  virtual int close(File* file) override;
+  virtual int write(File* file, const void* buf, size_t len) override;
+  virtual int read(File* file, void* buf, size_t len) override;
 
-  void debug_show() const;
+  virtual void show() const override;
+  virtual Inode& get_root_inode() override;
 
  private:
-  void create_dentry(const String& pathname, size_t size, mode_t mode, uid_t uid, gid_t gid);
 
   // FIXME: `inode` should be marked const, but it seems that
   // List<T>::ConstIterator isn't implemented properly...
