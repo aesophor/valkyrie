@@ -34,6 +34,8 @@ void Kernel::run() {
   printk("initializing root filesystem...\n");
   _initramfs._archive.populate_root_filesystem(_root_filesystem);
 
+  _root_filesystem.debug_show();
+
   printk("starting task scheduler...\n");
   _task_scheduler.run();
 

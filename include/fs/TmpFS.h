@@ -52,8 +52,15 @@ class TmpFS final {
   virtual int write(File* file, const void* buf, size_t len);
   virtual int read(File* file, void* buf, size_t len);
 
+  void debug_show() const;
+
  private:
   void create_dentry(const String& pathname, size_t size, mode_t mode, uid_t uid, gid_t gid);
+
+  // FIXME: `inode` should be marked const, but it seems that
+  // List<T>::ConstIterator isn't implemented properly...
+  // I don't have the luxury (i.e. time) to fix this now, so maybe later...
+  void debug_show_dfs_helper(TmpFSInode* inode, const int depth) const;
 
   uint64_t _next_inode_index;
   UniquePtr<TmpFSInode> _root_inode;

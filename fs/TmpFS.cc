@@ -95,4 +95,24 @@ void TmpFS::create_dentry(const String& pathname,
   }
 }
 
+void TmpFS::debug_show() const {
+  debug_show_dfs_helper(_root_inode.get(), 0);
+}
+
+void TmpFS::debug_show_dfs_helper(TmpFSInode* inode, const int depth) const {
+  if (!inode) {
+    return;
+  }
+
+  // Pre-order DFS
+  for (int i = 0; i < depth; i++) {
+    printf("\t");
+  }
+  printf("%s\n", inode->_name.c_str());
+
+  for (const auto& child : inode->_children) {
+    debug_show_dfs_helper(child.get(), depth + 1);
+  }
+}
+
 }  // namespace valkyrie::kernel
