@@ -43,6 +43,7 @@ void Kernel::run() {
 
   _vfs.get_rootfs().fs->show();
 
+
   /*
   printk("starting task scheduler...\n");
   _task_scheduler.run();

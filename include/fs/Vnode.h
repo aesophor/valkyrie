@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#ifndef VALKYRIE_INODE_H_
-#define VALKYRIE_INODE_H_
+#ifndef VALKYRIE_VNODE_H_
+#define VALKYRIE_VNODE_H_
 
 #include <Types.h>
 #include <Memory.h>
@@ -9,14 +9,14 @@
 
 namespace valkyrie::kernel {
 
-class Inode {
+class Vnode {
  public:
-  Inode(const uint32_t index) : _index(index) {}
-  virtual ~Inode() = default;
+  Vnode(const uint32_t index) : _index(index) {}
+  virtual ~Vnode() = default;
 
 
-  virtual void add_child(UniquePtr<Inode> child) = 0;
-  virtual UniquePtr<Inode> remove_child(const String& name) = 0;
+  virtual void add_child(UniquePtr<Vnode> child) = 0;
+  virtual UniquePtr<Vnode> remove_child(const String& name) = 0;
 
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
@@ -61,4 +61,4 @@ class Inode {
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_INODE_H_
+#endif  // VALKYRIE_VNODE_H_

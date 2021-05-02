@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <fs/File.h>
 #include <fs/FileSystem.h>
 
 namespace valkyrie::kernel {
@@ -19,12 +20,18 @@ class VirtualFileSystem final {
 
   bool mount_rootfs(UniquePtr<FileSystem> fs);
 
+  File* open(const String& pathname, int flags);
+  int close(File* file);
+  int write(File* file, const void* buf, size_t len);
+  int read(File* file, void* buf, size_t len);
+
   VirtualFileSystem::Mount& get_rootfs();
 
  private:
   VirtualFileSystem();
 
   Mount _rootfs;
+  List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
 };
 
 }  // namespace valkyrie::kernel

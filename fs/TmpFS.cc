@@ -6,20 +6,20 @@
 
 namespace valkyrie::kernel {
 
-TmpFSInode::TmpFSInode(TmpFS& fs, TmpFSInode* parent, const String& name)
-    : Inode(fs._next_inode_index++),
+TmpFSVnode::TmpFSVnode(TmpFS& fs, TmpFSVnode* parent, const String& name)
+    : Vnode(fs._next_inode_index++),
       _name(name),
       _parent(parent),
       _children() {}
 
 
-void TmpFSInode::add_child(UniquePtr<Inode> child) {
-  UniquePtr<TmpFSInode> c(static_cast<TmpFSInode*>(child.release()));
+void TmpFSVnode::add_child(UniquePtr<Vnode> child) {
+  UniquePtr<TmpFSVnode> c(static_cast<TmpFSVnode*>(child.release()));
   _children.push_back(move(c));
 }
 
-UniquePtr<Inode> TmpFSInode::remove_child(const String& name) {
-  UniquePtr<Inode> removed_child;
+UniquePtr<Vnode> TmpFSVnode::remove_child(const String& name) {
+  UniquePtr<Vnode> removed_child;
 
   _children.remove_if([&removed_child, &name](auto& inode) {
     return inode->_name == name &&
@@ -33,11 +33,11 @@ UniquePtr<Inode> TmpFSInode::remove_child(const String& name) {
   return removed_child;
 }
 
-int TmpFSInode::chmod(const mode_t mode) {
+int TmpFSVnode::chmod(const mode_t mode) {
 
 }
 
-int TmpFSInode::chown(const uid_t uid, const gid_t gid) {
+int TmpFSVnode::chown(const uid_t uid, const gid_t gid) {
 
 }
 
@@ -45,35 +45,37 @@ int TmpFSInode::chown(const uid_t uid, const gid_t gid) {
 
 TmpFS::TmpFS()
     : _next_inode_index(1),
-      _root_inode(make_unique<TmpFSInode>(*this, nullptr, "")) {}
+      _root_inode(make_unique<TmpFSVnode>(*this, nullptr, "")) {}
 
 
-void TmpFS::create(const String& pathname,
-                   size_t size,
-                   mode_t mode,
-                   uid_t uid,
-                   gid_t gid) {
+Vnode* TmpFS::create(const String& pathname,
+                     size_t size,
+                     mode_t mode,
+                     uid_t uid,
+                     gid_t gid) {
   if (pathname == "." || pathname == "..") {
-    return;
+    return nullptr;
   }
 
   List<String> component_names = pathname.split('/');
-  TmpFSInode* parent = _root_inode.get();
+  TmpFSVnode* vnode = _root_inode.get();
 
   for (const auto& name : component_names) {
-    auto it = parent->_children.find_if([&name](const auto& inode) {
-      return inode->_name == name;
+    auto it = vnode->_children.find_if([&name](const auto& v) {
+      return v->_name == name;
     });
 
     // Create the child if not present.
-    if (it != parent->_children.end()) {
-      parent = it->get();
+    if (it != vnode->_children.end()) {
+      vnode = it->get();
     } else {
-      auto inode = make_unique<TmpFSInode>(*this, parent, name);
-      parent->add_child(move(inode));
-      parent = parent->_children.back().get();
+      auto child = make_unique<TmpFSVnode>(*this, vnode, name);
+      vnode->add_child(move(child));
+      vnode = vnode->_children.back().get();
     }
   }
+
+  return vnode;
 }
 
 
@@ -100,11 +102,29 @@ void TmpFS::show() const {
   printf("----- end dumping rootfs tree -----\n");
 }
 
-Inode& TmpFS::get_root_inode() {
+Vnode& TmpFS::get_root_vnode() {
   return *_root_inode;
 }
 
-void TmpFS::debug_show_dfs_helper(TmpFSInode* inode, const int depth) const {
+Vnode* TmpFS::get_vnode_by_pathname(const String& pathname) {
+  List<String> component_names = pathname.split('/');
+  TmpFSVnode* vnode = _root_inode.get();
+
+  for (const auto& name : component_names) {
+    auto it = vnode->_children.find_if([&name](const auto& v) {
+      return v->_name == name;
+    });
+
+    if (it == vnode->_children.end()) {
+      return nullptr;
+    }
+    vnode = it->get();
+  }
+
+  return vnode;
+}
+
+void TmpFS::debug_show_dfs_helper(TmpFSVnode* inode, const int depth) const {
   if (!inode) {
     return;
   }
