@@ -10,7 +10,9 @@ TmpFSInode::TmpFSInode(TmpFS& fs, TmpFSInode* parent, const String& name)
     : Inode(fs._next_inode_index++),
       _name(name),
       _parent(parent),
-      _children() {}
+      _children() {
+  printk("alloc tmpfs inode: %s\n", name.c_str());
+}
 
 
 void TmpFSInode::add_child(UniquePtr<Inode> child) {
@@ -70,28 +72,27 @@ void TmpFS::create_dentry(const String& pathname,
                           mode_t mode,
                           uid_t uid,
                           gid_t gid) {
-  List<String> components = pathname.split('/');
-
-  /*
-  components.for_each([](const auto& s) {
-    printk("%s\n", s.c_str());
-  });
-  */
-
-  for (const auto& s : components) {
-    printk("%s\n", s.c_str());
+  if (pathname == "." || pathname == "..") {
+    return;
   }
 
-  /*
-  TmpFSInode* ptr = _root_inode.get();
-  int level = 0;
+  List<String> component_names = pathname.split('/');
+  TmpFSInode* parent = _root_inode.get();
 
-  while (level < components.size() && ptr) {
-    auto target = ptr->_children.find_if([&components, level](const auto& inode_uptr) {
-      return inode_uptr->_name == components[level];
+  for (const auto& name : component_names) {
+    auto it = parent->_children.find_if([&name](const auto& inode) {
+      return inode->_name == name;
     });
+
+    // Create the child if not present.
+    if (it != parent->_children.end()) {
+      parent = it->get();
+    } else {
+      auto inode = make_unique<TmpFSInode>(*this, parent, name);
+      parent->add_child(move(inode));
+      parent = parent->_children.back().get();
+    }
   }
-  */
 }
 
 }  // namespace valkyrie::kernel

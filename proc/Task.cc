@@ -100,12 +100,12 @@ Task* Task::get_by_pid(const pid_t pid) {
       Task* task = q.front();
       q.pop_front();
 
-      auto result = task->_active_children.find_if([pid](auto t) {
+      auto it = task->_active_children.find_if([pid](auto t) {
         return t->_pid == pid;
       });
 
-      if (result) {
-        return *result;
+      if (it != task->_active_children.end()) {
+        return *it;
       }
 
       // Push all children onto the queue.
