@@ -11,8 +11,6 @@
 
 namespace valkyrie::kernel {
 
-extern void foo();
-
 TaskScheduler& TaskScheduler::get_instance() {
   static TaskScheduler instance;
   return instance;
@@ -79,7 +77,6 @@ void TaskScheduler::schedule() {
     _runqueue.push_back(move(task));
 
     /*
-    // FIXME: for debugging purpose only. Remove this block later.
     auto& next_task = _runqueue.front();
     printf(">>>> context switch: next: pid = %d [%s]\n", next_task->get_pid(),
                                                          next_task->get_name());
