@@ -1,8 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <proc/Task.h>
 
-#include <Mutex.h>
-#include <UniqueLock.h>
 #include <String.h>
 #include <fs/ELF.h>
 #include <fs/Initramfs.h>
@@ -257,12 +255,9 @@ int Task::do_wait(int* wstatus) {
 
   kfree(_elf_dest);
 
-  Mutex m;
-  m.lock();
   auto& sched = TaskScheduler::get_instance();
   _parent->_active_children.remove(this);
   _parent->_terminated_children.push_back(sched.remove_task(*this));
-  m.unlock();
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
@@ -306,6 +301,7 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
 
   // Probe for argc from `_argv`.
   for (const char* s = argv[0]; s; s = argv[++argc]);
+
   strings = make_unique<String[]>(argc);
   copied_str_addrs = make_unique<char*[]>(argc);
 
