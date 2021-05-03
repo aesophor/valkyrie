@@ -9,19 +9,27 @@
 
 namespace valkyrie::kernel {
 
+// Forward declaration
+class FileSystem;
+
 class Vnode {
  public:
   Vnode(const uint32_t index) : _index(index) {}
   virtual ~Vnode() = default;
 
-
+  
+  virtual SharedPtr<Vnode> create_child(const String& name,
+                                        const char* content,
+                                        size_t size) = 0;
   virtual void add_child(SharedPtr<Vnode> child) = 0;
   virtual SharedPtr<Vnode> remove_child(const String& name) = 0;
+  virtual SharedPtr<Vnode> get_child(const String& name) = 0;
 
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
 
   virtual char* get_content() const = 0;
+  virtual void set_content(UniquePtr<char[]> content) = 0;
 
 
   bool is_directory() const { return (_mode & S_IFMT) == S_IFDIR; }

@@ -2,6 +2,7 @@
 #include <fs/TmpFS.h>
 
 #include <fs/Stat.h>
+#include <fs/VirtualFileSystem.h>
 #include <kernel/Compiler.h>
 #include <libs/CString.h>
 
@@ -11,15 +12,17 @@ TmpFSVnode::TmpFSVnode(TmpFS& fs,
                        TmpFSVnode* parent,
                        const String& name,
                        const char* content,
-                       size_t len)
+                       size_t size)
     : Vnode(fs._next_vnode_index++),
+      _fs(fs),
       _name(name),
       _content(),
       _parent(parent),
       _children() {
-  if (content && len > 0) {
-    _content = make_unique<char[]>(len);
-    memcpy(_content.get(), content, len);
+  if (content && size > 0) {
+    _content = make_unique<char[]>(size);
+    memcpy(_content.get(), content, size);
+    _size = size;
   }
 }
 
@@ -28,6 +31,14 @@ TmpFSVnode::~TmpFSVnode() {
 }
 
 
+SharedPtr<Vnode> TmpFSVnode::create_child(const String& name,
+                                          const char* content,
+                                          size_t size) {
+  auto child = make_shared<TmpFSVnode>(_fs, this, name, content, size);
+  add_child(child);
+  return child;
+}
+
 void TmpFSVnode::add_child(SharedPtr<Vnode> child) {
   _children.push_back(move(static_pointer_cast<TmpFSVnode>(child)));
 }
@@ -35,9 +46,9 @@ void TmpFSVnode::add_child(SharedPtr<Vnode> child) {
 SharedPtr<Vnode> TmpFSVnode::remove_child(const String& name) {
   SharedPtr<Vnode> removed_child;
 
-  _children.remove_if([&removed_child, &name](auto& inode) {
-    return inode->_name == name &&
-           (removed_child = move(inode), true);
+  _children.remove_if([&removed_child, &name](auto& vnode) {
+    return vnode->_name == name &&
+           (removed_child = move(vnode), true);
   });
 
   if (unlikely(!removed_child)) {
@@ -47,12 +58,20 @@ SharedPtr<Vnode> TmpFSVnode::remove_child(const String& name) {
   return removed_child;
 }
 
-int TmpFSVnode::chmod(const mode_t mode) {
+SharedPtr<Vnode> TmpFSVnode::get_child(const String& name) {
+  auto it = _children.find_if([&name](auto& vnode) {
+    return vnode->_name == name;
+  });
 
+  return (it != _children.end()) ? *it : nullptr;
+}
+
+int TmpFSVnode::chmod(const mode_t mode) {
+  return -1;
 }
 
 int TmpFSVnode::chown(const uid_t uid, const gid_t gid) {
-
+  return -1;
 }
 
 
@@ -61,62 +80,6 @@ TmpFS::TmpFS()
     : _next_vnode_index(1),
       _root_vnode(make_shared<TmpFSVnode>(*this, nullptr, "", nullptr, 0)) {}
 
-
-SharedPtr<Vnode> TmpFS::create(const String& pathname,
-                               const char* content,
-                               size_t size,
-                               mode_t mode,
-                               uid_t uid,
-                               gid_t gid) {
-  if (pathname == "." || pathname == "..") {
-    return nullptr;
-  }
-
-  List<String> component_names = pathname.split('/');
-  TmpFSVnode* vnode = _root_vnode.get();
-
-  for (const auto& name : component_names) {
-    auto it = vnode->_children.find_if([&name](const auto& v) {
-      return v->_name == name;
-    });
-
-    // Create the child if not present.
-    if (it != vnode->_children.end()) {
-      vnode = it->get();
-    } else {
-      auto child = make_shared<TmpFSVnode>(*this, vnode, name, content, size);
-      vnode->add_child(move(child));
-      vnode = vnode->_children.back().get();
-    }
-  }
-
-  return vnode;
-}
-
-
-SharedPtr<File> TmpFS::open(const String& pathname, int flags) {
-  // 1. Lookup `pathname` from the root vnode.
-  // 2. Create a new file descriptor for this vnode if doun.
-  // 3. Create a new file if O_CREAT is specified in `flags`.
-  SharedPtr<Vnode> vnode = get_vnode(pathname);
-
-  if (!vnode && (flags & O_CREAT)) {
-    vnode = create(pathname, nullptr, 0, 0, 0, 0);
-  }
-
-}
-
-int TmpFS::close(SharedPtr<File> file) {
-
-}
-
-int TmpFS::write(SharedPtr<File> file, const void* buf, size_t len) {
-
-}
-
-int TmpFS::read(SharedPtr<File> file, void* buf, size_t len) {
-
-}
 
 
 void TmpFS::show() const {
@@ -129,7 +92,8 @@ SharedPtr<Vnode> TmpFS::get_root_vnode() {
   return _root_vnode;
 }
 
-SharedPtr<Vnode> TmpFS::get_vnode(const String& pathname) {
+SharedPtr<Vnode> TmpFS::get_vnode(const String& pathname,
+                                  SharedPtr<Vnode>* out_parent) const {
   List<String> component_names = pathname.split('/');
   SharedPtr<TmpFSVnode> vnode = _root_vnode;
 

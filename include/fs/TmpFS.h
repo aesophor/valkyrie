@@ -29,16 +29,23 @@ class TmpFSVnode final : public Vnode {
   virtual ~TmpFSVnode();
 
 
+  virtual SharedPtr<Vnode> create_child(const String& name,
+                                        const char* content,
+                                        size_t size) override;
   virtual void add_child(SharedPtr<Vnode> child) override;
   virtual SharedPtr<Vnode> remove_child(const String& name) override;
+  virtual SharedPtr<Vnode> get_child(const String& name) override;
 
   virtual int chmod(const mode_t mode) override;
   virtual int chown(const uid_t uid, const gid_t gid) override;
 
   virtual char* get_content() const override { return _content.get(); }
+  virtual void set_content(UniquePtr<char[]> content) override { _content = move(content); }
+
   const String& get_name() const { return _name; }
 
  private:
+  TmpFS& _fs;
   String _name;
   UniquePtr<char[]> _content;
 
@@ -56,21 +63,10 @@ class TmpFS final : public FileSystem {
   TmpFS();
   virtual ~TmpFS() = default;
 
-  virtual SharedPtr<Vnode> create(const String& pathname,
-                                  const char* content,
-                                  size_t size,
-                                  mode_t mode,
-                                  uid_t uid,
-                                  gid_t gid) override;
-
-  virtual SharedPtr<File> open(const String& pathname, int flags) override;
-  virtual int close(SharedPtr<File> file) override;
-  virtual int write(SharedPtr<File> file, const void* buf, size_t len) override;
-  virtual int read(SharedPtr<File> file, void* buf, size_t len) override;
-
   virtual void show() const override;
   virtual SharedPtr<Vnode> get_root_vnode() override;
-  virtual SharedPtr<Vnode> get_vnode(const String& pathname) override;
+  virtual SharedPtr<Vnode> get_vnode(const String& pathname,
+                                     SharedPtr<Vnode>* out_parent = nullptr) const override;
 
  private:
   // FIXME: `inode` should be marked const, but it seems that

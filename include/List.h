@@ -4,6 +4,7 @@
 
 #include <Functional.h>
 #include <Memory.h>
+#include <Types.h>
 #include <kernel/Compiler.h>
 
 namespace valkyrie::kernel {
@@ -259,11 +260,13 @@ class ListIterator {
   // Copy constructor
   ListIterator(const ListIterator& r)
       : _list(r._list),
-        _current(r._current) {}
+        _current(r._current),
+        _index(r._index) {}
 
   // Copy assignment operator
   ListIterator& operator =(const ListIterator& r) {
     _current = r._current;
+    _index = r._index;
     return *this;
   }
 
@@ -279,24 +282,28 @@ class ListIterator {
   // Prefix increment
   ListIterator& operator ++() {
     _current = _current->next;
+    _index++;
     return *this;
   }
 
   // Prefix decrement
   ListIterator& operator --() {
     _current = _current->prev;
+    _index--;
     return *this;
   }
 
   // Postfix increment
   ListIterator operator ++(int) {
     _current = _current->next;
+    _index++;
     return *this;
   }
 
   // Postfix decrement
   ListIterator operator --(int) {
     _current = _current->prev;
+    _index--;
     return *this;
   }
 
@@ -304,25 +311,32 @@ class ListIterator {
     return _current == _list._head.get();
   }
 
+  size_t index() const {
+    return _index;
+  }
+
 
  private:
   // Constructor
   ListIterator(List<ValueType>& list,
-               typename List<ValueType>::Node* current)
+               typename List<ValueType>::Node* current,
+               size_t index)
       : _list(list),
-        _current(current) {}
+        _current(current),
+        _index() {}
 
 
   static ListIterator begin(List<ValueType>& list) {
-    return {list, list._head->next};
+    return {list, list._head->next, 0};
   }
 
   static ListIterator end(List<ValueType>& list) {
-    return {list, list._head.get()};
+    return {list, list._head.get(), list._size - 1};
   }
 
   List<ValueType>& _list;
   typename List<ValueType>::Node* _current;
+  size_t _index;
 };
 
 }  // namespace valkyrie::kernel

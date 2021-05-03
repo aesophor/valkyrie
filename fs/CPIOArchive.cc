@@ -2,6 +2,7 @@
 #include <fs/CPIOArchive.h>
 
 #include <dev/Console.h>
+#include <fs/VirtualFileSystem.h>
 #include <kernel/Kernel.h>
 #include <libs/CString.h>
 
@@ -44,7 +45,7 @@ void CPIOArchive::populate(FileSystem& fs) {
   while ((dentry = CPIOArchive::DirectoryEntry(ptr))) {
     printf(" <%s> = %d\n", dentry.pathname, dentry.content_len);
 
-    fs.create(dentry.pathname, dentry.content, dentry.content_len, 0, 0, 0);
+    VirtualFileSystem::get_instance().create(dentry.pathname, dentry.content, dentry.content_len, 0, 0, 0);
 
     // Advance `ptr` until it reaches the next header.
     ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;

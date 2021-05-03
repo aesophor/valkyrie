@@ -20,16 +20,30 @@ class VirtualFileSystem final {
 
   bool mount_rootfs(UniquePtr<FileSystem> fs);
 
-  File* open(const String& pathname, int flags);
-  int close(File* file);
-  int write(File* file, const void* buf, size_t len);
-  int read(File* file, void* buf, size_t len);
+  SharedPtr<Vnode> create(const String& pathname,
+                          const char* content,
+                          size_t size,
+                          mode_t mode,
+                          uid_t uid,
+                          gid_t gid);
+
+  SharedPtr<File> open(const String& pathname, int options);
+  int close(SharedPtr<File> file);
+  int write(SharedPtr<File> file, const void* buf, size_t len);
+  int read(SharedPtr<File> file, void* buf, size_t len);
 
   VirtualFileSystem::Mount& get_rootfs();
   List<SharedPtr<File>>& get_opened_files();
 
  private:
   VirtualFileSystem();
+
+  // Retrieves the target vnode by `pathname`.
+  SharedPtr<Vnode> resolve_path(const String& pathname,
+                                SharedPtr<Vnode>* out_parent = nullptr,
+                                String* out_basename = nullptr) const;
+ 
+
 
   Mount _rootfs;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)

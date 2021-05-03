@@ -9,6 +9,8 @@
 #define VALKYRIE_FILE_H_
 
 #include <Types.h>
+#include <Memory.h>
+#include <fs/Vnode.h>
 
 namespace valkyrie::kernel {
 
@@ -18,16 +20,16 @@ class Vnode;
 
 
 struct File final {
-  File(FileSystem& fs, Vnode* inode, int flags)
+  File(FileSystem& fs, SharedPtr<Vnode> vnode, int options)
       : fs(fs),
-        vnode(inode),
-        pos(0),
-        flags(flags) {}
+        vnode(move(vnode)),
+        pos(),
+        options(options) {}
 
   FileSystem& fs;  // the filesystem to which this file belong.
-  Vnode* vnode;
+  SharedPtr<Vnode> vnode;
   size_t pos;  // the next r/w position of this opened file.
-  int flags;
+  int options;
 };
 
 }  // namespace valkyrie::kernel
