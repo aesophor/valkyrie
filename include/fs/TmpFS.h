@@ -24,14 +24,20 @@ class TmpFSVnode final : public Vnode {
              TmpFSVnode* parent,
              const String& name,
              const char* content,
-             size_t len);
+             size_t size,
+             mode_t mode,
+             uid_t uid,
+             gid_t gid);
 
   virtual ~TmpFSVnode();
 
 
   virtual SharedPtr<Vnode> create_child(const String& name,
                                         const char* content,
-                                        size_t size) override;
+                                        size_t size,
+                                        mode_t mode,
+                                        uid_t uid,
+                                        gid_t gid) override;
   virtual void add_child(SharedPtr<Vnode> child) override;
   virtual SharedPtr<Vnode> remove_child(const String& name) override;
   virtual SharedPtr<Vnode> get_child(const String& name) override;

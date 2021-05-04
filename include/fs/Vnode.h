@@ -14,13 +14,24 @@ class FileSystem;
 
 class Vnode {
  public:
-  Vnode(const uint32_t index) : _index(index) {}
+  Vnode(const uint32_t index,
+        mode_t mode,
+        uid_t uid,
+        gid_t gid)
+      : _index(index),
+        _mode(mode),
+        _uid(uid),
+        _gid(gid) {}
+
   virtual ~Vnode() = default;
 
   
   virtual SharedPtr<Vnode> create_child(const String& name,
                                         const char* content,
-                                        size_t size) = 0;
+                                        size_t size,
+                                        mode_t mode,
+                                        uid_t uid,
+                                        gid_t gid) = 0;
   virtual void add_child(SharedPtr<Vnode> child) = 0;
   virtual SharedPtr<Vnode> remove_child(const String& name) = 0;
   virtual SharedPtr<Vnode> get_child(const String& name) = 0;

@@ -5,6 +5,7 @@
 #include <List.h>
 #include <String.h>
 #include <fs/CPIOArchive.h>
+#include <fs/DirectoryEntry.h>
 #include <fs/File.h>
 #include <fs/Stat.h>
 #include <fs/Vnode.h>
@@ -33,7 +34,8 @@ bool VirtualFileSystem::mount_rootfs(UniquePtr<FileSystem> fs,
   }
 
   archive.for_each([this](const auto& entry) {
-    create(entry.pathname, entry.content, entry.content_len, 0, 0, 0);
+    mode_t mode = (entry.content_len) ? S_IFREG : S_IFDIR;
+    auto v = create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
   });
 
   return _rootfs.fs;
@@ -68,7 +70,7 @@ SharedPtr<Vnode> VirtualFileSystem::create(const String& pathname,
     return nullptr;
   }
 
-  return parent->create_child(basename, content, size);
+  return parent->create_child(basename, content, size, mode, 0, 0);
 }
 
 SharedPtr<File> VirtualFileSystem::open(const String& pathname, int options) {
@@ -99,7 +101,7 @@ SharedPtr<File> VirtualFileSystem::open(const String& pathname, int options) {
   }
 
   // Okay, so the user wants to create this file...
-  target = create(pathname, nullptr, 0, 0, 0, 0);
+  target = create(pathname, nullptr, 0, S_IFREG, 0, 0);
   _opened_files.push_back(make_shared<File>(*_rootfs.fs, target, options));
   return _opened_files.back();
 }
@@ -109,7 +111,7 @@ int VirtualFileSystem::close(SharedPtr<File> file) {
     return -1;
   }
 
-  printk("file handle use_count = %d\n", file.use_count());
+  //printk("file handle use_count = %d\n", file.use_count());
 
   auto it = _opened_files.find_if([file](const auto& f) {
     return f->vnode == file->vnode;
@@ -143,12 +145,17 @@ int VirtualFileSystem::write(SharedPtr<File> file, const void* buf, size_t len) 
     return -1;
   }
 
-  auto new_content = make_unique<char[]>(len);
-  memcpy(new_content.get(), buf, len);
-  
-  file->vnode->set_content(move(new_content));
+  if (file->vnode->is_regular_file()) {
+    auto new_content = make_unique<char[]>(len);
+    memcpy(new_content.get(), buf, len);
+    file->vnode->set_content(move(new_content));
+
+  } else {
+    printk("vfs_write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
+    return -1;
+  }
+
   file->pos += len;
-  
   file->vnode->set_size(file->pos);
   return len;
 }
@@ -160,11 +167,17 @@ int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
     return -1;
   }
 
-  printk("file size = %d, file_pos = %d\n", file->vnode->get_size(), file->pos);
-  size_t readable_size = file->vnode->get_size() - file->pos;
-  len = min(len, readable_size);
-  printk("vfs_read: memcpy(0x%x, 0x%x, %d)\n", buf, file->vnode->get_content() + file->pos, len);
-  memcpy(buf, file->vnode->get_content() + file->pos, len);
+  if (file->vnode->is_regular_file()) {
+    size_t readable_size = file->vnode->get_size() - file->pos;
+    len = min(len, readable_size);
+    memcpy(buf, file->vnode->get_content() + file->pos, len);
+
+  } else if (file->vnode->is_directory()) {
+
+  } else {
+    printk("vfs_read on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
+    return -1;
+  }
 
   file->pos += len;
   return len;

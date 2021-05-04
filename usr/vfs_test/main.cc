@@ -13,14 +13,12 @@ int main(int argc, char **argv) {
 
   int a = open("hello", O_CREAT);
   int b = open("world", O_CREAT);
-  printf("a = %d, b = %d\n", a, b);
   write(a, "Hello ", 6);
   write(b, "World!", 6);
   close(a);
   close(b);
   b = open("hello", 0);
   a = open("world", 0);
-  printf("b = %d, a = %d\n", b, a);
   int sz;
   sz = read(b, buf, 100);
   sz += read(a, buf + sz, 100);
