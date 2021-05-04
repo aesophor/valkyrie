@@ -86,6 +86,10 @@ void BuddyAllocator::deallocate(void* p) {
   Block* block = reinterpret_cast<Block*>(p) - 1;  // 1 is for the header
   Block* buddy = get_buddy(block);
 
+  if (reinterpret_cast<size_t>(block) == 0x10001000) {
+    Kernel::panic("you bitch!!!\n");
+  }
+
   // When you can’t find the buddy of the merged block or
   // the merged block size is maximum-block-size,
   // the allocator stops and put the merged block to the linked-list.
@@ -173,6 +177,11 @@ void BuddyAllocator::free_list_del_head(Block* block) {
     Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
   }
 
+  if (unlikely(block->order < 0 || block->order >= MAX_ORDER)) {
+    Kernel::panic("kernel heap corrupted: block (0x%x) = {0x%x, 0x%x}\n",
+                  block, block->next, block->order);
+  }
+
   if (unlikely(!_free_lists[block->order])) {
     return;
   }
@@ -184,6 +193,11 @@ void BuddyAllocator::free_list_del_head(Block* block) {
 void BuddyAllocator::free_list_add_head(Block* block) {
   if (unlikely(!block)) {
     Kernel::panic("kernel heap corrupted: free_list_add_head(nullptr)\n");
+  }
+
+  if (unlikely(block->order < 0 || block->order >= MAX_ORDER)) {
+    Kernel::panic("kernel heap corrupted: block (0x%x) = {0x%x, 0x%x}\n",
+                  block, block->next, block->order);
   }
 
   if (unlikely(_free_lists[block->order] == block)) {

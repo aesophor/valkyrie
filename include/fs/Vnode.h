@@ -39,6 +39,7 @@ class Vnode {
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
 
+  virtual const String& get_name() const = 0;
   virtual char* get_content() const = 0;
   virtual void set_content(UniquePtr<char[]> content) = 0;
 

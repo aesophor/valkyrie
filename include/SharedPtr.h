@@ -53,8 +53,10 @@ class SharedPtr {
   }
 
   // Copy constructor
-  SharedPtr(const SharedPtr& r) {
-    *this = r;
+  SharedPtr(const SharedPtr& r)
+      : _ctrl(r._ctrl),
+        _alias(r._alias) {
+    inc_use_count();
   }
 
   // Copy assignment operator

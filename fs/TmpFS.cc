@@ -22,7 +22,6 @@ TmpFSVnode::TmpFSVnode(TmpFS& fs,
       _content(),
       _parent(parent),
       _children() {
-  printk("mode = 0x%x\n", _mode); 
   if (content && size > 0) {
     _content = make_unique<char[]>(size);
     memcpy(_content.get(), content, size);
@@ -41,9 +40,8 @@ SharedPtr<Vnode> TmpFSVnode::create_child(const String& name,
                                           mode_t mode,
                                           uid_t uid,
                                           gid_t gid) {
-  auto child = make_shared<TmpFSVnode>(_fs, this, name, content, size, mode, uid, gid);
-  add_child(child);
-  return child;
+  _children.push_back(make_shared<TmpFSVnode>(_fs, this, name, content, size, mode, uid, gid));
+  return _children.back();
 }
 
 void TmpFSVnode::add_child(SharedPtr<Vnode> child) {
@@ -85,7 +83,7 @@ int TmpFSVnode::chown(const uid_t uid, const gid_t gid) {
 
 TmpFS::TmpFS()
     : _next_vnode_index(1),
-      _root_vnode(make_shared<TmpFSVnode>(*this, nullptr, "", nullptr, 0, S_IFDIR, 0, 0)) {}
+      _root_vnode(make_shared<TmpFSVnode>(*this, nullptr, "/", nullptr, 0, S_IFDIR, 0, 0)) {}
 
 
 

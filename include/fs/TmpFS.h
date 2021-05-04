@@ -45,10 +45,10 @@ class TmpFSVnode final : public Vnode {
   virtual int chmod(const mode_t mode) override;
   virtual int chown(const uid_t uid, const gid_t gid) override;
 
+  virtual const String& get_name() const override { return _name; }
   virtual char* get_content() const override { return _content.get(); }
   virtual void set_content(UniquePtr<char[]> content) override { _content = move(content); }
 
-  const String& get_name() const { return _name; }
 
  private:
   TmpFS& _fs;

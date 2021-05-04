@@ -26,9 +26,8 @@ class Function<ReturnType(Args...)> {
   // Constructor from aribtrary type T where
   // T::operator() is defined.
   template <typename T>
-  Function(T t) {
-    *this = t;
-  }
+  Function(T t)
+      : _callable(make_shared<CallableImpl<T>>(t)) {}
   
   template <typename T>
   Function& operator =(T t) {
@@ -37,24 +36,22 @@ class Function<ReturnType(Args...)> {
   }
 
   // Copy constructor
-  Function(const Function& other) {
-    *this = other;
-  }
+  Function(const Function& r)
+      : _callable(r._callable) {}
 
   // Copy assignment operator
-  Function& operator =(const Function& other) {
-    _callable = other._callable;
+  Function& operator =(const Function& r) {
+    _callable = r._callable;
     return *this;
   }
 
   // Move constructor
-  Function(Function&& other) noexcept {
-    *this = move(other);
-  }
+  Function(Function&& r) noexcept
+      : _callable(move(r._callable)) {}
 
   // Move assignment operator
-  Function& operator =(Function&& other) noexcept {
-    _callable = move(other._callable);
+  Function& operator =(Function&& r) noexcept {
+    _callable = move(r._callable);
     return *this;
   }
 

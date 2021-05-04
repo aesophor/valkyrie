@@ -35,7 +35,7 @@ bool VirtualFileSystem::mount_rootfs(UniquePtr<FileSystem> fs,
 
   archive.for_each([this](const auto& entry) {
     mode_t mode = (entry.content_len) ? S_IFREG : S_IFDIR;
-    auto v = create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
+    create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
   });
 
   return _rootfs.fs;

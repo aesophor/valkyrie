@@ -27,7 +27,8 @@ class BuddyAllocator {
  private:
   struct Block {
     Block* next;
-    int64_t order;
+    int32_t order;
+    int32_t __unused;
   };
 
   int  get_page_frame_index(const Block* block) const;
