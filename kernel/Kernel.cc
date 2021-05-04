@@ -42,27 +42,6 @@ void Kernel::run() {
   archive.populate(*_vfs.get_rootfs().fs);
   _vfs.get_rootfs().fs->show();
 
-  /*
-  {
-    char buf[16] = {0};
-    SharedPtr<File> f = _vfs.open("readme.txt", 0);
-
-    //_vfs.read(f, buf, 16);
-    //printf("%s\n", buf);
-    //_vfs.close(f);
-
-    strcpy(buf, "O M G\n");
-    _vfs.write(f, buf, 6);
-    _vfs.close(f);
-
-    f = _vfs.open("readme.txt", 0);
-    memset(buf, 0, 16);
-    _vfs.read(f, buf, 16);
-    printf("%s\n", buf);
-    _vfs.close(f);
-  }
-  */
-
   printk("starting task scheduler...\n");
   _task_scheduler.run();
 
