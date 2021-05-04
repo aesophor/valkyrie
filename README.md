@@ -6,6 +6,11 @@
 
 看起來是在寫 kernel，但其實都在自幹 STL...
 
+
+<div align="center">
+<img src="/.meta/cover.png">
+</div>
+
 <br>
 
 ## Progress Overview

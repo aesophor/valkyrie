@@ -34,7 +34,7 @@ void Kernel::run() {
  
   printk("VFS: mounting rootfs...\n");
   _vfs.mount_rootfs(make_unique<TmpFS>(), CPIOArchive(CPIO_ARCHIVE_ADDR));
-  _vfs.get_rootfs().fs->show();
+  //_vfs.get_rootfs().fs->show();
 
   printk("starting task scheduler...\n");
   _task_scheduler.run();
