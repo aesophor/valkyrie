@@ -34,7 +34,7 @@
 - [ ] Wait Queues
 - [x] tmpfs
 - [x] Virtual filesystem - vfs_open(), sys_close(), sys_write(), sys_read()
-- [x] Opened file table, Per-process fd table
+- [x] System-wide opened file table, Per-process file descriptor tables
 - [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
 - [ ] ...
 
