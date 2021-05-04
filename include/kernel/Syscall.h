@@ -11,6 +11,10 @@
 namespace valkyrie::kernel {
 
 enum Syscall {
+  SYS_READ,
+  SYS_WRITE,
+  SYS_OPEN,
+  SYS_CLOSE,
   SYS_UART_READ,
   SYS_UART_WRITE,
   SYS_UART_PUTCHAR,
@@ -22,10 +26,6 @@ enum Syscall {
   SYS_SCHED_YIELD,
   SYS_KILL,
   SYS_SIGNAL,
-  SYS_READ,
-  SYS_WRITE,
-  SYS_OPEN,
-  SYS_CLOSE,
   __NR_syscall
 };
 
@@ -33,6 +33,10 @@ enum Syscall {
 extern const size_t __syscall_table[Syscall::__NR_syscall];
 
 // Individual system call declaration.
+int sys_read(int fd, void* buf, size_t count);
+int sys_write(int fd, const void* buf, size_t count);
+int sys_open(const char* pathname, int options);
+int sys_close(int fd);
 size_t sys_uart_read(char buf[], size_t size);
 size_t sys_uart_write(const char buf[], size_t size);
 void sys_uart_putchar(const char c);
@@ -44,10 +48,6 @@ int sys_wait(int* wstatus);
 int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
 int sys_signal(int signal, void (*handler)());
-int sys_read(int fd, void* buf, size_t count);
-int sys_write(int fd, const void* buf, size_t count);
-int sys_open(const char* pathname, int options);
-int sys_close(int fd);
 
 
 inline bool is_syscall_id_valid(const uint64_t id) {

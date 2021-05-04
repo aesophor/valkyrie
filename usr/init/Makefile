@@ -1,5 +1,6 @@
 CXX = aarch64-linux-gnu-g++
 CXXFLAGS = -std=c++20\
+	   -I../vlibc\
 	   -ffreestanding\
 	   -nostdinc\
 	   -nostdlib\
@@ -13,11 +14,11 @@ CXXFLAGS = -std=c++20\
 	   -Wall
 
 LD = aarch64-linux-gnu-ld
-LDFLAGS = -T linker.ld
+LDFLAGS = -T ../vlibc/linker.ld
 
 ELF = init
-SRC = main.cc printf.cc
-OBJ = main.o printf.o
+SRC = ../vlibc/vlibc.cc ../vlibc/syscall.S ../vlibc/printf.cc main.cc
+OBJ = vlibc.o syscall.o printf.o main.o
 
 all:
 	$(CXX) $(CXXFLAGS) -c $(SRC)

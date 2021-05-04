@@ -1,5 +1,6 @@
 CXX = aarch64-linux-gnu-g++
 CXXFLAGS = -std=c++20\
+	   -I../vlibc\
 	   -ffreestanding\
 	   -nostdinc\
 	   -nostdlib\
