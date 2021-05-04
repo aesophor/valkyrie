@@ -31,15 +31,9 @@ void Kernel::run() {
   printk("enabling timer interrupts\n");
   _timer_multiplexer.get_arm_core_timer().enable();
   */
-  
-  printk("reading cpio archive...\n");
-  CPIOArchive archive(CPIO_ARCHIVE_ADDR);
-
-  printk("vfs: mounting rootfs...\n");
-  _vfs.mount_rootfs(make_unique<TmpFS>());
-
-  printk("vfs: populating root filesystem...\n");
-  archive.populate(*_vfs.get_rootfs().fs);
+ 
+  printk("VFS: mounting rootfs...\n");
+  _vfs.mount_rootfs(make_unique<TmpFS>(), CPIOArchive(CPIO_ARCHIVE_ADDR));
   _vfs.get_rootfs().fs->show();
 
   printk("starting task scheduler...\n");

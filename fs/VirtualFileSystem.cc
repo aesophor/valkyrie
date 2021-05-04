@@ -4,9 +4,11 @@
 #include <Algorithm.h>
 #include <List.h>
 #include <String.h>
+#include <fs/CPIOArchive.h>
 #include <fs/File.h>
 #include <fs/Stat.h>
 #include <fs/Vnode.h>
+#include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 
@@ -21,8 +23,19 @@ VirtualFileSystem::VirtualFileSystem()
       _opened_files() {}
 
 
-bool VirtualFileSystem::mount_rootfs(UniquePtr<FileSystem> fs) {
+bool VirtualFileSystem::mount_rootfs(UniquePtr<FileSystem> fs,
+                                     const CPIOArchive& archive) {
   _rootfs = { move(fs) };
+
+  if (!archive.is_valid()) {
+    printk("initramfs unpacking failed invalid magic at start of compressed archive\n");
+    Kernel::panic("VFS: unable to mount root fs\n");
+  }
+
+  archive.for_each([this](const auto& entry) {
+    create(entry.pathname, entry.content, entry.content_len, 0, 0, 0);
+  });
+
   return _rootfs.fs;
 }
 

@@ -17,35 +17,16 @@ CPIOArchive::CPIOArchive(const size_t base_addr)
       _ptr(_base_addr) {}
 
 
-Pair<const char*, size_t>
-CPIOArchive::get_entry_content_and_size(const char* name) const {
-  const char* ptr = _base_addr;
-  CPIOArchive::DirectoryEntry dentry;
-
-  while ((dentry = CPIOArchive::DirectoryEntry(ptr))) {
-    //printf("(%s)<%s> = %d\n", name, dentry.pathname, dentry.content_len);
-
-    if (!strcmp(name, dentry.pathname)) {
-      return {dentry.content, dentry.content_len};
-    }
-
-    // Advance `ptr` until it reaches the next header.
-    ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
-    while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
-  }
-
-  return {nullptr, 0};
+bool CPIOArchive::is_valid() const {
+  return !strncmp(_base_addr, CPIO_MAGIC, CPIO_MAGIC_LEN);
 }
 
-
-void CPIOArchive::populate(FileSystem& fs) {
+void CPIOArchive::for_each(Function<void (const CPIOArchive::Entry&)> callback) const {
   const char* ptr = _base_addr;
-  CPIOArchive::DirectoryEntry dentry;
+  CPIOArchive::Entry dentry;
 
-  while ((dentry = CPIOArchive::DirectoryEntry(ptr))) {
-    printf(" <%s> = %d\n", dentry.pathname, dentry.content_len);
-
-    VirtualFileSystem::get_instance().create(dentry.pathname, dentry.content, dentry.content_len, 0, 0, 0);
+  while ((dentry = CPIOArchive::Entry(ptr)).is_valid()) {
+    callback(dentry);
 
     // Advance `ptr` until it reaches the next header.
     ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
@@ -54,7 +35,7 @@ void CPIOArchive::populate(FileSystem& fs) {
 }
 
 
-CPIOArchive::DirectoryEntry::DirectoryEntry(const char* ptr)
+CPIOArchive::Entry::Entry(const char* ptr)
     : header(reinterpret_cast<const CPIOArchive::Header*>(ptr)) {
   char buf[16];
 
@@ -76,11 +57,7 @@ CPIOArchive::DirectoryEntry::DirectoryEntry(const char* ptr)
   while (content_len && !*content) ++content;
 }
 
-CPIOArchive::DirectoryEntry::operator bool() const {
-  return is_valid();
-}
-
-bool CPIOArchive::DirectoryEntry::is_valid() const {
+bool CPIOArchive::Entry::is_valid() const {
   return strcmp(pathname, CPIO_TRAILER);
 }
 

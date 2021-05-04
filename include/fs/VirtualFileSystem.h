@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <fs/CPIOArchive.h>
 #include <fs/File.h>
 #include <fs/FileSystem.h>
 
@@ -18,7 +19,8 @@ class VirtualFileSystem final {
   static VirtualFileSystem& get_instance();
   ~VirtualFileSystem() = default;
 
-  bool mount_rootfs(UniquePtr<FileSystem> fs);
+  bool mount_rootfs(UniquePtr<FileSystem> fs,
+                    const CPIOArchive& archive);
 
   SharedPtr<Vnode> create(const String& pathname,
                           const char* content,

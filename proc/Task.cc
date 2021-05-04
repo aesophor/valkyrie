@@ -3,7 +3,7 @@
 
 #include <String.h>
 #include <fs/ELF.h>
-#include <fs/Initramfs.h>
+#include <fs/VirtualFileSystem.h>
 #include <kernel/Compiler.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
@@ -201,7 +201,18 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   kfree(_elf_dest);
 
   // Load the specified file from the filesystem.
-  ELF elf(Initramfs::get_instance().read(name));
+  SharedPtr<File> file = VirtualFileSystem::get_instance().open(name, 0);
+  
+  if (!file) {
+    printk("exec failed: pid = %d [%s]\n", _pid, _name);
+    return -1;
+  }
+
+  ELF elf({ file->vnode->get_content(), file->vnode->get_size() });
+
+  VirtualFileSystem::get_instance().close(file);
+  file.reset();
+
   _elf_dest = kmalloc(elf.get_size() + 0x1000);
   void* dest = reinterpret_cast<char*>(_elf_dest) + 0x1000 - 0x10;
 
