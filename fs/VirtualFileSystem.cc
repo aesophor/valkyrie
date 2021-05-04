@@ -127,7 +127,7 @@ int VirtualFileSystem::close(SharedPtr<File> file) {
   // 1. `file` != nullptr
   // 2. `_opened_files` contains one instance
   // 3. sys_close contains one instance
-  if (file.use_count() == 3) {
+  if (file.use_count() <= 3) {
     _opened_files.remove_if([file](const auto& f) {
       return f->vnode == file->vnode;
     });

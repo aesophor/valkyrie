@@ -210,8 +210,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   ELF elf({ file->vnode->get_content(), file->vnode->get_size() });
 
-  VirtualFileSystem::get_instance().close(file);
-  file.reset();
+  VirtualFileSystem::get_instance().close(move(file));
 
   _elf_dest = kmalloc(elf.get_size() + 0x1000);
   void* dest = reinterpret_cast<char*>(_elf_dest) + 0x1000 - 0x10;
