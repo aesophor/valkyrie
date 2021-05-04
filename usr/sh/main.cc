@@ -9,20 +9,46 @@ int main(int argc, char **argv) {
   return run_shell(argv[1]);
 }
 
+
 int run_shell(const char* username) {
-  char _buf[256];
+  char buf[256];
 
   while (true) {
-    memset(_buf, 0, sizeof(_buf));
+    memset(buf, 0, sizeof(buf));
     printf("%s# ", username);
-    uart_read(_buf, 255);
+    uart_read(buf, 255);
 
-    if (!strlen(_buf)) {
+    if (!strlen(buf)) {
       continue;
-    } else if (!strcmp(_buf, "exit")) {
+
+    } else if (!strncmp(buf, "exit", sizeof(buf))) {
       break;
+
+    } else if (access(buf, 0) != -1) {
+      int pid;
+      int wstatus;
+
+      switch ((pid = fork())) {
+        case -1:
+          printf("fork failed\n");
+          break;
+
+        case 0: {
+          char* arguments[2] = {buf, nullptr};
+          printf("exec(%s, ...)\n", buf);
+          exec(buf, arguments);
+          printf("exec failed\n");
+          break;
+        }
+
+        default:
+          wait(&wstatus);
+          printf("command finished with exit code = %d\n", wstatus);
+          break;
+      }
+
     } else {
-      printf("sh: command not found: %s\n", _buf);
+      printf("sh: command not found: %s\n", buf);
     }
   }
 

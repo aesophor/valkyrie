@@ -17,8 +17,8 @@ LD = aarch64-linux-gnu-ld
 LDFLAGS = -T ../vlibc/linker.ld
 
 ELF = vfs_test
-SRC = ../vlibc/vlibc.cc ../vlibc/syscall.S ../vlibc/printf.cc main.cc
-OBJ = vlibc.o syscall.o printf.o main.o
+SRC = ../vlibc/vlibc.cc main.cc ../vlibc/syscall.S ../vlibc/printf.cc
+OBJ = vlibc.o main.o syscall.o printf.o
 
 all:
 	$(CXX) $(CXXFLAGS) -c $(SRC)

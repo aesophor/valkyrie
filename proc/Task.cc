@@ -270,6 +270,13 @@ int Task::do_wait(int* wstatus) {
   _state = Task::State::TERMINATED;
   _error_code = error_code;
 
+  // Close unclosed fds
+  for (int i = 3; i < NR_TASK_FD_LIMITS; i++) {
+    if (_fd_table[i]) {
+      sys_close(i);
+    }
+  }
+
   kfree(_elf_dest);
 
   auto& sched = TaskScheduler::get_instance();
@@ -389,6 +396,10 @@ int Task::allocate_fd_for_file(SharedPtr<File> file) {
   for (int i = 0; i < NR_TASK_FD_LIMITS; i++) {
     if (!_fd_table[i]) {
       _fd_table[i] = move(file);
+
+      if (!_fd_table[i]) {
+        Kernel::panic("wtf\n");
+      }
       return i;
     }
   }

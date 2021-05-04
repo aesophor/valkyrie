@@ -28,6 +28,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_sched_yield),
   SYSCALL_DECL(sys_kill),
   SYSCALL_DECL(sys_signal),
+  SYSCALL_DECL(sys_access),
 };
 
 
@@ -154,6 +155,10 @@ long sys_kill(pid_t pid, int signal) {
 
 int sys_signal(int signal, void (*handler)()) {
   return Task::get_current().do_signal(signal, handler);
+}
+
+int sys_access(const char* pathname, int options) {
+  return VirtualFileSystem::get_instance().access(pathname, options);
 }
 
 }  // namespace valkyrie::kernel

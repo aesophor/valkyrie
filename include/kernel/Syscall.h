@@ -26,6 +26,7 @@ enum Syscall {
   SYS_SCHED_YIELD,
   SYS_KILL,
   SYS_SIGNAL,
+  SYS_ACCESS,
   __NR_syscall
 };
 
@@ -48,6 +49,7 @@ int sys_wait(int* wstatus);
 int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
 int sys_signal(int signal, void (*handler)());
+int sys_access(const char* pathname, int options);
 
 
 inline bool is_syscall_id_valid(const uint64_t id) {

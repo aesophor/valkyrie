@@ -33,6 +33,7 @@ class VirtualFileSystem final {
   int close(SharedPtr<File> file);
   int write(SharedPtr<File> file, const void* buf, size_t len);
   int read(SharedPtr<File> file, void* buf, size_t len);
+  int access(const String& pathname, int options);
 
   VirtualFileSystem::Mount& get_rootfs();
   List<SharedPtr<File>>& get_opened_files();

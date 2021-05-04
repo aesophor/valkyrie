@@ -105,10 +105,11 @@ SharedPtr<File> VirtualFileSystem::open(const String& pathname, int options) {
 }
 
 int VirtualFileSystem::close(SharedPtr<File> file) {
-  // 1. release the file descriptor
   if (!file) {
     return -1;
   }
+
+  printk("file handle use_count = %d\n", file.use_count());
 
   auto it = _opened_files.find_if([file](const auto& f) {
     return f->vnode == file->vnode;
@@ -118,13 +119,20 @@ int VirtualFileSystem::close(SharedPtr<File> file) {
     return -1;
   }
   
-  if (it->use_count() == 1) {
+  file->pos = 0;
+
+  // Why should we release this file from the system-wide file table
+  // when file.use_count == 3?
+  //
+  // 1. `file` != nullptr
+  // 2. `_opened_files` contains one instance
+  // 3. sys_close contains one instance
+  if (file.use_count() == 3) {
     _opened_files.remove_if([file](const auto& f) {
       return f->vnode == file->vnode;
     });
   }
 
-  file->pos = 0;
   return 0;
 }
 
@@ -160,6 +168,18 @@ int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
 
   file->pos += len;
   return len;
+}
+
+int VirtualFileSystem::access(const String& pathname, int options) {
+  // Check user's permission for a file.
+  // FIXME: currently it simply checks if the file exists...
+  SharedPtr<Vnode> target = resolve_path(pathname);
+
+  if (!target) {
+    return -1;
+  }
+
+  return 0;
 }
 
 

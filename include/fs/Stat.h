@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_STAT_H_
 #define VALKYRIE_STAT_H_
 
-// open() control flags
+// open() options
 #define O_RDONLY    (1 <<  0)
 #define O_WRONLY    (1 <<  1)
 #define O_RDWR      (O_RDONLY | O_WRONLY)
@@ -19,6 +19,11 @@
 #define O_CLOEXEC   (1 << 11)
 #define O_DIRECT    (1 << 12)
 
+// access() options
+#define R_OK 4
+#define W_OK 2
+#define X_OK 1
+#define F_OK 0
 
 // Directory entry permission flags
 #define S_IRWXU 0000700  // RWX mask for owner

@@ -23,6 +23,7 @@ int wait(int* wstatus);
 int sched_yield();
 long kill(pid_t pid, int signal);
 int signal(int signal, void (*handler)());
+int access(const char* pathname, int options);
 
 
 inline void __libc_putchar(void*, const char c) {
