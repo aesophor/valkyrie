@@ -367,4 +367,13 @@ void Task::handle_pending_signals() {
   }
 }
 
+
+int Task::allocate_one_file_descriptor(SharedPtr<File> file) {
+  return _fd_table.allocate_one_file_descriptor(move(file));
+}
+
+void Task::deallocate_file_descriptor(const int fd) {
+  return _fd_table.deallocate_file_descriptor(fd);
+}
+
 }  // namespace valkyrie::kernel

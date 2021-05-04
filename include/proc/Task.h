@@ -6,6 +6,7 @@
 #include <Memory.h>
 #include <Types.h>
 #include <dev/Console.h>
+#include <fs/FileDescriptorTable.h>
 #include <kernel/Compiler.h>
 #include <libs/CString.h>
 #include <mm/Page.h>
@@ -74,6 +75,9 @@ class Task {
   int do_signal(int signal, void (*handler)());
 
   void handle_pending_signals();
+
+  int allocate_one_file_descriptor(SharedPtr<File> file);
+  void deallocate_file_descriptor(const int fd);
 
 
   Task::State get_state() const { return _state; }
@@ -144,6 +148,9 @@ class Task {
   // POSIX signals
   List<Signal> _pending_signals;
   void (*_custom_signal_handlers[Signal::__NR_signals])();
+
+  // Per-process file descriptors
+  FileDescriptorTable _fd_table;
 };
 
 }  // namespace valkyrie::kernel

@@ -7,7 +7,6 @@
 #include <fs/File.h>
 #include <fs/Stat.h>
 #include <fs/Vnode.h>
-#include <proc/Task.h>
 
 namespace valkyrie::kernel {
 
@@ -60,34 +59,35 @@ SharedPtr<Vnode> VirtualFileSystem::create(const String& pathname,
 }
 
 SharedPtr<File> VirtualFileSystem::open(const String& pathname, int options) {
-  // 1. Lookup pathname from the root vnode.
+  // Lookup pathname from the root vnode.
   SharedPtr<Vnode> target = resolve_path(pathname);
 
-  if (!target) {
-    return nullptr;
-  }
-
+  // Check if this file has already been opened by any other process.
   auto it = _opened_files.find_if([&target](const auto& f) {
     return f->vnode.get() == target.get();
   });
 
-  // If the file has already been opened
+  // If yes, then we can return its file handle now.
   if (it != _opened_files.end()) {
     return *it;
   }
 
-  // Otherwise, we will open it now.
-  _opened_files.push_back(make_shared<File>(*_rootfs.fs, target, options));
-  _opened_files.back()->pos = 0;
-
-  // 2. Create a new file descriptor for this vnode if found.
-
-  // 3. Create a new file if O_CREAT is specified in flags.
-  if (!(options & O_CREAT)) {
+  // Otherwise, the file has not been opened by any process yet.
+  // If the file exists, then we will open it now.
+  if (target) {
+    _opened_files.push_back(make_shared<File>(*_rootfs.fs, target, options));
     return _opened_files.back();
   }
 
+  // File doesn't exist...
+  // We should check if `O_CREAT` is sepcified in options.
+  if (!(options & O_CREAT)) {
+    return nullptr;
+  }
+
+  // Okay, so the user wants to create this file...
   target = create(pathname, nullptr, 0, 0, 0, 0);
+  _opened_files.push_back(make_shared<File>(*_rootfs.fs, target, options));
   return _opened_files.back();
 }
 
