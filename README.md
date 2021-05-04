@@ -32,8 +32,10 @@
 - [ ] Kernel preemption - protect critical sections
 - [ ] POSIX signals and custom signal handlers - sys_kill(), sys_signal(), sys_rt_sigreturn()
 - [ ] Wait Queues
-- [ ] Virtual Filesystem - sys_open(), sys_close(), sys_write(), sys_read()
-- [ ] tmpfs
+- [x] tmpfs
+- [x] Virtual filesystem - vfs_open(), sys_close(), sys_write(), sys_read()
+- [x] Opened file table, Per-process fd table
+- [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
 - [ ] ...
 
 ## Kernel C++20 STL Progress
