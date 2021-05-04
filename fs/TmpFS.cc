@@ -92,25 +92,6 @@ SharedPtr<Vnode> TmpFS::get_root_vnode() {
   return _root_vnode;
 }
 
-SharedPtr<Vnode> TmpFS::get_vnode(const String& pathname,
-                                  SharedPtr<Vnode>* out_parent) const {
-  List<String> component_names = pathname.split('/');
-  SharedPtr<TmpFSVnode> vnode = _root_vnode;
-
-  for (const auto& name : component_names) {
-    auto it = vnode->_children.find_if([&name](const auto& v) {
-      return v->_name == name;
-    });
-
-    if (it == vnode->_children.end()) {
-      return nullptr;
-    }
-    vnode = *it;
-  }
-
-  return vnode;
-}
-
 void TmpFS::debug_show_dfs_helper(TmpFSVnode* vnode, const int depth) const {
   if (!vnode) {
     return;

@@ -16,8 +16,6 @@ class FileSystem {
 
   virtual void show() const = 0;
   virtual SharedPtr<Vnode> get_root_vnode() = 0;
-  virtual SharedPtr<Vnode> get_vnode(const String& pathname,
-                                     SharedPtr<Vnode>* out_parent = nullptr) const = 0;
 };
 
 }  // namespace valkyrie::kernel

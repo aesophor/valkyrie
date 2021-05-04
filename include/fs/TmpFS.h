@@ -65,8 +65,6 @@ class TmpFS final : public FileSystem {
 
   virtual void show() const override;
   virtual SharedPtr<Vnode> get_root_vnode() override;
-  virtual SharedPtr<Vnode> get_vnode(const String& pathname,
-                                     SharedPtr<Vnode>* out_parent = nullptr) const override;
 
  private:
   // FIXME: `inode` should be marked const, but it seems that
