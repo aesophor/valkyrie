@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
       break;
 
     case 0: { // child
-      sys_exec("bin/fork_test", nullptr);
+      sys_exec("bin/vfs_test", nullptr);
       break;
     }
 

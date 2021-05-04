@@ -378,6 +378,7 @@ int Task::allocate_fd_for_file(SharedPtr<File> file) {
   for (int i = 0; i < NR_TASK_FD_LIMITS; i++) {
     if (!_fd_table[i]) {
       _fd_table[i] = move(file);
+      return i;
     }
   }
 
