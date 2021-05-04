@@ -36,7 +36,8 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _ustack_page(get_free_page()),
       _name(),
       _pending_signals(),
-      _custom_signal_handlers() {
+      _custom_signal_handlers(),
+      _fd_table() {
 
   if (unlikely(_pid == 1)) {
     Task::_init = this;
@@ -51,6 +52,11 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
   _context.lr = reinterpret_cast<uint64_t>(entry_point);
   _context.sp = _kstack_page.end();
   strcpy(_name, name);
+
+  // Reserve fd 0,1,2 for stdin, stdout, stderr
+  _fd_table[0] = File::opened;
+  _fd_table[1] = File::opened;
+  _fd_table[2] = File::opened;
 
   printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x\n",
       this,
@@ -368,12 +374,27 @@ void Task::handle_pending_signals() {
 }
 
 
-int Task::allocate_one_file_descriptor(SharedPtr<File> file) {
-  return _fd_table.allocate_one_file_descriptor(move(file));
+int Task::allocate_fd_for_file(SharedPtr<File> file) {
+  for (int i = 0; i < NR_TASK_FD_LIMITS; i++) {
+    if (!_fd_table[i]) {
+      _fd_table[i] = move(file);
+    }
+  }
+
+  printk("warning: task (pid = %d) has reached fd limits!\n", _pid);
+  return -1;
 }
 
-void Task::deallocate_file_descriptor(const int fd) {
-  return _fd_table.deallocate_file_descriptor(fd);
+SharedPtr<File> Task::release_fd_and_get_file(const int fd) {
+  return (is_fd_valid(fd)) ? move(_fd_table[fd]) : nullptr;
+}
+
+SharedPtr<File> Task::get_file_by_fd(const int fd) const {
+  return (is_fd_valid(fd)) ? _fd_table[fd] : nullptr;
+}
+
+bool Task::is_fd_valid(const int fd) const {
+  return likely(fd >= 0 && fd < NR_TASK_FD_LIMITS);
 }
 
 }  // namespace valkyrie::kernel

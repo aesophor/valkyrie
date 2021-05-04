@@ -22,6 +22,10 @@ enum Syscall {
   SYS_SCHED_YIELD,
   SYS_KILL,
   SYS_SIGNAL,
+  SYS_READ,
+  SYS_WRITE,
+  SYS_OPEN,
+  SYS_CLOSE,
   __NR_syscall
 };
 
@@ -40,6 +44,10 @@ int sys_wait(int* wstatus);
 int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
 int sys_signal(int signal, void (*handler)());
+int sys_read(int fd, void* buf, size_t count);
+int sys_write(int fd, const void* buf, size_t count);
+int sys_open(const char* pathname, int options);
+int sys_close(int fd);
 
 
 inline bool is_syscall_id_valid(const uint64_t id) {

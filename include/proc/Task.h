@@ -6,7 +6,7 @@
 #include <Memory.h>
 #include <Types.h>
 #include <dev/Console.h>
-#include <fs/FileDescriptorTable.h>
+#include <fs/File.h>
 #include <kernel/Compiler.h>
 #include <libs/CString.h>
 #include <mm/Page.h>
@@ -16,6 +16,7 @@
 
 #define TASK_TIME_SLICE    3
 #define TASK_NAME_MAX_LEN 16
+#define NR_TASK_FD_LIMITS 16
 
 namespace valkyrie::kernel {
 
@@ -76,8 +77,10 @@ class Task {
 
   void handle_pending_signals();
 
-  int allocate_one_file_descriptor(SharedPtr<File> file);
-  void deallocate_file_descriptor(const int fd);
+  int allocate_fd_for_file(SharedPtr<File> file);
+  SharedPtr<File> release_fd_and_get_file(const int fd);
+  SharedPtr<File> get_file_by_fd(const int fd) const;
+  bool is_fd_valid(const int fd) const;
 
 
   Task::State get_state() const { return _state; }
@@ -150,7 +153,7 @@ class Task {
   void (*_custom_signal_handlers[Signal::__NR_signals])();
 
   // Per-process file descriptors
-  FileDescriptorTable _fd_table;
+  SharedPtr<File> _fd_table[NR_TASK_FD_LIMITS];
 };
 
 }  // namespace valkyrie::kernel

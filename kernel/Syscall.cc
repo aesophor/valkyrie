@@ -2,6 +2,7 @@
 #include <kernel/Syscall.h>
 
 #include <dev/Console.h>
+#include <fs/VirtualFileSystem.h>
 #include <kernel/TimerMultiplexer.h>
 #include <proc/Task.h>
 #include <proc/TaskScheduler.h>
@@ -23,6 +24,10 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_sched_yield),
   SYSCALL_DECL(sys_kill),
   SYSCALL_DECL(sys_signal),
+  SYSCALL_DECL(sys_read),
+  SYSCALL_DECL(sys_write),
+  SYSCALL_DECL(sys_open),
+  SYSCALL_DECL(sys_close),
 };
 
 
@@ -75,6 +80,66 @@ long sys_kill(pid_t pid, int signal) {
 
 int sys_signal(int signal, void (*handler)()) {
   return Task::get_current().do_signal(signal, handler);
+}
+
+int sys_read(int fd, void* buf, size_t count) {
+  auto& vfs = VirtualFileSystem::get_instance();
+  auto& current_task = Task::get_current();
+
+  SharedPtr<File> file = current_task.get_file_by_fd(fd);
+
+  if (!file) {
+    printk("sys_read: fd %d doesn't exist. Is it opened?\n", fd);
+    return -1;
+  }
+
+  return vfs.read(file, buf, count);
+}
+
+int sys_write(int fd, const void* buf, size_t count) {
+  auto& vfs = VirtualFileSystem::get_instance();
+  auto& current_task = Task::get_current();
+
+  SharedPtr<File> file = current_task.get_file_by_fd(fd);
+
+  if (!file) {
+    printk("sys_write: fd %d doesn't exist. Is it opened?\n", fd);
+    return -1;
+  }
+
+  return vfs.write(file, buf, count);
+}
+
+int sys_open(const char* pathname, int options) {
+  auto& vfs = VirtualFileSystem::get_instance();
+  auto& current_task = Task::get_current();
+
+  SharedPtr<File> file = vfs.open(pathname, options);
+
+  if (!file) {
+    if (options & O_CREAT) {
+      printk("sys_open: unable to create file %s\n", pathname);
+    } else {
+      printk("sys_open: file %s doesn't exist\n", pathname);
+    }
+    return -1;
+  }
+
+  return current_task.allocate_fd_for_file(file);
+}
+
+int sys_close(int fd) {
+  auto& vfs = VirtualFileSystem::get_instance();
+  auto& current_task = Task::get_current();
+
+  SharedPtr<File> file = current_task.release_fd_and_get_file(fd);
+
+  if (!file) {
+    printk("sys_close: fd %d doesn't exist. Is it opened?\n", fd);
+    return -1;
+  }
+
+  return vfs.close(file);
 }
 
 }  // namespace valkyrie::kernel
