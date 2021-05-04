@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
       break;
 
     case 0: { // child
-      exec("bin/vfs_test", nullptr);
+      exec("bin/login", nullptr);
       break;
     }
 

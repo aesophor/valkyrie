@@ -93,9 +93,22 @@ int sys_close(int fd) {
 }
 
 size_t sys_uart_read(char buf[], size_t size) {
-  for (size_t i = 0; i < size; i++) {
-    buf[i] = MiniUART::get_instance().getchar();
+  int i = 0;
+  while (i < (int) size) {
+    auto c = MiniUART::get_instance().getchar();
+
+    if (c == 0x7f) {
+      if (i > 0) {
+        buf[--i] = 0;
+        puts("\b \b", /*newline=*/false);
+      }
+    } else if (c == '\n') {
+      return i;
+    } else {
+      buf[i++] = c;
+    }
   }
+
   return size;
 }
 
