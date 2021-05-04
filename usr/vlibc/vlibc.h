@@ -5,9 +5,6 @@
 #include <types.h>
 #include <printf.h>
 
-// Internal function
-void __libc_putchar(void*, const char c);
-
 extern "C" {
 
 // System call wrappers
@@ -26,6 +23,11 @@ int wait(int* wstatus);
 int sched_yield();
 long kill(pid_t pid, int signal);
 int signal(int signal, void (*handler)());
+
+
+inline void __libc_putchar(void*, const char c) {
+  uart_putchar(c);
+}
 
 }
 

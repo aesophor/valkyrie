@@ -1,5 +1,5 @@
 SECTIONS {
-  . = 0x20000000;
+  . = 0x0;
 
   .text ALIGN(0x10) : {
     *(.text)
