@@ -386,15 +386,15 @@ int Task::allocate_fd_for_file(SharedPtr<File> file) {
 }
 
 SharedPtr<File> Task::release_fd_and_get_file(const int fd) {
-  return (is_fd_valid(fd)) ? move(_fd_table[fd]) : nullptr;
+  return (likely(is_fd_valid(fd))) ? move(_fd_table[fd]) : nullptr;
 }
 
 SharedPtr<File> Task::get_file_by_fd(const int fd) const {
-  return (is_fd_valid(fd)) ? _fd_table[fd] : nullptr;
+  return (likely(is_fd_valid(fd))) ? _fd_table[fd] : nullptr;
 }
 
 bool Task::is_fd_valid(const int fd) const {
-  return likely(fd >= 0 && fd < NR_TASK_FD_LIMITS);
+  return fd >= 0 && fd < NR_TASK_FD_LIMITS;
 }
 
 }  // namespace valkyrie::kernel
