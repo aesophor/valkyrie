@@ -4,7 +4,7 @@
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
 
-#define INIT_PATH "sbin/init"
+#define INIT_PATH "/sbin/init"
 
 namespace valkyrie::kernel {
 

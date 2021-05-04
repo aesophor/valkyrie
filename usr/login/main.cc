@@ -16,6 +16,6 @@ int main(int argc, char **argv) {
   uart_read(buf, sizeof(buf) - 1);
 
   char* arguments[4] = {"/bin/sh", username, buf, nullptr};
-  exec("bin/sh", arguments);
+  exec("/bin/sh", arguments);
   return 0;
 }
