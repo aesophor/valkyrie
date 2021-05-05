@@ -86,10 +86,6 @@ void BuddyAllocator::deallocate(void* p) {
   Block* block = reinterpret_cast<Block*>(p) - 1;  // 1 is for the header
   Block* buddy = get_buddy(block);
 
-  if (reinterpret_cast<size_t>(block) == 0x10001000) {
-    Kernel::panic("you bitch!!!\n");
-  }
-
   // When you can’t find the buddy of the merged block or
   // the merged block size is maximum-block-size,
   // the allocator stops and put the merged block to the linked-list.
