@@ -111,8 +111,6 @@ int VirtualFileSystem::close(SharedPtr<File> file) {
     return -1;
   }
 
-  //printk("file handle use_count = %d\n", file.use_count());
-
   auto it = _opened_files.find_if([file](const auto& f) {
     return f->vnode == file->vnode;
   });
@@ -173,6 +171,17 @@ int VirtualFileSystem::read(SharedPtr<File> file, void* buf, size_t len) {
     memcpy(buf, file->vnode->get_content() + file->pos, len);
 
   } else if (file->vnode->is_directory()) {
+
+    if (file->child_it.is_end()) {
+      file->child_it = file->vnode->get_child_iterator();  // reset iterator
+      len = 0;
+    } else {
+      DirectoryEntry e;
+      auto& next_child = *(file->child_it++);
+      strncpy(e.name, next_child->get_name().c_str(), sizeof(e.name));
+      memcpy(buf, reinterpret_cast<char*>(&e), sizeof(e));
+      len = sizeof(e);
+    }
 
   } else {
     printk("vfs_read on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());

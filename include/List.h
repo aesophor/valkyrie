@@ -246,7 +246,6 @@ class List {
 };
 
 
-
 template <typename ValueType>
 class ListIterator {
   // Friend declaration
@@ -313,6 +312,12 @@ class ListIterator {
 
   size_t index() const {
     return _index;
+  }
+
+
+  template <typename T>
+  typename List<T>::Iterator polymorph() const {
+    return typename List<T>::Iterator {_list, _current, _index};
   }
 
 

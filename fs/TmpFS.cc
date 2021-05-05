@@ -71,6 +71,11 @@ SharedPtr<Vnode> TmpFSVnode::get_child(const String& name) {
   return (it != _children.end()) ? *it : nullptr;
 }
 
+List<SharedPtr<Vnode>>::Iterator TmpFSVnode::get_child_iterator() {
+  return _children.begin().polymorph<SharedPtr<Vnode>>();
+}
+
+
 int TmpFSVnode::chmod(const mode_t mode) {
   return -1;
 }

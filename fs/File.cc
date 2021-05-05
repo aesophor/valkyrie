@@ -11,6 +11,7 @@ const SharedPtr<File> File::opened
 
 File::File(FileSystem& fs, SharedPtr<Vnode> vnode, int options)
     : fs(fs),
+      child_it(vnode->get_child_iterator()),
       vnode(move(vnode)),
       pos(),
       options(options) {}

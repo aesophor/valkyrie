@@ -41,6 +41,7 @@ class TmpFSVnode final : public Vnode {
   virtual void add_child(SharedPtr<Vnode> child) override;
   virtual SharedPtr<Vnode> remove_child(const String& name) override;
   virtual SharedPtr<Vnode> get_child(const String& name) override;
+  virtual List<SharedPtr<Vnode>>::Iterator get_child_iterator() override;
 
   virtual int chmod(const mode_t mode) override;
   virtual int chown(const uid_t uid, const gid_t gid) override;
