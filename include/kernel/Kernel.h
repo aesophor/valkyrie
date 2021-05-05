@@ -58,9 +58,13 @@ template <typename... Args>
   printf(fmt, forward<Args>(args)...);
   console::clear_color();
 
-  //printk("PID = %d SP = 0x%x\n", &Task::get_current(), stack_pointer);
+  printk("SP = 0x%x ", stack_pointer);
+  if (Task::current()) {
+    printf("PID = %d", Task::current()->get_pid());
+  }
+  puts("");
 
-  MemoryManager::get_instance().dump_page_frame_allocator_info();
+
   MemoryManager::get_instance().dump_slob_allocator_info();
 
   printk("");

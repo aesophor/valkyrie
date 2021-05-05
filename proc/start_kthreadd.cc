@@ -7,7 +7,8 @@ namespace valkyrie::kernel {
 
 [[noreturn]] void start_kthreadd() {
   while (true) {
-    Task::get_current().do_wait(nullptr);
+    // Wait for any kthread to terminate.
+    Task::current()->do_wait(nullptr);
     TaskScheduler::get_instance().schedule();
   }
 }

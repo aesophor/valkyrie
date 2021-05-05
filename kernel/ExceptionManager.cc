@@ -33,22 +33,22 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (likely(ex.ec == 0b10101 && ex.iss == 0)) {
-    Task::get_current().set_trap_frame(trap_frame);
+    Task::current()->set_trap_frame(trap_frame);
 
     // A process may return from `do_syscall()`,
     // e.g., a child task created by sys_fork(),
     // so we should call `Task::get_current()` again
     // to make sure that we are operating on the correct Task object.
-    Task::get_current().get_trap_frame()->x0 = do_syscall(trap_frame->x8,
-                                                          trap_frame->x0,
-                                                          trap_frame->x1,
-                                                          trap_frame->x2,
-                                                          trap_frame->x3,
-                                                          trap_frame->x4,
-                                                          trap_frame->x5);
+    Task::current()->get_trap_frame()->x0 = do_syscall(trap_frame->x8,
+                                                       trap_frame->x0,
+                                                       trap_frame->x1,
+                                                       trap_frame->x2,
+                                                       trap_frame->x3,
+                                                       trap_frame->x4,
+                                                       trap_frame->x5);
 
     // Handle pending POSIX signals.
-    Task::get_current().handle_pending_signals();
+    Task::current()->handle_pending_signals();
 
     // User preemption.
     TaskScheduler::get_instance().maybe_reschedule();
@@ -68,6 +68,9 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 
     case 0b011001:
       Kernel::panic("Trapped access to SVE functionality\n");
+
+    case 0b100001:
+      Kernel::panic("Instruction Abort taken without a change in Exception level.\n");
 
     case 0b100101:
       Kernel::panic("Data Abort taken without a change in Exception level (invalid data access)\n");
@@ -166,13 +169,13 @@ ExceptionManager::Exception ExceptionManager::get_current_exception() {
   Exception ex;
 
   // Obtain return address of current exception.
-  asm volatile("mrs %0, elr_el1" : "=r" (ex.ret_addr));
+  asm volatile("mrs %0, ELR_EL1" : "=r" (ex.ret_addr));
 
-  // esr_el2[31:26] = EC
-  // esr_el2[25] = IL
-  // esr_el2[24:0] = ISS
+  // ESR_EL1[31:26] = EC
+  // ESR_EL1[25] = IL
+  // ESR_EL1[24:0] = ISS
   uint32_t esr_el1; 
-  asm volatile("mrs %0, esr_el1" : "=r" (esr_el1));
+  asm volatile("mrs %0, ESR_EL1" : "=r" (esr_el1));
   ex.ec = esr_el1 >> 26;
   ex.iss = esr_el1 & 0x1ffffff;
 

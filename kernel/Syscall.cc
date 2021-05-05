@@ -35,9 +35,8 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
 
 int sys_read(int fd, void* buf, size_t count) {
   auto& vfs = VirtualFileSystem::get_instance();
-  auto& current_task = Task::get_current();
 
-  SharedPtr<File> file = current_task.get_file_by_fd(fd);
+  SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
 
   if (!file) {
     printk("sys_read: fd %d doesn't exist. Is it opened?\n", fd);
@@ -49,9 +48,8 @@ int sys_read(int fd, void* buf, size_t count) {
 
 int sys_write(int fd, const void* buf, size_t count) {
   auto& vfs = VirtualFileSystem::get_instance();
-  auto& current_task = Task::get_current();
 
-  SharedPtr<File> file = current_task.get_file_by_fd(fd);
+  SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
 
   if (!file) {
     printk("sys_write: fd %d doesn't exist. Is it opened?\n", fd);
@@ -63,7 +61,6 @@ int sys_write(int fd, const void* buf, size_t count) {
 
 int sys_open(const char* pathname, int options) {
   auto& vfs = VirtualFileSystem::get_instance();
-  auto& current_task = Task::get_current();
 
   SharedPtr<File> file = vfs.open(pathname, options);
 
@@ -76,14 +73,13 @@ int sys_open(const char* pathname, int options) {
     return -1;
   }
 
-  return current_task.allocate_fd_for_file(file);
+  return Task::current()->allocate_fd_for_file(file);
 }
 
 int sys_close(int fd) {
   auto& vfs = VirtualFileSystem::get_instance();
-  auto& current_task = Task::get_current();
 
-  SharedPtr<File> file = current_task.release_fd_and_get_file(fd);
+  SharedPtr<File> file = Task::current()->release_fd_and_get_file(fd);
 
   if (!file) {
     printk("sys_close: fd %d doesn't exist. Is it opened?\n", fd);
@@ -125,23 +121,23 @@ void sys_uart_putchar(const char c) {
 }
 
 int sys_fork() {
-  return Task::get_current().do_fork();
+  return Task::current()->do_fork();
 }
 
 int sys_exec(const char* name, const char* const argv[]) {
-  return Task::get_current().do_exec(name, argv);
+  return Task::current()->do_exec(name, argv);
 }
 
 int sys_wait(int* wstatus) {
-  return Task::get_current().do_wait(wstatus);
+  return Task::current()->do_wait(wstatus);
 }
 
 [[noreturn]] void sys_exit(int error_code) {
-  Task::get_current().do_exit(error_code);
+  Task::current()->do_exit(error_code);
 }
 
 int sys_getpid() {
-  return Task::get_current().get_pid();
+  return Task::current()->get_pid();
 }
 
 int sys_sched_yield() {
@@ -150,11 +146,11 @@ int sys_sched_yield() {
 }
 
 long sys_kill(pid_t pid, int signal) {
-  return Task::get_current().do_kill(pid, static_cast<Signal>(signal));
+  return Task::current()->do_kill(pid, static_cast<Signal>(signal));
 }
 
 int sys_signal(int signal, void (*handler)()) {
-  return Task::get_current().do_signal(signal, handler);
+  return Task::current()->do_signal(signal, handler);
 }
 
 int sys_access(const char* pathname, int options) {

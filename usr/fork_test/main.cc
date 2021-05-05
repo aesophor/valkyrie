@@ -20,10 +20,10 @@ void fork_test() {
     printf("child terminating...\n");
   } else {
     printf("parent here, pid %d, child %d\n", getpid(), ret);
-    printf("parent terminating...\n");
 
     pid = wait(&wstatus);
     printf("waited child with pid = %d and error_code = %d\n", pid, wstatus);
+    printf("parent terminating...\n");
   }
   asm volatile("mov %0, sp" : "=r" (cnt));
   asm volatile("mov %0, lr" : "=r" (ret));

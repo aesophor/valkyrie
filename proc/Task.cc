@@ -50,7 +50,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
   }
 
   _context.lr = reinterpret_cast<uint64_t>(entry_point);
-  _context.sp = _kstack_page.end();
+  _context.sp = _kstack_page.end() - 0x10;
   strcpy(_name, name);
 
   // Reserve fd 0,1,2 for stdin, stdout, stderr
@@ -58,11 +58,13 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
   _fd_table[1] = File::opened;
   _fd_table[2] = File::opened;
 
-  printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x\n",
+  printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
       this,
       _name,
       _pid,
-      _entry_point);
+      _entry_point,
+      _kstack_page.begin(),
+      _ustack_page.begin());
 }
 
 
@@ -78,9 +80,11 @@ Task::~Task() {
   while (!_active_children.empty()) {
     auto child = _active_children.front();
     Task::_init->_active_children.push_back(child);
+    child->_parent = Task::_init;
     _active_children.pop_front();
   }
 
+  kfree(_elf_dest);
   kfree(_kstack_page.get());
   kfree(_ustack_page.get());
 }
@@ -193,12 +197,13 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   // Construct the argv chain on the user stack.
   size_t user_sp = copy_arguments_to_user_stack(_argv);
-  size_t kernel_sp = _kstack_page.end();
+  size_t kernel_sp = _kstack_page.end() - 0x10;
 
   // Reset the stack pointer.
   _context.sp = user_sp;
 
   kfree(_elf_dest);
+  _elf_dest = nullptr;
 
   // Load the specified file from the filesystem.
   SharedPtr<File> file = VirtualFileSystem::get_instance().open(name, 0);
@@ -228,7 +233,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   // Jump to the entry point.
   printk("executing new program: %s, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
-         _name, _kstack_page, _ustack_page);
+         _name, _kstack_page.begin(), _ustack_page.begin());
 
   ExceptionManager::get_instance()
     .downgrade_exception_level(0,
@@ -277,6 +282,7 @@ int Task::do_wait(int* wstatus) {
   }
 
   kfree(_elf_dest);
+  _elf_dest = nullptr;
 
   auto& sched = TaskScheduler::get_instance();
   _parent->_active_children.remove(this);

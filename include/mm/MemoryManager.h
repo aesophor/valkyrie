@@ -27,7 +27,7 @@ class MemoryManager {
   Zone* initialize_zones();
 
   const size_t _ram_size;
-  Zone _zones[1];
+  Zone _zones[2];
   AddressSanitizer _kasan;
 };
 

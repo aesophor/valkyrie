@@ -14,7 +14,7 @@ MemoryManager& MemoryManager::get_instance() {
 
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::get_instance().get_arm_memory().second),
-      _zones{Zone(0x10000000)},
+      _zones{Zone(0x10000000), Zone(0x10200000)},
       _kasan() {}
 
 
@@ -53,7 +53,7 @@ void* MemoryManager::kmalloc(size_t size) {
       SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
     return _zones[0].buddy_allocator.allocate(size);
   } else {
-    auto ret = _zones[0].slob_allocator.allocate(size);
+    auto ret = _zones[1].slob_allocator.allocate(size);
     _kasan.mark_allocated(ret);
     return ret;
   }
@@ -67,7 +67,7 @@ void MemoryManager::kfree(void* p) {
     _zones[0].buddy_allocator.deallocate(p);
   } else {
     _kasan.mark_free_chk(p);
-    _zones[0].slob_allocator.deallocate(p);
+    _zones[1].slob_allocator.deallocate(p);
   }
 }
 

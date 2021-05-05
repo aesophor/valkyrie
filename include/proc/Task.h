@@ -52,14 +52,10 @@ class Task {
   Task& operator= (const Task& r) = delete;
 
 
-  [[gnu::always_inline]] static Task& get_current() {
-    Task* current;
-    asm volatile("mrs %0, TPIDR_EL1" : "=r" (current));
-    return *current;
-  }
-
-  [[gnu::always_inline]] static void set_current(const Task* t) {
-    asm volatile("msr TPIDR_EL1, %0" :: "r" (t));
+  [[gnu::always_inline]] static Task* current() {
+    Task* ret;
+    asm volatile("mrs %0, TPIDR_EL1" : "=r" (ret));
+    return ret;
   }
 
   [[gnu::always_inline]] void save_context() {

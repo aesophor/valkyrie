@@ -24,6 +24,9 @@ int run_shell(const char* username) {
     } else if (!strncmp(buf, "exit", sizeof(buf))) {
       break;
 
+    } else if (!strncmp(buf, "yield", sizeof(buf))) {
+      sched_yield();
+
     } else if (access(buf, 0) != -1) {
       int pid;
       int wstatus;
@@ -38,6 +41,7 @@ int run_shell(const char* username) {
           printf("exec(%s, ...)\n", buf);
           exec(buf, arguments);
           printf("exec failed\n");
+          exit(-1);
           break;
         }
 

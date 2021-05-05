@@ -20,7 +20,8 @@ int main(int argc, char **argv) {
       break;
 
     case 0: { // child
-      exec("/bin/login", nullptr);
+      char* arguments[] = {"/bin/login", nullptr};
+      exec("/bin/login", arguments);
       break;
     }
 

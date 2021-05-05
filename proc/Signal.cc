@@ -27,7 +27,7 @@ void sigint_default_handler() {
 
 void sigkill_default_handler() {
   printk("sigkill handler... suiciding\n");
-  Task::get_current().do_exit(Signal::SIGKILL);
+  Task::current()->do_exit(Signal::SIGKILL);
 }
 
 void sig_unsupported_handler() {
