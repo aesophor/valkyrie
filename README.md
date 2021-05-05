@@ -20,7 +20,7 @@
 - [x] Lab3: Allocator (pmm)
 - [x] Lab4: Exception and Interrupt Handling
 - [x] Lab5: Multitasking
-- [ ] Lab6: Virtual Filesystem
+- [x] Lab6: Virtual Filesystem
 - [ ] Lab7: Filesystem Meets Hardware
 - [ ] Lab8: Virtual Memory (vmm)
 
@@ -41,6 +41,8 @@
 - [x] Virtual filesystem - vfs_open(), sys_close(), sys_write(), sys_read()
 - [x] System-wide opened file table, Per-process file descriptor tables
 - [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
+- [ ] Multi-level VFS
+- [ ] Procfs
 - [ ] ...
 
 ## Kernel C++20 STL Progress
