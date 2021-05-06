@@ -209,8 +209,8 @@ int VFS::access(const String& pathname, int options) {
 
 
 SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
-                                                 SharedPtr<Vnode>* out_parent,
-                                                 String* out_basename) const {
+                                   SharedPtr<Vnode>* out_parent,
+                                   String* out_basename) const {
   List<String> components = pathname.split('/');
 
   if (components.empty()) {
