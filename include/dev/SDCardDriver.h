@@ -1,4 +1,7 @@
 // Copyright (c) 2021 GrassLab @ NYCU. All rights reserved.
+#ifndef VALKYRIE_SDCARD_DRIVER
+#define VALKYRIE_SDCARD_DRIVER
+
 #include <dev/IO.h>
 #include <dev/GPIO.h>
 
@@ -89,3 +92,5 @@ class SDCardDriver final {
 };
 
 }  // namespace valkyrie::kernel
+
+#endif  // VALKYRIE_SDCARD_DRIVER

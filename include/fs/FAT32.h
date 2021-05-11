@@ -7,6 +7,8 @@
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
 
+#define NR_MAX_PARTITIONS  4
+
 namespace valkyrie::kernel {
 
 // Forward declaration
@@ -66,36 +68,67 @@ class FAT32 final : public FileSystem {
   virtual SharedPtr<Vnode> get_root_vnode() override;
 
  private:
-  struct [[gnu::packed]] BootSector {
-    unsigned char 		bootjmp[3];
-    unsigned char 		oem_name[8];
-    unsigned short 	        bytes_per_sector;
-    unsigned char		sectors_per_cluster;
-    unsigned short		reserved_sector_count;
-    unsigned char		table_count;
-    unsigned short		root_entry_count;
-    unsigned short		total_sectors_16;
-    unsigned char		media_type;
-    unsigned short		table_size_16;
-    unsigned short		sectors_per_track;
-    unsigned short		head_side_count;
-    unsigned int 		hidden_sector_count;
-    unsigned int 		total_sectors_32;
+  struct [[gnu::packed]] BootSector final {
+    uint8_t bootjmp[3];
+    uint8_t oem_name[8];
+    uint16_t bytes_per_sector;
+    uint8_t sectors_per_cluster;
+    uint16_t reserved_sector_count;
+    uint8_t table_count;
+    uint16_t root_entry_count;
+    uint16_t total_sectors_16;
+    uint8_t media_type;
+    uint16_t table_size_16;
+    uint16_t sectors_per_track;
+    uint16_t head_side_count;
+    uint32_t hidden_sector_count;
+    uint32_t total_sectors_32;
     // Below fields are extended section (specific to FAT32).
-    unsigned int		table_size_32;
-    unsigned short		extended_flags;
-    unsigned short		fat_version;
-    unsigned int		root_cluster;
-    unsigned short		fat_info;
-    unsigned short		backup_BS_sector;
-    unsigned char 		reserved_0[12];
-    unsigned char		drive_number;
-    unsigned char 		reserved_1;
-    unsigned char		boot_signature;
-    unsigned int 		volume_id;
-    unsigned char		volume_label[11];
-    unsigned char		fat_type_label[8];
+    uint32_t table_size_32;
+    uint16_t extended_flags;
+    uint16_t fat_version;
+    uint32_t root_cluster;
+    uint16_t fat_info;
+    uint16_t backup_BS_sector;
+    uint8_t __reserved_0[12];
+    uint8_t drive_number;
+    uint8_t __reserved_1;
+    uint8_t boot_signature;
+    uint32_t volume_id;
+    uint8_t volume_label[11];
+    uint8_t fat_type_label[8];
   };
+
+  struct [[gnu::packed]] PartitionTableEntry final {
+    uint8_t drive_attributes;
+    uint8_t chs_addr_partition_start[3];
+    uint8_t partition_type;
+    uint8_t chs_addr_last_parition_sector[3];
+    uint32_t lba_addr_partition_start;
+    uint32_t nr_sectors;  // in partition
+  };
+
+  struct [[gnu::packed]] MasterBootRecord final {
+    uint8_t bootstrap[440];
+    uint32_t unique_disk_id;
+    uint16_t __reserved;
+    PartitionTableEntry partitions[NR_MAX_PARTITIONS];
+    uint16_t signature;
+  };
+
+  struct [[gnu::packed]] DirectoryEntry final {
+    char name[8];
+    char extension[3];
+    uint8_t attributes;
+    uint16_t first_cluster_high;
+    uint16_t first_clusert_low;
+    uint32_t size;
+  };
+
+  static_assert(sizeof(BootSector) == 90);
+  static_assert(sizeof(PartitionTableEntry) == 16);
+  static_assert(sizeof(MasterBootRecord) == 512);
+
 
   int _next_vnode_index;
   SharedPtr<FAT32Vnode> _root_vnode;
