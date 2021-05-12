@@ -66,7 +66,24 @@ FAT32::FAT32()
   memcpy(&_bpb, buf, sizeof(BootSector));
 
   printk("reserved_sector_count: %d\n", bpb.reserved_sector_count);
+  printk("sectors_per_cluster: %d\n", bpb.sectors_per_cluster);
   printk("root_cluster: 0x%x\n", bpb.root_cluster);
+  printk("table_size_32: 0x%x\n", bpb.table_size_32);
+
+  // Print FAT #1
+  /*
+  for (int i = 0; i < bpb.table_size_32; i++) {
+    int sector = 0x800 + bpb.reserved_sector_count + i;
+    sdcard_driver.read_block(sector, buf);
+
+    for (int j = 0; j < 512; j += 4) {
+      uint32_t* p = reinterpret_cast<uint32_t*>(&buf[j]);
+      printf("0x%x ", *p);
+    }
+    printf("---\n");
+  }
+  */
+
 
   // Access cluster #2
   int cluster_begin_lba = 0x800 + bpb.reserved_sector_count + (bpb.table_count * bpb.table_size_32);
@@ -81,12 +98,18 @@ FAT32::FAT32()
 
 
   char* ptr = buf;
-  DirectoryEntry dentry;
+  ShortDirectoryEntry _dentry;
 
   while (true) {
-    memcpy(&dentry, ptr, sizeof(DirectoryEntry));
+    memcpy(&_dentry, ptr, sizeof(ShortDirectoryEntry));
 
-    if (!dentry.name[0]) {
+    const ShortDirectoryEntry& dentry = _dentry;
+    //printf("0x%x ", dentry.name[0]);
+
+    if ((uint8_t) dentry.name[0] == 0xe5) {
+      ptr += sizeof(ShortDirectoryEntry);
+      continue;
+    } else if (dentry.name[0] == 0) {
       break;
     }
 
@@ -94,11 +117,46 @@ FAT32::FAT32()
     char extension[16] = {0};
     strncpy(name, dentry.name, 8);
     strncpy(extension, dentry.extension, 3);
-    printf("filename: %s, extension: %s\n", name, extension);
+    printf("filename: %s, extension: %s cluster: [%d,%d], size = %d\n",
+        name, extension, dentry.first_cluster_high, dentry.first_cluster_low, dentry.size);
 
-    ptr += 32;
+    ptr += sizeof(ShortDirectoryEntry);
   }
-}
+
+
+  // Get file #1 content
+  idx = cluster_begin_lba + (5865 - 2) * bpb.sectors_per_cluster;
+  sdcard_driver.read_block(idx, buf);
+
+  for (auto& c : buf) {
+    printf("%c", c);
+  }
+
+  
+  // Look up FAT 0
+  // A single FAT contains multiple sectors,
+  // so first thing first, we need to calculate the sector index.
+  int sector_index = 0x800 + bpb.reserved_sector_count + (5865 / 128);
+  printf("sector index = %d\n", sector_index);
+
+  sdcard_driver.read_block(sector_index, buf);
+  uint32_t* p = reinterpret_cast<uint32_t*>(buf);
+  p += 5865 % 128;
+
+  printf("next cluster number = %d\n", *p);
+
+
+
+  /*
+  // Get file #1 content
+  idx = cluster_begin_lba + (5866 - 2) * bpb.sectors_per_cluster;
+  sdcard_driver.read_block(idx, buf);
+
+  for (auto& c : buf) {
+    printf("%x", c);
+  }
+  */
+ }
 
 
 SharedPtr<Vnode> FAT32::get_root_vnode() {

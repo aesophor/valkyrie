@@ -9,6 +9,18 @@
 
 #define NR_MAX_PARTITIONS  4
 
+#define FAT32_EOC_MIN 0x0ffffff8
+#define FAT32_EOC_MAX 0x0fffffff
+#define IS_EOC(x) (FAT32_EOC_MIN <= x && x <= FAT32_EOC_MAX)
+
+#define ATTR_READ_ONLY 0x01
+#define ATTR_HIDDEN    0x02
+#define ATTR_SYSTEM    0x04
+#define ATTR_VOLUME_ID 0x08
+#define ATTR_DIRECTORY 0x10
+#define ATTR_ARCHIVE   0x20
+#define ATTR_LONG_NAME (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
+
 namespace valkyrie::kernel {
 
 // Forward declaration
@@ -116,19 +128,29 @@ class FAT32 final : public FileSystem {
     uint16_t signature;
   };
 
-  struct [[gnu::packed]] DirectoryEntry final {
+  struct [[gnu::packed]] ShortDirectoryEntry final {
     char name[8];
     char extension[3];
     uint8_t attributes;
+    uint8_t __reserved;
+    uint8_t create_time_tenth;
+    uint16_t create_time;
+    uint16_t create_date;
+    uint16_t last_access_date;
     uint16_t first_cluster_high;
-    uint16_t first_clusert_low;
+    uint16_t last_write_time;
+    uint16_t last_write_date;
+    uint16_t first_cluster_low;
     uint32_t size;
   };
 
   static_assert(sizeof(BootSector) == 90);
   static_assert(sizeof(PartitionTableEntry) == 16);
   static_assert(sizeof(MasterBootRecord) == 512);
+  static_assert(sizeof(ShortDirectoryEntry) == 32);
 
+
+  //char* get_first_sector_of_cluster(const int first_cluster_number);
 
   int _next_vnode_index;
   SharedPtr<FAT32Vnode> _root_vnode;
