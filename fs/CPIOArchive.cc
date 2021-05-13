@@ -7,7 +7,6 @@
 #include <libs/CString.h>
 
 #define CPIO_MAGIC     "070701"
-#define CPIO_MAGIC_LEN 6
 #define CPIO_TRAILER   "TRAILER!!!"
 
 namespace valkyrie::kernel {
@@ -18,19 +17,24 @@ CPIOArchive::CPIOArchive(const size_t base_addr)
 
 
 bool CPIOArchive::is_valid() const {
-  return !strncmp(_base_addr, CPIO_MAGIC, CPIO_MAGIC_LEN);
+  return !strncmp(_base_addr, CPIO_MAGIC, sizeof(CPIO_MAGIC) - 1);
 }
 
 void CPIOArchive::for_each(Function<void (const CPIOArchive::Entry&)> callback) const {
   const char* ptr = _base_addr;
-  CPIOArchive::Entry dentry;
 
-  while ((dentry = CPIOArchive::Entry(ptr)).is_valid()) {
+  while (true) {
+    CPIOArchive::Entry dentry(ptr);
+
+    if (!dentry.is_valid()) {
+      break;
+    }
+  
     callback(dentry);
 
     // Advance `ptr` until it reaches the next header.
     ptr += sizeof(CPIOArchive::Header) + dentry.pathname_len + dentry.content_len;
-    while (strncmp(ptr, CPIO_MAGIC, CPIO_MAGIC_LEN)) ++ptr;
+    while (strncmp(ptr, CPIO_MAGIC, sizeof(CPIO_MAGIC) - 1)) ++ptr;
   }
 }
 
@@ -58,7 +62,7 @@ CPIOArchive::Entry::Entry(const char* ptr)
 }
 
 bool CPIOArchive::Entry::is_valid() const {
-  return strcmp(pathname, CPIO_TRAILER);
+  return strncmp(pathname, CPIO_TRAILER, sizeof(CPIO_TRAILER) - 1);
 }
 
 }  // namespace valkyrie::kernel

@@ -12,7 +12,7 @@ namespace valkyrie::kernel {
 // See TaskScheduler::run().
 
 [[noreturn]] void start_init() {
-  const char* argv[] = {INIT_PATH, nullptr};
+  const char* argv[] = {INIT_PATH, "param1", "test", nullptr};
   Task::current()->do_exec(INIT_PATH, argv);
 
   // sys_exec() shouldn't have returned.

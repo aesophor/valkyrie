@@ -59,13 +59,15 @@ template <typename... Args>
   console::clear_color();
 
   printk("SP = 0x%x ", stack_pointer);
+  /*
   if (Task::current()) {
     printf("PID = %d", Task::current()->get_pid());
   }
+  */
   puts("");
 
 
-  MemoryManager::get_instance().dump_slob_allocator_info();
+  //MemoryManager::get_instance().dump_slob_allocator_info();
 
   printk("");
   console::set_color(console::Color::RED, /*bold=*/true);
