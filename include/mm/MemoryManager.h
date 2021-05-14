@@ -10,7 +10,12 @@ namespace valkyrie::kernel {
 class MemoryManager {
  public:
   static MemoryManager& get_instance();
+
   ~MemoryManager() = default;
+  MemoryManager(const MemoryManager&) = delete;
+  MemoryManager(MemoryManager&&) = delete;
+  MemoryManager& operator =(const MemoryManager&) = delete;
+  MemoryManager& operator =(MemoryManager&&) = delete;
 
   void* get_free_page();
   void* kmalloc(size_t size);

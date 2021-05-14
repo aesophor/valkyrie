@@ -15,7 +15,12 @@ namespace valkyrie::kernel {
 class BuddyAllocator {
  public:
   explicit BuddyAllocator(const size_t zone_begin);
+
   ~BuddyAllocator() = default;
+  BuddyAllocator(const BuddyAllocator&) = delete;
+  BuddyAllocator(BuddyAllocator&&) = delete;
+  BuddyAllocator& operator =(const BuddyAllocator&) = delete;
+  BuddyAllocator& operator =(BuddyAllocator&&) = delete;
 
   static size_t get_block_header_size();
 

@@ -17,7 +17,12 @@ class VFS final {
   };
 
   static VFS& get_instance();
+
   ~VFS() = default;
+  VFS(const VFS&) = delete;
+  VFS(VFS&&) = delete;
+  VFS& operator =(const VFS&) = delete;
+  VFS& operator =(VFS&&) = delete;
 
   bool mount_rootfs(UniquePtr<FileSystem> fs,
                     const CPIOArchive& archive);

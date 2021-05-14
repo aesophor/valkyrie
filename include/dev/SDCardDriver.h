@@ -63,12 +63,11 @@ class SDCardDriver final {
  public:
   static SDCardDriver& get_instance();
 
+  ~SDCardDriver() = default;
   SDCardDriver(const SDCardDriver&) = delete;
-  SDCardDriver& operator =(const SDCardDriver&) = delete;
-
   SDCardDriver(SDCardDriver&&) = delete;
+  SDCardDriver& operator =(const SDCardDriver&) = delete;
   SDCardDriver& operator =(SDCardDriver&&) = delete;
-
 
   void read_block(int block_idx, void* buf);
   void write_block(int block_idx, void* buf);

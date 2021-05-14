@@ -15,7 +15,12 @@ namespace valkyrie::kernel {
 class TimerMultiplexer {
  public:
   static TimerMultiplexer& get_instance();
+
   ~TimerMultiplexer() = default;
+  TimerMultiplexer(const TimerMultiplexer&) = delete;
+  TimerMultiplexer(TimerMultiplexer&&) = delete;
+  TimerMultiplexer& operator =(const TimerMultiplexer&) = delete;
+  TimerMultiplexer& operator =(TimerMultiplexer&&) = delete;
 
   struct Event {
     using Callback = Function<void ()>;

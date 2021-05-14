@@ -62,7 +62,6 @@ class ELF {
 
 
   ELF(Pair<const char*, size_t> addr_size);
-  ~ELF() = default;
 
   bool is_valid() const;
   void load_at(void* dest) const;

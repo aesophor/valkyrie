@@ -18,10 +18,9 @@
 
 namespace valkyrie::kernel {
 
-class TaskletScheduler {
+class TaskletScheduler final {
  public:
   TaskletScheduler() : _tasklet_queue() {}
-  ~TaskletScheduler() = default;
 
 
   template <typename T>

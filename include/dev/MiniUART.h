@@ -41,7 +41,12 @@ namespace valkyrie::kernel {
 class MiniUART {
  public:
   static MiniUART& get_instance();
+
   ~MiniUART() = default;
+  MiniUART(const MiniUART&) = delete;
+  MiniUART(MiniUART&&) = delete;
+  MiniUART& operator =(const MiniUART&) = delete;
+  MiniUART& operator =(MiniUART&&) = delete;
 
   char getchar();
   void gets(char* s);

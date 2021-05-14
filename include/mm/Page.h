@@ -17,9 +17,6 @@ class Page final {
   explicit
   Page(void* user_data_addr);
 
-  // Destructor
-  ~Page() = default;
-
 
   // Copies the user data only, will not touch the header.
   void copy_from(const Page& source);

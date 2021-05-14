@@ -16,13 +16,15 @@ class Tasklet {
   // forwards any T as either lvalue or rvalue reference
   // where T::operator() is defined.
   template <Callable T>
-  Tasklet(T&& t) : _handler(forward<T>(t)) {}
+  Tasklet(T&& t)
+      : _handler(forward<T>(t)) {}
 
   // Destructor
   ~Tasklet() = default;
 
   // Copy constructor
-  Tasklet(const Tasklet& r) : _handler(r._handler) {}
+  Tasklet(const Tasklet& r)
+      : _handler(r._handler) {}
 
   // Copy assignment operator
   Tasklet& operator =(const Tasklet& r) {
@@ -31,18 +33,17 @@ class Tasklet {
   }
 
   // Move constructor
-  Tasklet(Tasklet&& r) : _handler(move(r._handler)) {}
+  Tasklet(Tasklet&& r) noexcept
+      : _handler(move(r._handler)) {}
 
   // Move assignment operator
-  Tasklet& operator =(Tasklet&& r) {
+  Tasklet& operator =(Tasklet&& r) noexcept {
     _handler = move(r._handler);
     return *this;
   }
 
 
-  void handle() {
-    _handler();
-  }
+  [[gnu::always_inline]] void handle() { _handler(); }
 
  private:
   Handler _handler;

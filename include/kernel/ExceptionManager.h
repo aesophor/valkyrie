@@ -30,7 +30,12 @@ namespace valkyrie::kernel {
 class ExceptionManager final {
  public:
   static ExceptionManager& get_instance();
+
   ~ExceptionManager() = default;
+  ExceptionManager(const ExceptionManager&) = delete;
+  ExceptionManager(ExceptionManager&&) = delete;
+  ExceptionManager& operator =(const ExceptionManager&) = delete;
+  ExceptionManager& operator =(ExceptionManager&&) = delete;
 
   [[gnu::always_inline]] static void enable() {
     asm volatile("msr DAIFCLR, #0b1111");

@@ -21,7 +21,12 @@ namespace valkyrie::kernel {
 class Kernel {
  public:
   static Kernel& get_instance();
+
   ~Kernel() = default;
+  Kernel(const Kernel&) = delete;
+  Kernel(Kernel&&) = delete;
+  Kernel& operator =(const Kernel&) = delete;
+  Kernel& operator =(Kernel&&) = delete;
 
   [[noreturn]] void run();
 

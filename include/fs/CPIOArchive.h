@@ -16,7 +16,6 @@ class CPIOArchive final {
 
  public:
   explicit CPIOArchive(const size_t base_addr);
-  ~CPIOArchive() = default;
 
   bool is_valid() const;
   void for_each(Function<void (const CPIOArchive::Entry&)> callback) const;

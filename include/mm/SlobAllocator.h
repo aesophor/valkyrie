@@ -20,7 +20,12 @@ class BuddyAllocator;
 class SlobAllocator {
  public:
   explicit SlobAllocator(BuddyAllocator* page_frame_allocator);
+
   ~SlobAllocator() = default;
+  SlobAllocator(const SlobAllocator&) = delete;
+  SlobAllocator(SlobAllocator&&) = delete;
+  SlobAllocator& operator =(const SlobAllocator&) = delete;
+  SlobAllocator& operator =(SlobAllocator&&) = delete;
 
   void* allocate(size_t requested_size);
   void  deallocate(void* p);

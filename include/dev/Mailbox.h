@@ -22,7 +22,11 @@ namespace valkyrie::kernel {
 class Mailbox final {
  public:
   static Mailbox& get_instance();
-  ~Mailbox() = default;
+
+  Mailbox(const Mailbox&) = delete;
+  Mailbox(Mailbox&&) = delete;
+  Mailbox& operator =(const Mailbox&) = delete;
+  Mailbox& operator =(Mailbox&&) = delete;
 
   uint32_t get_board_model();
   uint32_t get_board_revision();

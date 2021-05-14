@@ -6,10 +6,9 @@
 
 namespace valkyrie::kernel {
 
-class ARMCoreTimer {
+class ARMCoreTimer final {
  public:
   ARMCoreTimer();
-  ~ARMCoreTimer() = default;
 
   bool is_enabled() const;
   void enable();

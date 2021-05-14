@@ -12,7 +12,12 @@ namespace valkyrie::kernel {
 class TaskScheduler {
  public:
   static TaskScheduler& get_instance();
+
   ~TaskScheduler() = default;
+  TaskScheduler(const TaskScheduler&) = delete;
+  TaskScheduler(TaskScheduler&&) = delete;
+  TaskScheduler& operator =(const TaskScheduler&) = delete;
+  TaskScheduler& operator =(TaskScheduler&&) = delete;
 
   // Starts the task scheduler.
   void run();
