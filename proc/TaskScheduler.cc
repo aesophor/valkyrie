@@ -2,7 +2,6 @@
 #include <proc/TaskScheduler.h>
 
 #include <dev/Console.h>
-#include <kernel/Compiler.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <proc/idle.h>
@@ -33,7 +32,7 @@ void TaskScheduler::run() {
 
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
-  if (unlikely(!task)) {
+  if (!task) [[unlikely]] {
     Kernel::panic("sched: task is empty\n");
   }
 
@@ -63,7 +62,7 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
            (removed_task = move(t), true);
   });
 
-  if (unlikely(!removed_task)) {
+  if (!removed_task) [[unlikely]] {
     Kernel::panic("sched: removed_task is empty\n");
   }
 
@@ -73,7 +72,7 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
 
 void TaskScheduler::schedule() {
   // Maybe move the first task in the runqueue to the end.
-  if (likely(_runqueue.size() > 1)) {
+  if (_runqueue.size() > 1) [[likely]] {
     auto task = move(_runqueue.front());
     _runqueue.pop_front();
     _runqueue.push_back(move(task));

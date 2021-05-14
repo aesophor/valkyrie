@@ -4,7 +4,6 @@
 #include <String.h>
 #include <fs/ELF.h>
 #include <fs/VirtualFileSystem.h>
-#include <kernel/Compiler.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
@@ -40,13 +39,13 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _fd_table(),
       _cwd_vnode(VFS::get_instance().get_rootfs().get_root_vnode().get()) {
 
-  if (unlikely(_pid == 1)) {
+  if (_pid == 1) [[unlikely]] {
     Task::_init = this;
-  } else if (unlikely(_pid == 2)) {
+  } else if (_pid == 2) [[unlikely]] {
     Task::_kthreadd = this;
   }
 
-  if (likely(parent)) {
+  if (parent) [[likely]] {
     parent->_active_children.push_back(this);
   }
 
@@ -310,7 +309,7 @@ long Task::do_kill(pid_t pid, Signal signal) {
 
 
 int Task::do_signal(int signal, void (*handler)()) {
-  if (unlikely(!is_signal_valid(signal))) {
+  if (!is_signal_valid(signal)) [[unlikely]] {
     printk("do_signal: failed (signal=0x%x is invalid)\n", signal);
     return -1;
   }
@@ -388,7 +387,7 @@ void Task::handle_pending_signals() {
     signal = _pending_signals.front();
     _pending_signals.pop_front();
 
-    if (unlikely(!is_signal_valid(signal))) {
+    if (!is_signal_valid(signal)) [[unlikely]] {
       Kernel::panic("invalid signal: 0x%x\n", signal);
     }
 
@@ -418,11 +417,11 @@ int Task::allocate_fd_for_file(SharedPtr<File> file) {
 }
 
 SharedPtr<File> Task::release_fd_and_get_file(const int fd) {
-  return (likely(is_fd_valid(fd))) ? move(_fd_table[fd]) : nullptr;
+  return (is_fd_valid(fd)) ? move(_fd_table[fd]) : nullptr;
 }
 
 SharedPtr<File> Task::get_file_by_fd(const int fd) const {
-  return (likely(is_fd_valid(fd))) ? _fd_table[fd] : nullptr;
+  return (is_fd_valid(fd)) ? _fd_table[fd] : nullptr;
 }
 
 bool Task::is_fd_valid(const int fd) const {

@@ -5,7 +5,6 @@
 #include <Functional.h>
 #include <Memory.h>
 #include <Types.h>
-#include <kernel/Compiler.h>
 
 namespace valkyrie::kernel {
 

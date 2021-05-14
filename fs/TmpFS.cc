@@ -3,7 +3,6 @@
 
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
-#include <kernel/Compiler.h>
 #include <libs/CString.h>
 
 namespace valkyrie::kernel {
@@ -56,7 +55,7 @@ SharedPtr<Vnode> TmpFSVnode::remove_child(const String& name) {
            (removed_child = move(vnode), true);
   });
 
-  if (unlikely(!removed_child)) {
+  if (!removed_child) [[unlikely]] {
     printk("tmpfs: <warning> unable to remove %s from %s\n", name, _name);
   }
 
@@ -121,7 +120,7 @@ void TmpFS::debug_show_dfs_helper(TmpFSVnode* vnode, const int depth) const {
     printf("  ");
   }
 
-  if (unlikely(vnode != _root_vnode.get())) {
+  if (vnode != _root_vnode.get()) [[unlikely]] {
     printf("%s\n", vnode->_name.c_str());
   }
 

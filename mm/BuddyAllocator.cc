@@ -3,7 +3,6 @@
 
 #include <Utility.h>
 #include <dev/Console.h>
-#include <kernel/Compiler.h>
 #include <kernel/Kernel.h>
 #include <libs/Math.h>
 #include <mm/Page.h>
@@ -32,7 +31,7 @@ size_t BuddyAllocator::get_block_header_size() {
 }
 
 void* BuddyAllocator::allocate(size_t requested_size) {
-  if (unlikely(!requested_size)) {
+  if (!requested_size) [[unlikely]] {
     return nullptr;
   }
 
@@ -41,7 +40,7 @@ void* BuddyAllocator::allocate(size_t requested_size) {
   requested_size = normalize_size(requested_size + sizeof(Block));
   int order = size_to_order(requested_size);
 
-  if (unlikely(order >= MAX_ORDER)) {
+  if (order >= MAX_ORDER) [[unlikely]] {
     printk("unable to allocate physical memory of %d bytes\n", requested_size);
     return nullptr;
   }
@@ -50,7 +49,7 @@ void* BuddyAllocator::allocate(size_t requested_size) {
   // then remove it from the free list and return that free block.
   Block* victim = nullptr;
 
-  if (likely(victim = _free_lists[order])) {
+  if ((victim = _free_lists[order])) [[likely]] {
     mark_block_as_allocated(victim);
     free_list_del_head(victim);
     goto out;
@@ -64,7 +63,7 @@ void* BuddyAllocator::allocate(size_t requested_size) {
     }
   }
 
-  if (unlikely(order >= MAX_ORDER)) {
+  if (order >= MAX_ORDER) [[unlikely]] {
     printk("unable to allocate physical memory of %d bytes\n", requested_size);
     return nullptr;
   }
@@ -79,7 +78,7 @@ out:
 }
 
 void BuddyAllocator::deallocate(void* p) {
-  if (unlikely(!p)) {
+  if (!p) [[unlikely]] {
     return;
   }
 
@@ -169,16 +168,16 @@ void BuddyAllocator::mark_block_as_allocatable(const Block* block) {
 
 
 void BuddyAllocator::free_list_del_head(Block* block) {
-  if (unlikely(!block)) {
+  if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
   }
 
-  if (unlikely(block->order < 0 || block->order >= MAX_ORDER)) {
+  if (block->order < 0 || block->order >= MAX_ORDER) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: block (0x%x) = {0x%x, 0x%x}\n",
                   block, block->next, block->order);
   }
 
-  if (unlikely(!_free_lists[block->order])) {
+  if (!_free_lists[block->order]) [[unlikely]] {
     return;
   }
 
@@ -187,16 +186,16 @@ void BuddyAllocator::free_list_del_head(Block* block) {
 }
 
 void BuddyAllocator::free_list_add_head(Block* block) {
-  if (unlikely(!block)) {
+  if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: free_list_add_head(nullptr)\n");
   }
 
-  if (unlikely(block->order < 0 || block->order >= MAX_ORDER)) {
+  if (block->order < 0 || block->order >= MAX_ORDER) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: block (0x%x) = {0x%x, 0x%x}\n",
                   block, block->next, block->order);
   }
 
-  if (unlikely(_free_lists[block->order] == block)) {
+  if (_free_lists[block->order] == block) [[unlikely]] {
     return;
   }
 
@@ -211,7 +210,7 @@ void BuddyAllocator::free_list_add_head(Block* block) {
 }
 
 void BuddyAllocator::free_list_del_entry(Block* block) {
-  if (unlikely(!block)) {
+  if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: free_list_del_entry(nullptr)\n");
   }
 
@@ -238,11 +237,11 @@ void BuddyAllocator::free_list_del_entry(Block* block) {
 
 BuddyAllocator::Block* BuddyAllocator::split_block(Block* block,
                                                            const int target_order) {
-  if (unlikely(!block)) {
+  if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: block == nullptr\n");
   }
 
-  if (unlikely(block->order < 0 || block->order >= MAX_ORDER)) {
+  if (block->order < 0 || block->order >= MAX_ORDER) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: invalid block->order (%d)\n", block->order);
   }
 

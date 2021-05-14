@@ -3,7 +3,6 @@
 
 #include <Algorithm.h>
 #include <dev/Console.h>
-#include <kernel/Compiler.h>
 #include <kernel/Kernel.h>
 #include <libs/Math.h>
 #include <mm/Page.h>
@@ -21,7 +20,7 @@ SlobAllocator::SlobAllocator(BuddyAllocator* page_frame_allocator)
 
 
 void* SlobAllocator::allocate(size_t requested_size) {
-  if (unlikely(!requested_size)) {
+  if (!requested_size) [[unlikely]] {
     return nullptr;
   }
 
@@ -71,7 +70,7 @@ out:
 }
 
 void SlobAllocator::deallocate(void* p) {
-  if (unlikely(!p)) {
+  if (!p) [[unlikely]] {
     return;
   }
 
@@ -151,7 +150,7 @@ void SlobAllocator::dump_slob_info() const {
   printf("_top_chunk                    = 0x%x\n", _top_chunk);
   printf("_page_frame_allocatable_end   = 0x%x\n", _page_frame_allocatable_end);
 
-  if (unlikely(_top_chunk > _page_frame_allocatable_end)) {
+  if (_top_chunk > _page_frame_allocatable_end) [[unlikely]] {
     Kernel::panic("kernel heap corrupted "
                   "(_top_chunk > _page_frame_allocatable_end)\n");
   }
@@ -211,15 +210,15 @@ size_t SlobAllocator::get_top_chunk_size() const {
 
 SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
                                                 const size_t target_size) {
-  if (unlikely(!chunk)) {
+  if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted (chunk == nullptr)\n");
   }
 
-  if (unlikely(chunk->index < 0)) {
+  if (chunk->index < 0) [[unlikely]] {
     Kernel::panic("kernel heap corrupted (invalid chunk->index: %d)\n", chunk->index);
   }
 
-  if (unlikely(target_size > chunk->get_chunk_size())) {
+  if (target_size > chunk->get_chunk_size()) [[unlikely]] {
     Kernel::panic("kernel heap corrupted"
                   "(unable to split %d bytes from a %d byte chunk)",
                   target_size, chunk->get_chunk_size());
@@ -230,7 +229,7 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
   // Update chunk headers
   size_t remainder_size = chunk->get_chunk_size() - target_size;
 
-  if (likely(remainder_size > 0)) {
+  if (remainder_size > 0) [[likely]] {
     size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
     Slob* remainder = reinterpret_cast<Slob*>(remainder_addr);
 
@@ -260,7 +259,7 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
 
 
 void SlobAllocator::bin_del_head(Slob* chunk) {
-  if (unlikely(!chunk)) {
+  if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: bin_del_head(nullptr)\n");
   }
 
@@ -281,7 +280,7 @@ void SlobAllocator::bin_del_head(Slob* chunk) {
 }
 
 void SlobAllocator::bin_add_head(Slob* chunk) {
-  if (unlikely(!chunk)) {
+  if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: bin_add_head(nullptr)\n");
   }
 
@@ -305,7 +304,7 @@ void SlobAllocator::bin_add_head(Slob* chunk) {
 }
 
 void SlobAllocator::bin_del_entry(Slob* chunk) {
-  if (unlikely(!chunk)) {
+  if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: bin_del_entry(nullptr)\n");
   }
 

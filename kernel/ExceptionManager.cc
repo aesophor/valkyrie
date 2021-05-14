@@ -32,7 +32,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
-  if (likely(ex.ec == 0b10101 && ex.iss == 0)) {
+  if (ex.ec == 0b10101 && ex.iss == 0) [[likely]] {
     Task::current()->set_trap_frame(trap_frame);
 
     // A process may return from `do_syscall()`,

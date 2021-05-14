@@ -8,7 +8,6 @@
 #include <dev/Console.h>
 #include <fs/File.h>
 #include <fs/Vnode.h>
-#include <kernel/Compiler.h>
 #include <libs/CString.h>
 #include <mm/Page.h>
 #include <mm/MemoryManager.h>
