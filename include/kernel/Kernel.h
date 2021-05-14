@@ -5,6 +5,7 @@
 #include <dev/Console.h>
 #include <dev/Mailbox.h>
 #include <dev/MiniUART.h>
+#include <dev/SDCardDriver.h>
 #include <fs/TmpFS.h>
 #include <fs/VirtualFileSystem.h>
 #include <kernel/ExceptionManager.h>
@@ -39,6 +40,7 @@ class Kernel {
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
   TaskScheduler& _task_scheduler;
+  SDCardDriver& _sdcard_driver;
   VFS& _vfs;
 };
 

@@ -17,6 +17,7 @@ Kernel::Kernel()
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
       _task_scheduler(TaskScheduler::get_instance()),
+      _sdcard_driver(SDCardDriver::get_instance()),
       _vfs(VFS::get_instance()) {}
 
 
