@@ -109,7 +109,7 @@ void SDCardDriver::read_block(int block_idx, void* buf) {
     } else {
       success = true;
     }
-  } while(!success);
+  } while (!success);
 
   wait_finish();
 }
@@ -137,7 +137,7 @@ void SDCardDriver::write_block(int block_idx, void* buf) {
     } else {
       success = true;
     }
-  } while(!success);
+  } while (!success);
 
   wait_finish();
 }
