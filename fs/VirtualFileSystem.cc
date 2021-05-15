@@ -28,7 +28,7 @@ bool VFS::mount_rootfs(UniquePtr<FileSystem> fs,
                        const CPIOArchive& archive) {
   _rootfs = { move(fs) };
 
-  if (!archive.is_valid()) {
+  if (!archive.is_valid()) [[unlikely]] {
     printk("initramfs unpacking failed invalid magic at start of compressed archive\n");
     Kernel::panic("VFS: unable to mount root fs\n");
   }
@@ -107,7 +107,7 @@ SharedPtr<File> VFS::open(const String& pathname, int options) {
 }
 
 int VFS::close(SharedPtr<File> file) {
-  if (!file) {
+  if (!file) [[unlikely]] {
     return -1;
   }
 
@@ -115,7 +115,9 @@ int VFS::close(SharedPtr<File> file) {
     return f->vnode == file->vnode;
   });
 
-  if (it == _opened_files.end()) {
+  // `file` != nullptr but the file is not opened.
+  // The user is probably trying to close an unopened file?
+  if (it == _opened_files.end()) [[unlikely]] {
     return -1;
   }
   
@@ -139,7 +141,7 @@ int VFS::close(SharedPtr<File> file) {
 int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
   // 1. write len byte from buf to the opened file.
   // 2. return written size or error code if an error occurs.
-  if (!file) {
+  if (!file) [[unlikely]] {
     return -1;
   }
 
@@ -161,7 +163,7 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
 int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
   // 1. read min(len, readable file data size) byte to buf from the opened file.
   // 2. return read size or error code if an error occurs.
-  if (!file) {
+  if (!file) [[unlikely]] {
     return -1;
   }
 
