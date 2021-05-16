@@ -2,6 +2,8 @@
 #include <kernel/Kernel.h>
 
 #include <fs/CPIOArchive.h>
+#include <fs/FAT32.h>
+#include <fs/TmpFS.h>
 
 namespace valkyrie::kernel {
 
@@ -34,9 +36,9 @@ void Kernel::run() {
   */
  
   printk("VFS: mounting rootfs...\n");
+  auto fat32 = make_unique<FAT32>();
   _vfs.mount_rootfs(make_unique<TmpFS>(), CPIOArchive(CPIO_ARCHIVE_ADDR));
-  //_vfs.get_rootfs().fs->show();
-
+ 
   printk("starting task scheduler...\n");
   _task_scheduler.run();
 

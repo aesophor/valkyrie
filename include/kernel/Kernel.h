@@ -6,7 +6,6 @@
 #include <dev/Mailbox.h>
 #include <dev/MiniUART.h>
 #include <dev/SDCardDriver.h>
-#include <fs/TmpFS.h>
 #include <fs/VirtualFileSystem.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/TimerMultiplexer.h>
