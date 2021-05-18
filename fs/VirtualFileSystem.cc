@@ -4,6 +4,7 @@
 #include <Algorithm.h>
 #include <List.h>
 #include <String.h>
+#include <dev/SDCardDriver.h>
 #include <fs/CPIOArchive.h>
 #include <fs/DirectoryEntry.h>
 #include <fs/File.h>
@@ -21,8 +22,15 @@ VFS& VFS::get_instance() {
 
 VFS::VFS()
     : _rootfs(),
+      _storage_devices(),
       _opened_files() {}
 
+
+void VFS::initialize_attached_storage_devices() {
+  // TODO: currently it only supports SD card.
+  auto sdcard = make_unique<StorageDevice>(SDCardDriver::get_instance());
+  _storage_devices.push_back(move(sdcard));
+}
 
 bool VFS::mount_rootfs(UniquePtr<FileSystem> fs,
                        const CPIOArchive& archive) {

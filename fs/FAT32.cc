@@ -1,80 +1,46 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <fs/FAT32.h>
 
+#include <Memory.h>
 #include <dev/SDCardDriver.h>
 #include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 
-FAT32Vnode::FAT32Vnode(FAT32& fs,
-                       FAT32Vnode* parent,
+FAT32Inode::FAT32Inode(FAT32& fs,
+                       FAT32Inode* parent,
                        const String& name,
                        mode_t mode,
                        uid_t uid,
                        gid_t gid)
-    : Vnode(fs._next_vnode_index++, mode, uid, gid),
+    : Vnode(fs._next_inode_index++, mode, uid, gid),
       _fs(fs),
       _name(name),
       _parent(parent),
       _children() {}
 
 
-FAT32::FAT32()
-    : _next_vnode_index(0),
-      _root_vnode() {
-  auto& sdcard_driver = SDCardDriver::get_instance();
+FAT32::FAT32(DiskPartition& disk_partition)
+    : _disk_partition(disk_partition),
+      _metadata(),
+      _next_inode_index(0),
+      _root_inode() {
   
   char buf[512];
-  sdcard_driver.read_block(0, buf);
-  for (auto& c : buf) {
-    printf("%x ", c);
-  }
-  printf("\n");
+  _disk_partition.read_block(0, buf);
+  memcpy(&_metadata, buf, sizeof(BootSector));
 
-
-  const MasterBootRecord* mbr = reinterpret_cast<MasterBootRecord*>(buf);
-
-  if (mbr->signature != 0xaa55) [[unlikely]] {
-    Kernel::panic("invalid boot sector.\n");
-  }
-
-  printk("disk id: %x\n", mbr->unique_disk_id);
-
-  for (int i = 0; i < 4; i++) {
-    printk("parition %d: ", i);
-
-    // The partition table in MBR is not 16-byte aligned...
-    // so we have to copy them. Also, we need a const reference
-    // to the entry so that we can access the copied entry's bit fields...
-    PartitionTableEntry _entry;
-    const PartitionTableEntry& entry = _entry;
-    memcpy(&_entry, &mbr->partitions[i], sizeof(PartitionTableEntry));
-
-    printf("sector_idx = 0x%x\n", entry.lba_addr_partition_start);
-  }
-
-  printf("------\n");
-  sdcard_driver.read_block(0x800, buf);
-  for (auto& c : buf) {
-    printf("%c ", c);
-  }
-  printf("\n");
-
-
-  BootSector _bpb;
-  const BootSector& bpb = _bpb;
-  memcpy(&_bpb, buf, sizeof(BootSector));
-
-  printk("reserved_sector_count: %d\n", bpb.reserved_sector_count);
-  printk("sectors_per_cluster: %d\n", bpb.sectors_per_cluster);
-  printk("root_cluster: 0x%x\n", bpb.root_cluster);
-  printk("table_size_32: 0x%x\n", bpb.table_size_32);
+  const BootSector& _metadata = this->_metadata;
+  printk("reserved_sector_count: %d\n", _metadata.reserved_sector_count);
+  printk("sectors_per_cluster: %d\n", _metadata.sectors_per_cluster);
+  printk("root_cluster: 0x%x\n", _metadata.root_cluster);
+  printk("table_size_32: 0x%x\n", _metadata.table_size_32);
 
   // Print FAT #1
   /*
   for (int i = 0; i < bpb.table_size_32; i++) {
-    int sector = 0x800 + bpb.reserved_sector_count + i;
-    sdcard_driver.read_block(sector, buf);
+    int sector = bpb.reserved_sector_count + i;
+    _disk_partition.read_block(sector, buf);
 
     for (int j = 0; j < 512; j += 4) {
       uint32_t* p = reinterpret_cast<uint32_t*>(&buf[j]);
@@ -86,11 +52,12 @@ FAT32::FAT32()
 
 
   // Access cluster #2
-  int cluster_begin_lba = 0x800 + bpb.reserved_sector_count + (bpb.table_count * bpb.table_size_32);
-  int idx = cluster_begin_lba + (2 - 2) * bpb.sectors_per_cluster;
+  int cluster_begin_lba = _metadata.reserved_sector_count +
+                          (_metadata.table_count * _metadata.table_size_32);
+  int idx = cluster_begin_lba + (2 - 2) * _metadata.sectors_per_cluster;
 
   printf("------\n");
-  sdcard_driver.read_block(idx, buf);
+  _disk_partition.read_block(idx, buf);
   for (auto& c : buf) {
     printf("%x ", c);
   }
@@ -125,8 +92,8 @@ FAT32::FAT32()
 
 
   // Get file #1 content
-  idx = cluster_begin_lba + (5865 - 2) * bpb.sectors_per_cluster;
-  sdcard_driver.read_block(idx, buf);
+  idx = cluster_begin_lba + (5865 - 2) * _metadata.sectors_per_cluster;
+  _disk_partition.read_block(idx, buf);
 
   for (auto& c : buf) {
     printf("%c", c);
@@ -136,14 +103,14 @@ FAT32::FAT32()
   // Look up FAT 0
   // A single FAT contains multiple sectors,
   // so first thing first, we need to calculate the sector index.
-  int sector_index = 0x800 + bpb.reserved_sector_count + (5865 / 128);
+  int sector_index = _metadata.reserved_sector_count + (5866 / 128);
   printf("sector index = %d\n", sector_index);
 
-  sdcard_driver.read_block(sector_index, buf);
+  _disk_partition.read_block(sector_index, buf);
   uint32_t* p = reinterpret_cast<uint32_t*>(buf);
-  p += 5865 % 128;
+  p += 5866 % 128;
 
-  printf("next cluster number = %d\n", *p);
+  printf("next cluster number = %x\n", *p);
 
 
 
@@ -160,7 +127,7 @@ FAT32::FAT32()
 
 
 SharedPtr<Vnode> FAT32::get_root_vnode() {
-  return _root_vnode;
+  return _root_inode;
 }
 
 }  // namespace valkyrie::kernel

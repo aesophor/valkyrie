@@ -19,7 +19,6 @@ Kernel::Kernel()
       _exception_manager(ExceptionManager::get_instance()),
       _timer_multiplexer(TimerMultiplexer::get_instance()),
       _task_scheduler(TaskScheduler::get_instance()),
-      _sdcard_driver(SDCardDriver::get_instance()),
       _vfs(VFS::get_instance()) {}
 
 
@@ -36,9 +35,9 @@ void Kernel::run() {
   */
  
   printk("VFS: mounting rootfs...\n");
-  auto fat32 = make_unique<FAT32>();
+  _vfs.initialize_attached_storage_devices();
   _vfs.mount_rootfs(make_unique<TmpFS>(), CPIOArchive(CPIO_ARCHIVE_ADDR));
- 
+
   printk("starting task scheduler...\n");
   _task_scheduler.run();
 

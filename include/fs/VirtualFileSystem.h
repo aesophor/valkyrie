@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <dev/StorageDevice.h>
 #include <fs/CPIOArchive.h>
 #include <fs/File.h>
 #include <fs/FileSystem.h>
@@ -24,8 +25,11 @@ class VFS final {
   VFS& operator =(const VFS&) = delete;
   VFS& operator =(VFS&&) = delete;
 
+
+  void initialize_attached_storage_devices();
   bool mount_rootfs(UniquePtr<FileSystem> fs,
                     const CPIOArchive& archive);
+
 
   SharedPtr<Vnode> create(const String& pathname,
                           const char* content,
@@ -50,10 +54,9 @@ class VFS final {
   SharedPtr<Vnode> resolve_path(const String& pathname,
                                 SharedPtr<Vnode>* out_parent = nullptr,
                                 String* out_basename = nullptr) const;
- 
-
 
   Mount _rootfs;
+  List<UniquePtr<StorageDevice>> _storage_devices;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
 };
 

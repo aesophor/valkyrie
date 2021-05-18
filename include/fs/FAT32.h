@@ -4,14 +4,13 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <dev/DiskPartition.h>
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
 
-#define NR_MAX_PARTITIONS  4
-
-#define FAT32_EOC_MIN 0x0ffffff8
-#define FAT32_EOC_MAX 0x0fffffff
-#define IS_EOC(x) (FAT32_EOC_MIN <= x && x <= FAT32_EOC_MAX)
+#define FAT32_EOC_MIN   0x0ffffff8
+#define FAT32_EOC_MAX   0x0fffffff
+#define FAT32_IS_EOC(x) (FAT32_EOC_MIN <= x && x <= FAT32_EOC_MAX)
 
 #define ATTR_READ_ONLY 0x01
 #define ATTR_HIDDEN    0x02
@@ -26,19 +25,19 @@ namespace valkyrie::kernel {
 // Forward declaration
 class FAT32;
 
-class FAT32Vnode final : public Vnode {
+class FAT32Inode final : public Vnode {
   // Friend declaration
   friend class FAT32;
 
  public:
-  FAT32Vnode(FAT32& fs,
-             FAT32Vnode* parent,
+  FAT32Inode(FAT32& fs,
+             FAT32Inode* parent,
              const String& name,
              mode_t mode,
              uid_t uid,
              gid_t gid);
 
-  virtual ~FAT32Vnode() = default;
+  virtual ~FAT32Inode() = default;
 
 
   virtual SharedPtr<Vnode> create_child(const String& name,
@@ -64,22 +63,38 @@ class FAT32Vnode final : public Vnode {
   FAT32& _fs;
   String _name;
 
-  FAT32Vnode* _parent;
-  List<SharedPtr<FAT32Vnode>> _children;
+  FAT32Inode* _parent;
+  List<SharedPtr<FAT32Inode>> _children;
 };
 
 
 class FAT32 final : public FileSystem {
   // Friend declaration
-  friend class FAT32Vnode;
+  friend class FAT32Inode;
 
  public:
-  FAT32();
+  FAT32(DiskPartition& disk_partition);
   virtual ~FAT32() = default;
 
   virtual SharedPtr<Vnode> get_root_vnode() override;
 
  private:
+  struct [[gnu::packed]] ShortDirectoryEntry final {
+    char name[8];
+    char extension[3];
+    uint8_t attributes;
+    uint8_t __reserved;
+    uint8_t create_time_tenth;
+    uint16_t create_time;
+    uint16_t create_date;
+    uint16_t last_access_date;
+    uint16_t first_cluster_high;
+    uint16_t last_write_time;
+    uint16_t last_write_date;
+    uint16_t first_cluster_low;
+    uint32_t size;
+  };
+
   struct [[gnu::packed]] BootSector final {
     uint8_t bootjmp[3];
     uint8_t oem_name[8];
@@ -111,49 +126,18 @@ class FAT32 final : public FileSystem {
     uint8_t fat_type_label[8];
   };
 
-  struct [[gnu::packed]] PartitionTableEntry final {
-    uint8_t drive_attributes;
-    uint8_t chs_addr_partition_start[3];
-    uint8_t partition_type;
-    uint8_t chs_addr_last_parition_sector[3];
-    uint32_t lba_addr_partition_start;
-    uint32_t nr_sectors;  // in partition
-  };
-
-  struct [[gnu::packed]] MasterBootRecord final {
-    uint8_t bootstrap[440];
-    uint32_t unique_disk_id;
-    uint16_t __reserved;
-    PartitionTableEntry partitions[NR_MAX_PARTITIONS];
-    uint16_t signature;
-  };
-
-  struct [[gnu::packed]] ShortDirectoryEntry final {
-    char name[8];
-    char extension[3];
-    uint8_t attributes;
-    uint8_t __reserved;
-    uint8_t create_time_tenth;
-    uint16_t create_time;
-    uint16_t create_date;
-    uint16_t last_access_date;
-    uint16_t first_cluster_high;
-    uint16_t last_write_time;
-    uint16_t last_write_date;
-    uint16_t first_cluster_low;
-    uint32_t size;
-  };
-
   static_assert(sizeof(BootSector) == 90);
-  static_assert(sizeof(PartitionTableEntry) == 16);
-  static_assert(sizeof(MasterBootRecord) == 512);
   static_assert(sizeof(ShortDirectoryEntry) == 32);
 
 
-  //char* get_first_sector_of_cluster(const int first_cluster_number);
+  class FileAllocationTable {
 
-  int _next_vnode_index;
-  SharedPtr<FAT32Vnode> _root_vnode;
+  };
+
+  DiskPartition& _disk_partition;
+  BootSector _metadata;
+  int _next_inode_index;
+  SharedPtr<FAT32Inode> _root_inode;
 };
 
 }  // namespace valkyrie::kernel
