@@ -8,7 +8,7 @@
 
 
 <div align="center">
-<img src="/.meta/cover.png">
+<img src="/Documentation/cover.png">
 </div>
 
 <br>
@@ -38,7 +38,7 @@
 - [ ] POSIX signals and custom signal handlers - sys_kill(), sys_signal(), sys_rt_sigreturn()
 - [ ] Wait Queues
 - [x] tmpfs
-- [x] Virtual filesystem - vfs_open(), sys_close(), sys_write(), sys_read()
+- [x] Virtual filesystem - vfs_open(), vfs_close(), vfs_write(), vfs_read()
 - [x] System-wide opened file table, Per-process file descriptor tables
 - [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
 - [ ] Multi-level VFS
