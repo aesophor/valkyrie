@@ -70,6 +70,65 @@ class String {
   ConstIterator end() const { return ConstIterator::end(*this); }
 
 
+  // Searches the string for the first character that matches any of
+  // the characters specified in its arguments.
+  //
+  // When pos is specified, the search only includes characters at
+  // or after position pos, ignoring any possible occurrences before pos.
+  size_t find_first_of(char c, size_t pos = 0) const {
+    size_t len = size();
+    for (size_t i = 0; i < len; i++) {
+      if (at(i) == c) {
+        return i;
+      }
+    }
+    return npos;
+  }
+
+  size_t find_first_not_of(char c, size_t pos = 0) const {
+    size_t len = size();
+    for (size_t i = 0; i < len; i++) {
+      if (at(i) != c) {
+        return i;
+      }
+    }
+    return npos;
+  }
+
+  // Searches the string for the last character that matches any of
+  // the characters specified in its arguments.
+  //
+  // When pos is specified, the search only includes characters at
+  // or before position pos, ignoring any possible occurrences after pos.
+  size_t find_last_of(char c, size_t pos = npos) const {
+    if (empty()) {
+      return npos;
+    }
+
+    pos = (pos == npos) ? size() - 1 : pos;
+    for (int i = pos; i >= 0; i--) {
+      if (at(i) == c) {
+        return i;
+      }
+    }
+    return npos;
+  }
+
+  size_t find_last_not_of(char c, size_t pos = npos) const {
+    if (empty()) {
+      return npos;
+    }
+
+    pos = (pos == npos) ? size() - 1 : pos;
+    for (int i = pos; i >= 0; i--) {
+      if (at(i) != c) {
+        return i;
+      }
+    }
+    return npos;
+  }
+
+
   String substr(size_t begin, size_t len) const {
     // Sanitize `len`.
     if (begin + len > size()) {
@@ -120,6 +179,10 @@ class String {
   char& back() { return _s[size() - 1]; }
   const char& front() const { return _s[0]; }
   const char& back() const { return _s[size() - 1]; }
+
+
+  // Until the end of the string.
+  static const size_t npos = -1;
 
  private:
   UniquePtr<char[]> _s;
