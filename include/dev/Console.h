@@ -4,7 +4,7 @@
 
 #include <Types.h>
 #include <dev/ConsoleColors.h>
-#include <dev/MiniUART.h>
+#include <driver/MiniUART.h>
 #include <libs/printf.h>
 
 namespace valkyrie::kernel::console {

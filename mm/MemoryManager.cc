@@ -2,7 +2,7 @@
 #include <mm/MemoryManager.h>
 
 #include <dev/Console.h>
-#include <dev/Mailbox.h>
+#include <driver/Mailbox.h>
 #include <mm/Page.h>
 
 namespace valkyrie::kernel {

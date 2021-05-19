@@ -2,9 +2,9 @@
 #ifndef VALKYRIE_SDCARD_DRIVER
 #define VALKYRIE_SDCARD_DRIVER
 
-#include <dev/IO.h>
-#include <dev/GPIO.h>
 #include <dev/BlockDeviceDriver.h>
+#include <driver/IO.h>
+#include <driver/GPIO.h>
 
 namespace valkyrie::kernel {
 

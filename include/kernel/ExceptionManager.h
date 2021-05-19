@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_EXCEPTION_MANAGER_H_
 #define VALKYRIE_EXCEPTION_MANAGER_H_
 
-#include <dev/IO.h>
+#include <driver/IO.h>
 #include <kernel/TaskletScheduler.h>
 #include <proc/TrapFrame.h>
 

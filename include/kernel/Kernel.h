@@ -3,8 +3,8 @@
 #define VALKYRIE_KERNEL_H_
 
 #include <dev/Console.h>
-#include <dev/Mailbox.h>
-#include <dev/MiniUART.h>
+#include <driver/Mailbox.h>
+#include <driver/MiniUART.h>
 #include <fs/VirtualFileSystem.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/TimerMultiplexer.h>

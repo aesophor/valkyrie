@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_POWER_H_
 #define VALKYRIE_POWER_H_
 
-#include <dev/IO.h>
+#include <driver/IO.h>
 
 #define PM_PASSWORD 0x5a000000
 #define PM_RSTC     0x3F10001c

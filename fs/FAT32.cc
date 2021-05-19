@@ -2,7 +2,6 @@
 #include <fs/FAT32.h>
 
 #include <Memory.h>
-#include <dev/SDCardDriver.h>
 #include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
@@ -22,15 +21,10 @@ FAT32Inode::FAT32Inode(FAT32& fs,
 
 FAT32::FAT32(DiskPartition& disk_partition)
     : _disk_partition(disk_partition),
-      _metadata(),
+      _metadata(disk_partition),
       _next_inode_index(0),
       _root_inode() {
-  
-  char buf[512];
-  _disk_partition.read_block(0, buf);
-  memcpy(&_metadata, buf, sizeof(BootSector));
 
-  const BootSector& _metadata = this->_metadata;
   printk("reserved_sector_count: %d\n", _metadata.reserved_sector_count);
   printk("sectors_per_cluster: %d\n", _metadata.sectors_per_cluster);
   printk("root_cluster: 0x%x\n", _metadata.root_cluster);
@@ -52,19 +46,8 @@ FAT32::FAT32(DiskPartition& disk_partition)
 
 
   // Access cluster #2
-  int cluster_begin_lba = _metadata.reserved_sector_count +
-                          (_metadata.table_count * _metadata.table_size_32);
-  int idx = cluster_begin_lba + (2 - 2) * _metadata.sectors_per_cluster;
-
-  printf("------\n");
-  _disk_partition.read_block(idx, buf);
-  for (auto& c : buf) {
-    printf("%x ", c);
-  }
-  printf("\n");
-
-
-  char* ptr = buf;
+  UniquePtr<char[]> cluster = cluster_read(2);
+  char* ptr = cluster.get();
   ShortDirectoryEntry _dentry;
 
   while (true) {
@@ -92,26 +75,14 @@ FAT32::FAT32(DiskPartition& disk_partition)
 
 
   // Get file #1 content
-  idx = cluster_begin_lba + (5865 - 2) * _metadata.sectors_per_cluster;
-  _disk_partition.read_block(idx, buf);
-
-  for (auto& c : buf) {
-    printf("%c", c);
+  cluster = cluster_read(5865);
+  for (int i = 0; i < 512; i++) {
+    printf("%c", cluster[i]);
   }
 
-  
   // Look up FAT 0
-  // A single FAT contains multiple sectors,
-  // so first thing first, we need to calculate the sector index.
-  int sector_index = _metadata.reserved_sector_count + (5866 / 128);
-  printf("sector index = %d\n", sector_index);
-
-  _disk_partition.read_block(sector_index, buf);
-  uint32_t* p = reinterpret_cast<uint32_t*>(buf);
-  p += 5866 % 128;
-
-  printf("next cluster number = %x\n", *p);
-
+  uint32_t next_cluster = file_allocation_table_read(5865);
+  printf("next cluster number = %d\n", next_cluster);
 
 
   /*
@@ -125,9 +96,41 @@ FAT32::FAT32(DiskPartition& disk_partition)
   */
  }
 
+uint32_t FAT32::file_allocation_table_read(const uint32_t cluster_number) const {
+  // A single FAT contains multiple sectors,
+  // so first thing first, we need to calculate the sector index.
+  int index = _metadata.reserved_sector_count;
+  index += cluster_number / (512 / 4);
+
+  char buf[512];
+  _disk_partition.read_block(index, buf);
+
+  uint32_t* p = reinterpret_cast<uint32_t*>(buf);
+  p += cluster_number % (512 / 4);
+  return *p;
+}
+
+UniquePtr<char[]> FAT32::cluster_read(const uint32_t cluster_number) const {
+  auto buffer = make_unique<char[]>(512);
+
+  int index = _metadata.reserved_sector_count;
+  index += _metadata.table_count * _metadata.table_size_32;
+  index += (cluster_number - 2) * _metadata.sectors_per_cluster;
+  
+  _disk_partition.read_block(index, buffer.get());
+  return buffer;
+}
+
 
 SharedPtr<Vnode> FAT32::get_root_vnode() {
   return _root_inode;
+}
+
+
+FAT32::BootSector::BootSector(DiskPartition& disk_partition) {
+  char buf[512];
+  disk_partition.read_block(0, buf);
+  memcpy(this, buf, sizeof(BootSector));
 }
 
 }  // namespace valkyrie::kernel

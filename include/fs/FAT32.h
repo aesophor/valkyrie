@@ -96,6 +96,8 @@ class FAT32 final : public FileSystem {
   };
 
   struct [[gnu::packed]] BootSector final {
+    BootSector(DiskPartition& disk_partition);
+
     uint8_t bootjmp[3];
     uint8_t oem_name[8];
     uint16_t bytes_per_sector;
@@ -130,12 +132,11 @@ class FAT32 final : public FileSystem {
   static_assert(sizeof(ShortDirectoryEntry) == 32);
 
 
-  class FileAllocationTable {
-
-  };
+  uint32_t file_allocation_table_read(const uint32_t cluster_number) const;
+  UniquePtr<char[]> cluster_read(const uint32_t cluster_number) const;
 
   DiskPartition& _disk_partition;
-  BootSector _metadata;
+  const BootSector _metadata;
   int _next_inode_index;
   SharedPtr<FAT32Inode> _root_inode;
 };

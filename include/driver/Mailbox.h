@@ -4,7 +4,7 @@
 
 #include <Types.h>
 #include <Utility.h>
-#include <dev/IO.h>
+#include <driver/IO.h>
 
 #define MAILBOX_BASE   (MMIO_BASE + 0xb880)
 

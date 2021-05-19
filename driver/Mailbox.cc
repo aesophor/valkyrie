@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <dev/Mailbox.h>
+#include <driver/Mailbox.h>
 
 #define GET_BOARD_MODEL     0x00010001
 #define GET_BOARD_REVISION  0x00010002
