@@ -14,7 +14,7 @@ namespace valkyrie::kernel {
 class VFS final {
  public:
   struct Mount final {
-    UniquePtr<FileSystem> fs;
+    FileSystem* fs;
   };
 
   static VFS& get_instance();
@@ -27,8 +27,8 @@ class VFS final {
 
 
   void initialize_attached_storage_devices();
-  bool mount_rootfs(UniquePtr<FileSystem> fs,
-                    const CPIOArchive& archive);
+  void mount_rootfs(FileSystem& fs);
+  //void mount_rootfs(FileSystem& fs, const CPIOArchive& archive);
 
 
   SharedPtr<Vnode> create(const String& pathname,

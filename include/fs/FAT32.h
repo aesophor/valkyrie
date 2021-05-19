@@ -29,6 +29,21 @@ class FAT32 final : public FileSystem {
     ShortDirectoryEntry();
     ShortDirectoryEntry(void* ptr);
 
+    [[gnu::always_inline]] bool is_deleted() const {
+      return reinterpret_cast<const uint8_t&>(name[0]) == 0xe5;
+    }
+
+    [[gnu::always_inline]] bool is_end_of_cluster_chain() const {
+      return bool(*this);
+    }
+
+    [[gnu::always_inline]] operator bool() const {
+      return reinterpret_cast<const uint8_t&>(name[0]) == 0;
+    }
+
+    String get_filename() const;
+    uint32_t get_cluster_number() const;
+
     char name[8];
     char extension[3];
     uint8_t attributes;
@@ -127,6 +142,8 @@ class FAT32Inode final : public Vnode {
  private:
   FAT32::ShortDirectoryEntry
   find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate); 
+
+  void for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback); 
 
   FAT32& _fs;
   String _name;

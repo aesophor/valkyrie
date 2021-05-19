@@ -63,6 +63,8 @@ class String {
     return ret;
   }
 
+  //operator bool() const { return !empty(); }
+
 
   Iterator begin() { return Iterator::begin(*this); }
   Iterator end() { return Iterator::end(*this); }
@@ -129,9 +131,13 @@ class String {
   }
 
 
-  String substr(size_t begin, size_t len) const {
+  String substr(size_t begin, size_t len = npos) const {
+    if (empty()) {
+      return {};
+    }
+
     // Sanitize `len`.
-    if (begin + len > size()) {
+    if (len == npos || begin + len > size()) {
       len = size() - begin;
     }
 

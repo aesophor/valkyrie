@@ -30,11 +30,17 @@ void VFS::initialize_attached_storage_devices() {
   // TODO: currently it only supports SD card.
   auto sdcard = make_unique<StorageDevice>(SDCardDriver::get_instance());
   _storage_devices.push_back(move(sdcard));
+
+  mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
 }
 
-bool VFS::mount_rootfs(UniquePtr<FileSystem> fs,
-                       const CPIOArchive& archive) {
-  _rootfs = { move(fs) };
+void VFS::mount_rootfs(FileSystem& fs) {
+  _rootfs = { &fs };
+}
+
+/*
+void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
+  _rootfs = { &fs };
 
   if (!archive.is_valid()) [[unlikely]] {
     printk("initramfs unpacking failed invalid magic at start of compressed archive\n");
@@ -45,9 +51,8 @@ bool VFS::mount_rootfs(UniquePtr<FileSystem> fs,
     mode_t mode = (entry.content_len) ? S_IFREG : S_IFDIR;
     create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
   });
-
-  return _rootfs.fs;
 }
+*/
 
 
 SharedPtr<Vnode> VFS::create(const String& pathname,

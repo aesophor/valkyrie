@@ -76,15 +76,18 @@ String FAT32::ShortDirectoryEntry::get_filename() const {
 
   memset(buf, 0, sizeof(buf));
   strncpy(buf, name, sizeof(name));
+  printf("-> %s\n", buf);
   String filename = buf;
-  filename = filename.substr(0, filename.find_last_not_of(' ') + 1);
+  filename = filename.substr(0, filename.find_last_not_of(' '));
 
   memset(buf, 0, sizeof(buf));
   strncpy(buf, extension, sizeof(extension));
-  String ext = buf;
-  ext = ext.substr(0, ext.find_last_not_of(' ') + 1);
+  printf("-> %s\n", buf);
 
-  return (!ext.empty()) ? filename + "." + ext : filename;
+  String ext = buf;
+  ext = ext.substr(0, ext.find_last_not_of(' '));
+
+  return filename + "." + ext;
 }
 
 uint32_t FAT32::ShortDirectoryEntry::get_cluster_number() const {
