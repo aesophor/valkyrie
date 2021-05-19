@@ -2,71 +2,17 @@
 #ifndef VALKYRIE_FAT32_H_
 #define VALKYRIE_FAT32_H_
 
+#include <Functional.h>
 #include <List.h>
 #include <Memory.h>
 #include <dev/DiskPartition.h>
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
 
-#define FAT32_EOC_MIN   0x0ffffff8
-#define FAT32_EOC_MAX   0x0fffffff
-#define FAT32_IS_EOC(x) (FAT32_EOC_MIN <= x && x <= FAT32_EOC_MAX)
-
-#define ATTR_READ_ONLY 0x01
-#define ATTR_HIDDEN    0x02
-#define ATTR_SYSTEM    0x04
-#define ATTR_VOLUME_ID 0x08
-#define ATTR_DIRECTORY 0x10
-#define ATTR_ARCHIVE   0x20
-#define ATTR_LONG_NAME (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
-
 namespace valkyrie::kernel {
 
 // Forward declaration
-class FAT32;
-
-class FAT32Inode final : public Vnode {
-  // Friend declaration
-  friend class FAT32;
-
- public:
-  FAT32Inode(FAT32& fs,
-             FAT32Inode* parent,
-             const String& name,
-             mode_t mode,
-             uid_t uid,
-             gid_t gid);
-
-  virtual ~FAT32Inode() = default;
-
-
-  virtual SharedPtr<Vnode> create_child(const String& name,
-                                        const char* content,
-                                        size_t size,
-                                        mode_t mode,
-                                        uid_t uid,
-                                        gid_t gid) override { return nullptr; }
-  virtual void add_child(SharedPtr<Vnode> child) override {}
-  virtual SharedPtr<Vnode> remove_child(const String& name) override { return nullptr; }
-  virtual SharedPtr<Vnode> get_child(const String& name) override { return nullptr; }
-  virtual SharedPtr<Vnode> get_ith_child(size_t i) override { return nullptr; }
-  virtual size_t get_children_count() const override { return 0; }
-
-  virtual int chmod(const mode_t mode) override { return 0; }
-  virtual int chown(const uid_t uid, const gid_t gid) override { return 0; }
-
-  virtual const String& get_name() const override { return _name; }
-  virtual char* get_content() const override { return nullptr; }
-  virtual void set_content(UniquePtr<char[]> content) override {}
-
- private:
-  FAT32& _fs;
-  String _name;
-
-  FAT32Inode* _parent;
-  List<SharedPtr<FAT32Inode>> _children;
-};
-
+class FAT32Inode;
 
 class FAT32 final : public FileSystem {
   // Friend declaration
@@ -80,6 +26,9 @@ class FAT32 final : public FileSystem {
 
  private:
   struct [[gnu::packed]] ShortDirectoryEntry final {
+    ShortDirectoryEntry();
+    ShortDirectoryEntry(void* ptr);
+
     char name[8];
     char extension[3];
     uint8_t attributes;
@@ -140,6 +89,52 @@ class FAT32 final : public FileSystem {
   int _next_inode_index;
   SharedPtr<FAT32Inode> _root_inode;
 };
+
+
+class FAT32Inode final : public Vnode {
+  // Friend declaration
+  friend class FAT32;
+
+ public:
+  FAT32Inode(FAT32& fs,
+             const String& name,
+             uint32_t cluster_number,
+             uid_t uid,
+             gid_t gid);
+
+  virtual ~FAT32Inode() = default;
+
+
+  virtual SharedPtr<Vnode> create_child(const String& name,
+                                        const char* content,
+                                        size_t size,
+                                        mode_t mode,
+                                        uid_t uid,
+                                        gid_t gid) override { return nullptr; }
+  virtual void add_child(SharedPtr<Vnode> child) override {}
+  virtual SharedPtr<Vnode> remove_child(const String& name) override { return nullptr; }
+  virtual SharedPtr<Vnode> get_child(const String& name) override;
+  virtual SharedPtr<Vnode> get_ith_child(size_t i) override;
+  virtual size_t get_children_count() const override;
+
+  virtual int chmod(const mode_t) override { return 0; }
+  virtual int chown(const uid_t, const gid_t) override { return 0; }
+
+  virtual const String& get_name() const override { return _name; }
+  virtual char* get_content() override;
+  virtual void set_content(UniquePtr<char[]> content) override {}
+
+ private:
+  FAT32::ShortDirectoryEntry
+  find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate); 
+
+  FAT32& _fs;
+  String _name;
+
+  uint32_t _cluster_number;
+  UniquePtr<char[]> _content;
+};
+
 
 }  // namespace valkyrie::kernel
 
