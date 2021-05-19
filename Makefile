@@ -8,7 +8,7 @@ OBJCOPY = aarch64-linux-gnu-objcopy
 OBJCOPYFLAGS = -O binary
 
 GDB = aarch64-linux-gnu-gdb
-GDBFLAGS = -x ./debug.gdb
+GDBFLAGS = -x scripts/debug.gdb
 
 BUILD_DIR = build
 ELF = valkyrie.elf
