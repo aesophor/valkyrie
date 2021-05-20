@@ -24,34 +24,66 @@ namespace valkyrie::kernel {
 FAT32::FAT32(DiskPartition& disk_partition)
     : _disk_partition(disk_partition),
       _metadata(disk_partition),
+      _nr_fat_entries_per_sector(_metadata.bytes_per_sector / sizeof(uint32_t)),
       _next_inode_index(0),
       _root_inode(make_shared<FAT32Inode>(*this, "/", _metadata.root_cluster, 0, S_IFDIR, 0, 0)) {
 
   _root_inode->for_each_child([](const auto& dentry) {
     printk("%s\n", dentry.get_filename().c_str());
   });
+
+  fat_find_free_cluster();
 }
 
-uint32_t FAT32::file_allocation_table_read(const uint32_t cluster_number) const {
-  // A single FAT contains multiple sectors,
-  // so first thing first, we need to calculate the sector index.
-  int index = _metadata.reserved_sector_count;
-  index += cluster_number / (512 / 4);
+
+uint32_t FAT32::fat_read(const uint32_t i) const {
+  if (i >= nr_single_fat_entries()) [[unlikely]] {
+    printk("fat32: invalid fat entry_index (%d)\n", i);
+    return FAT32_EOC_MAX;
+  }
 
   char buf[512];
-  _disk_partition.read_block(index, buf);
+  _disk_partition.read_block(fat0_sector_index(/*entry_idx=*/i), buf);
 
-  uint32_t* p = reinterpret_cast<uint32_t*>(buf);
-  p += cluster_number % (512 / 4);
-  return *p;
+  size_t offset = i % _nr_fat_entries_per_sector;  // offset within sector
+  return *(reinterpret_cast<uint32_t*>(buf) + offset);
 }
 
-void FAT32::cluster_read(const uint32_t cluster_number, char* buf) const {
-  int index = _metadata.reserved_sector_count;
-  index += _metadata.table_count * _metadata.table_size_32;
-  index += (cluster_number - 2) * _metadata.sectors_per_cluster;
-  
-  _disk_partition.read_block(index, buf);
+void FAT32::fat_write(const uint32_t i, const uint32_t val) const {
+  if (i >= nr_single_fat_entries()) [[unlikely]] {
+    printk("fat32: invalid fat entry_index (%d)\n", i);
+    return;
+  }
+
+  char buf[512];
+  _disk_partition.read_block(fat0_sector_index(/*entry_idx=*/i), buf);
+
+  size_t offset = i % _nr_fat_entries_per_sector;  // offset within sector
+  *(reinterpret_cast<uint32_t*>(buf) + offset) = val;
+}
+
+
+uint32_t FAT32::fat_find_free_cluster() const {
+  for (auto index = fat0_sector_index(); index < fat1_sector_index(); index++) {
+    char buf[512];
+    _disk_partition.read_block(index, buf);
+
+    uint32_t* p = reinterpret_cast<uint32_t*>(buf);
+    for (int i = 0; i < 512 / 4; i++) {
+      if (*p == 0) {
+        printk("fat32: found a free cluster (id = %d)\n", index * 512 + i);
+        return index * 512 + i;
+      }
+    }
+  }
+
+  printk("fat32: unable to find a free cluster in FAT. Is the storage full?\n");
+  return -1;
+}
+
+
+void FAT32::cluster_read(const uint32_t i, void* buf) const {
+  _disk_partition.read_block(cluster_sector_index(i), buf);
 }
 
 
@@ -155,19 +187,15 @@ char* FAT32Inode::get_content() {
   int i = 0;
   for (uint32_t n = _cluster_number;
        !FAT32_IS_EOC(n);
-       n = _fs.file_allocation_table_read(n)) {
-    _fs.cluster_read(n, _content.get() + 512 * i);
-    i++;
-
-    /*
-    for (int i = 0; i < 512; i++) {
-      printf("%x ", buf[i]);
-    }
-    printf("\n");
-    */
+       n = _fs.fat_read(n)) {
+    _fs.cluster_read(n, _content.get() + 512 * i++);
   }
 
   return _content.get();
+}
+
+void FAT32Inode::set_content(UniquePtr<char[]> content) {
+
 }
 
 
@@ -195,7 +223,8 @@ FAT32Inode::find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> pre
   return {};
 }
 
-void FAT32Inode::for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const {
+void
+FAT32Inode::for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const {
   auto cluster = make_unique<char[]>(512);
   _fs.cluster_read(_cluster_number, cluster.get());
 

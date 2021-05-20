@@ -77,7 +77,7 @@ class FAT32 final : public FileSystem {
     uint32_t hidden_sector_count;
     uint32_t total_sectors_32;
     // Below fields are extended section (specific to FAT32).
-    uint32_t table_size_32;
+    uint32_t table_size_32;  // # of sectors occupied by one FAT.
     uint16_t extended_flags;
     uint16_t fat_version;
     uint32_t root_cluster;
@@ -96,12 +96,48 @@ class FAT32 final : public FileSystem {
   static_assert(sizeof(ShortDirectoryEntry) == 32);
 
 
-  uint32_t file_allocation_table_read(const uint32_t cluster_number) const;
-  void cluster_read(const uint32_t cluster_number, char* buf) const;
+  [[gnu::always_inline]]
+  uint32_t fat0_sector_index(const uint32_t entry_index = 0) const {
+    return _metadata.reserved_sector_count +
+           entry_index / _nr_fat_entries_per_sector;
+  }
+
+  [[gnu::always_inline]]
+  uint32_t fat1_sector_index(const uint32_t entry_index = 0) const {
+    return fat0_sector_index() + _metadata.table_size_32 +
+           entry_index / _nr_fat_entries_per_sector;
+  }
+
+  [[gnu::always_inline]]
+  uint32_t data_region_sector_index() const {
+    return fat1_sector_index() + _metadata.table_size_32;
+  }
+
+  [[gnu::always_inline]]
+  uint32_t cluster_sector_index(const uint32_t i) const {
+    return data_region_sector_index() +
+           (i - 2) * _metadata.sectors_per_cluster;
+  }
+
+  [[gnu::always_inline]]
+  uint32_t nr_single_fat_entries() const {
+    return _metadata.table_size_32 * _nr_fat_entries_per_sector;
+  }
+
+
+  // Read/Write the i-th entry of the first FAT.
+  uint32_t fat_read(const uint32_t i) const;
+  void fat_write(const uint32_t i, const uint32_t val) const;
+  uint32_t fat_find_free_cluster() const;
+
+  // Read/Write the i-th cluster from/to the data region.
+  void cluster_read(const uint32_t i, void* buf) const;
+  void cluster_write(const uint32_t i, const void* buf) const;
 
 
   DiskPartition& _disk_partition;
   const BootSector _metadata;
+  int _nr_fat_entries_per_sector;
   int _next_inode_index;
   SharedPtr<FAT32Inode> _root_inode;
 };
@@ -140,13 +176,15 @@ class FAT32Inode final : public Vnode {
 
   virtual const String& get_name() const override { return _name; }
   virtual char* get_content() override;
-  virtual void set_content(UniquePtr<char[]> content) override {}
+  virtual void set_content(UniquePtr<char[]> content) override;
 
  private:
   FAT32::ShortDirectoryEntry
   find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate); 
 
-  void for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const; 
+  void
+  for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const; 
+
 
   FAT32& _fs;
   String _name;
