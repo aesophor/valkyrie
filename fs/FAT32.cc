@@ -9,8 +9,6 @@
 #define FAT32_EOC_MAX   0x0fffffff
 #define FAT32_IS_EOC(x) (FAT32_EOC_MIN <= x && x <= FAT32_EOC_MAX)
 
-#define FAT32_MODE     0777
-
 #define ATTR_READ_ONLY 0x01
 #define ATTR_HIDDEN    0x02
 #define ATTR_SYSTEM    0x04
