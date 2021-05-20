@@ -176,7 +176,7 @@ class FAT32Inode final : public Vnode {
 
   virtual const String& get_name() const override { return _name; }
   virtual char* get_content() override;
-  virtual void set_content(UniquePtr<char[]> content) override;
+  virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
 
  private:
   FAT32::ShortDirectoryEntry

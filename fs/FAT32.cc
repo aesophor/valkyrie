@@ -31,8 +31,6 @@ FAT32::FAT32(DiskPartition& disk_partition)
   _root_inode->for_each_child([](const auto& dentry) {
     printk("%s\n", dentry.get_filename().c_str());
   });
-
-  fat_find_free_cluster();
 }
 
 
@@ -69,7 +67,7 @@ uint32_t FAT32::fat_find_free_cluster() const {
     _disk_partition.read_block(index, buf);
 
     uint32_t* p = reinterpret_cast<uint32_t*>(buf);
-    for (int i = 0; i < 512 / 4; i++) {
+    for (int i = 0; i < _nr_fat_entries_per_sector; i++) {
       if (*p == 0) {
         printk("fat32: found a free cluster (id = %d)\n", index * 512 + i);
         return index * 512 + i;
@@ -84,6 +82,10 @@ uint32_t FAT32::fat_find_free_cluster() const {
 
 void FAT32::cluster_read(const uint32_t i, void* buf) const {
   _disk_partition.read_block(cluster_sector_index(i), buf);
+}
+
+void FAT32::cluster_write(const uint32_t i, const void* buf) const {
+  _disk_partition.write_block(cluster_sector_index(i), buf);
 }
 
 
@@ -194,8 +196,11 @@ char* FAT32Inode::get_content() {
   return _content.get();
 }
 
-void FAT32Inode::set_content(UniquePtr<char[]> content) {
+void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
+  _content = move(content);
 
+
+  _size = new_size;
 }
 
 

@@ -45,7 +45,7 @@ class Vnode {
 
   virtual const String& get_name() const = 0;
   virtual char* get_content() = 0;
-  virtual void set_content(UniquePtr<char[]> content) = 0;
+  virtual void set_content(UniquePtr<char[]> content, off_t new_size) = 0;
 
 
   bool is_directory() const { return (_mode & S_IFMT) == S_IFDIR; }

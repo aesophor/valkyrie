@@ -64,7 +64,10 @@ class TmpFSInode final : public Vnode {
 
   virtual const String& get_name() const override { return _name; }
   virtual char* get_content() override { return _content.get(); }
-  virtual void set_content(UniquePtr<char[]> content) override { _content = move(content); }
+  virtual void set_content(UniquePtr<char[]> content, off_t new_size) override {
+    _content = move(content);
+    _size = new_size;
+  }
 
 
  private:
