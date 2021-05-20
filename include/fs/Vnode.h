@@ -15,10 +15,12 @@ class FileSystem;
 class Vnode {
  public:
   Vnode(const uint32_t index,
+        off_t size,
         mode_t mode,
         uid_t uid,
         gid_t gid)
       : _index(index),
+        _size(size),
         _mode(mode),
         _uid(uid),
         _gid(gid) {}
@@ -28,7 +30,7 @@ class Vnode {
   
   virtual SharedPtr<Vnode> create_child(const String& name,
                                         const char* content,
-                                        size_t size,
+                                        off_t size,
                                         mode_t mode,
                                         uid_t uid,
                                         gid_t gid) = 0;

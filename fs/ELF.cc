@@ -55,7 +55,7 @@ void ELF::load_at(void* dest) const {
 void* ELF::get_entry_point(const void* elf_base) const {
   // The implementation of this method is temporary
   // as virtual memory hasn't been enabled yet.
-  size_t entry = reinterpret_cast<size_t>(elf_base) + 0x10000;//sizeof(ELF::FileHeader);
+  size_t entry = reinterpret_cast<size_t>(elf_base) + 0x10000;
   return reinterpret_cast<void*>(entry);
 }
 

@@ -42,7 +42,7 @@ class FAT32 final : public FileSystem {
     }
 
     String get_filename() const;
-    uint32_t get_cluster_number() const;
+    uint32_t get_first_cluster_number() const;
 
     char name[8];
     char extension[3];
@@ -97,7 +97,8 @@ class FAT32 final : public FileSystem {
 
 
   uint32_t file_allocation_table_read(const uint32_t cluster_number) const;
-  UniquePtr<char[]> cluster_read(const uint32_t cluster_number) const;
+  void cluster_read(const uint32_t cluster_number, char* buf) const;
+
 
   DiskPartition& _disk_partition;
   const BootSector _metadata;
@@ -114,6 +115,8 @@ class FAT32Inode final : public Vnode {
   FAT32Inode(FAT32& fs,
              const String& name,
              uint32_t cluster_number,
+             off_t size,
+             mode_t mode,
              uid_t uid,
              gid_t gid);
 
@@ -122,7 +125,7 @@ class FAT32Inode final : public Vnode {
 
   virtual SharedPtr<Vnode> create_child(const String& name,
                                         const char* content,
-                                        size_t size,
+                                        off_t size,
                                         mode_t mode,
                                         uid_t uid,
                                         gid_t gid) override { return nullptr; }
@@ -143,7 +146,7 @@ class FAT32Inode final : public Vnode {
   FAT32::ShortDirectoryEntry
   find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate); 
 
-  void for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback); 
+  void for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const; 
 
   FAT32& _fs;
   String _name;

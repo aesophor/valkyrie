@@ -39,7 +39,7 @@ class TmpFSInode final : public Vnode {
              TmpFSInode* parent,
              const String& name,
              const char* content,
-             size_t size,
+             off_t size,
              mode_t mode,
              uid_t uid,
              gid_t gid);
@@ -49,7 +49,7 @@ class TmpFSInode final : public Vnode {
 
   virtual SharedPtr<Vnode> create_child(const String& name,
                                         const char* content,
-                                        size_t size,
+                                        off_t size,
                                         mode_t mode,
                                         uid_t uid,
                                         gid_t gid) override;
