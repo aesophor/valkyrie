@@ -218,8 +218,6 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   }
 
   ELF elf({ file->vnode->get_content(), file->vnode->get_size() });
-  VFS::get_instance().close(move(file));
-
   _elf_dest = kmalloc(elf.get_size() + 0x1000);
   void* dest = reinterpret_cast<char*>(_elf_dest) + 0x1000 - 0x10;
 
@@ -233,6 +231,8 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   //printk("loading ELF at 0x%x\n", dest);
   elf.load_at(dest);
+
+  VFS::get_instance().close(move(file));
 
   // Jump to the entry point.
   //printk("executing new program: %s, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
