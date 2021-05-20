@@ -150,7 +150,7 @@ class FAT32Inode final : public Vnode {
  public:
   FAT32Inode(FAT32& fs,
              const String& name,
-             uint32_t cluster_number,
+             uint32_t first_cluster_number,
              off_t size,
              mode_t mode,
              uid_t uid,
@@ -189,7 +189,7 @@ class FAT32Inode final : public Vnode {
   FAT32& _fs;
   String _name;
 
-  uint32_t _cluster_number;
+  uint32_t _first_cluster_number;
   UniquePtr<char[]> _content;
 };
 

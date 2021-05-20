@@ -137,7 +137,7 @@ FAT32::BootSector::BootSector(DiskPartition& disk_partition) {
 
 FAT32Inode::FAT32Inode(FAT32& fs,
                        const String& name,
-                       uint32_t cluster_number,
+                       uint32_t first_cluster_number,
                        off_t size,
                        mode_t mode,
                        uid_t uid,
@@ -145,7 +145,7 @@ FAT32Inode::FAT32Inode(FAT32& fs,
     : Vnode(fs._next_inode_index++, size, mode, uid, gid),
       _fs(fs),
       _name(name),
-      _cluster_number(cluster_number),
+      _first_cluster_number(first_cluster_number),
       _content() {}
 
 
@@ -154,6 +154,7 @@ SharedPtr<Vnode> FAT32Inode::get_child(const String& name) {
     return name == dentry.get_filename();
   });
 
+  // FIXME: determine file type by attributes
   mode_t mode = (dentry.size) ? S_IFREG : S_IFDIR;
 
   return (dentry)
@@ -187,7 +188,7 @@ char* FAT32Inode::get_content() {
   _content = make_unique<char[]>(round_up_to_multiple_of_n(_size, 512));
 
   int i = 0;
-  for (uint32_t n = _cluster_number;
+  for (uint32_t n = _first_cluster_number;
        !FAT32_IS_EOC(n);
        n = _fs.fat_read(n)) {
     _fs.cluster_read(n, _content.get() + 512 * i++);
@@ -197,17 +198,41 @@ char* FAT32Inode::get_content() {
 }
 
 void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
+  new_size = round_up_to_multiple_of_n(new_size, 512);
+
+  uint32_t prev_free_cluster_number = _first_cluster_number;
+  uint32_t curr_free_cluster_number = 0;
+
+  for (uint32_t i = 0; i < new_size; i += 512) {
+    if ((curr_free_cluster_number = _fs.fat_find_free_cluster()) == -1) {
+      return;
+    }
+
+    // Write block to the data region
+    _fs.cluster_write(curr_free_cluster_number, content.get() + i);
+
+    // Update File Allocation Table
+    if (prev_free_cluster_number) [[likely]] {
+      _fs.fat_write(prev_free_cluster_number, curr_free_cluster_number);
+    } else {
+      _first_cluster_number = curr_free_cluster_number;
+    }
+
+    prev_free_cluster_number = curr_free_cluster_number;
+  }
+
   _content = move(content);
-
-
   _size = new_size;
+
+  // FIXME: Update dentry size in parent's cluster.
+
 }
 
 
 FAT32::ShortDirectoryEntry
 FAT32Inode::find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate) {
   auto cluster = make_unique<char[]>(512);
-  _fs.cluster_read(_cluster_number, cluster.get());
+  _fs.cluster_read(_first_cluster_number, cluster.get());
 
   for (char* ptr = cluster.get();; ptr += sizeof(FAT32::ShortDirectoryEntry)) {
     const FAT32::ShortDirectoryEntry dentry(ptr);
@@ -228,10 +253,11 @@ FAT32Inode::find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> pre
   return {};
 }
 
+// FIXME: resolve this code duplication
 void
 FAT32Inode::for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const {
   auto cluster = make_unique<char[]>(512);
-  _fs.cluster_read(_cluster_number, cluster.get());
+  _fs.cluster_read(_first_cluster_number, cluster.get());
 
   for (char* ptr = cluster.get();; ptr += sizeof(FAT32::ShortDirectoryEntry)) {
     const FAT32::ShortDirectoryEntry dentry(ptr);
