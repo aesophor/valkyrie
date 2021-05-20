@@ -12,16 +12,31 @@
 namespace valkyrie::kernel {
 
 // Forward declaration
-class TmpFS;
+class TmpFSInode;
+
+class TmpFS final : public FileSystem {
+  // Friend declaration
+  friend class TmpFSInode;
+
+ public:
+  TmpFS();
+  virtual ~TmpFS() = default;
+
+  virtual SharedPtr<Vnode> get_root_vnode() override;
+
+ private:
+  uint64_t _next_inode_index;
+  SharedPtr<TmpFSInode> _root_vnode;
+};
 
 
-class TmpFSVnode final : public Vnode {
+class TmpFSInode final : public Vnode {
   // Friend declaration
   friend class TmpFS;
 
  public:
-  TmpFSVnode(TmpFS& fs,
-             TmpFSVnode* parent,
+  TmpFSInode(TmpFS& fs,
+             TmpFSInode* parent,
              const String& name,
              const char* content,
              size_t size,
@@ -29,7 +44,7 @@ class TmpFSVnode final : public Vnode {
              uid_t uid,
              gid_t gid);
 
-  virtual ~TmpFSVnode();
+  virtual ~TmpFSInode() = default;
 
 
   virtual SharedPtr<Vnode> create_child(const String& name,
@@ -57,31 +72,8 @@ class TmpFSVnode final : public Vnode {
   String _name;
   UniquePtr<char[]> _content;
 
-  TmpFSVnode* _parent;  // FIXME: use WeakPtr
-  List<SharedPtr<TmpFSVnode>> _children;
-};
-
-
-class TmpFS final : public FileSystem {
-  // Friend declaration
-  friend class TmpFSVnode;
-  friend class CPIOArchive;  // FIXME: wtf
-
- public:
-  TmpFS();
-  virtual ~TmpFS() = default;
-
-  virtual void show() const override;
-  virtual SharedPtr<Vnode> get_root_vnode() override;
-
- private:
-  // FIXME: `inode` should be marked const, but it seems that
-  // List<T>::ConstIterator isn't implemented properly...
-  // I don't have the luxury (i.e. time) to fix this now, so maybe later...
-  void debug_show_dfs_helper(TmpFSVnode* vnode, const int depth) const;
-
-  uint64_t _next_vnode_index;
-  SharedPtr<TmpFSVnode> _root_vnode;
+  TmpFSInode* _parent;  // FIXME: use WeakPtr
+  List<SharedPtr<TmpFSInode>> _children;
 };
 
 }  // namespace valkyrie::kernel

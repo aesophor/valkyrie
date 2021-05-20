@@ -34,11 +34,11 @@ class FAT32 final : public FileSystem {
     }
 
     [[gnu::always_inline]] bool is_end_of_cluster_chain() const {
-      return bool(*this);
+      return reinterpret_cast<const uint8_t&>(name[0]) == 0;
     }
 
     [[gnu::always_inline]] operator bool() const {
-      return reinterpret_cast<const uint8_t&>(name[0]) == 0;
+      return reinterpret_cast<const uint8_t&>(name[0]) != 0;
     }
 
     String get_filename() const;

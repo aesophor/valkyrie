@@ -78,11 +78,13 @@ String FAT32::ShortDirectoryEntry::get_filename() const {
   strncpy(buf, name, sizeof(name));
   String filename = buf;
   filename = filename.substr(0, filename.find_last_not_of(' ') + 1);
+  filename.to_lower();
 
   memset(buf, 0, sizeof(buf));
   strncpy(buf, extension, sizeof(extension));
   String ext = buf;
   ext = ext.substr(0, ext.find_last_not_of(' ') + 1);
+  ext.to_lower();
 
   return (!ext.empty()) ? filename + "." + ext : filename;
 }
@@ -118,7 +120,7 @@ SharedPtr<Vnode> FAT32Inode::get_child(const String& name) {
     return name == dentry.get_filename();
   });
 
-  return (dentry) ? make_shared<FAT32Inode>(_fs, name, dentry.get_cluster_number(), 0, 0)
+  return bool(dentry) ? make_shared<FAT32Inode>(_fs, name, dentry.get_cluster_number(), 0, 0)
                   : nullptr;
 }
 

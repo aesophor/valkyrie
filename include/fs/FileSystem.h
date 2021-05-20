@@ -14,7 +14,6 @@ class FileSystem {
  public:
   virtual ~FileSystem() = default;
 
-  virtual void show() const {}
   virtual SharedPtr<Vnode> get_root_vnode() = 0;
 };
 

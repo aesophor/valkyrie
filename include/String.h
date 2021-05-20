@@ -175,6 +175,28 @@ class String {
     return substrings;
   }
 
+  String& to_upper() {
+    constexpr int offset = 'a' - 'A';
+
+    for (auto& c : *this) {
+      if (c >= 'a' && c <= 'z') {
+        c -= offset;
+      }
+    }
+    return *this;
+  }
+
+  String& to_lower() {
+    constexpr int offset = 'a' - 'A';
+
+    for (auto& c : *this) {
+      if (c >= 'A' && c <= 'Z') {
+        c += offset;
+      }
+    }
+    return *this;
+  }
+
 
   bool empty() const { return size() == 0; }
   size_t size() const { return (_s) ? strlen(_s.get()) : 0; }

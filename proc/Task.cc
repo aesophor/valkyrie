@@ -213,7 +213,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   SharedPtr<File> file = VFS::get_instance().open(name, 0);
   
   if (!file) {
-    printk("exec failed: pid = %d [%s]\n", _pid, _name);
+    printk("exec failed: pid = %d [%s]. No such file or directory\n", _pid, _name);
     return -1;
   }
 
