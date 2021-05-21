@@ -55,6 +55,7 @@ class VFS final {
                                 SharedPtr<Vnode>* out_parent = nullptr,
                                 String* out_basename = nullptr) const;
 
+
   Mount _rootfs;
   List<UniquePtr<StorageDevice>> _storage_devices;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)

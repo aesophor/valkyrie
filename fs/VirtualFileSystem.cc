@@ -159,11 +159,9 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
   }
 
   if (file->vnode->is_regular_file()) {
-    size_t old_len = file->vnode->get_size();
-    auto new_content = make_unique<char[]>(old_len + len);
-    memcpy(new_content.get(), file->vnode->get_content(), old_len);
-    memcpy(new_content.get() + old_len, buf, len);
-    file->vnode->set_content(move(new_content), old_len + len);
+    auto new_content = make_unique<char[]>(len);
+    memcpy(new_content.get(), buf, len);
+    file->vnode->set_content(move(new_content), len);
 
   } else {
     printk("vfs_write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());

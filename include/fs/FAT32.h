@@ -151,6 +151,8 @@ class FAT32Inode final : public Vnode {
   FAT32Inode(FAT32& fs,
              const String& name,
              uint32_t first_cluster_number,
+             uint32_t parent_first_cluster_number,
+             uint32_t parent_first_cluster_offset,
              off_t size,
              mode_t mode,
              uid_t uid,
@@ -164,7 +166,7 @@ class FAT32Inode final : public Vnode {
                                         off_t size,
                                         mode_t mode,
                                         uid_t uid,
-                                        gid_t gid) override { return nullptr; }
+                                        gid_t gid) override;
   virtual void add_child(SharedPtr<Vnode> child) override {}
   virtual SharedPtr<Vnode> remove_child(const String& name) override { return nullptr; }
   virtual SharedPtr<Vnode> get_child(const String& name) override;
@@ -180,7 +182,8 @@ class FAT32Inode final : public Vnode {
 
  private:
   FAT32::ShortDirectoryEntry
-  find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate); 
+  find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate,
+                uint32_t* out_offset = nullptr); 
 
   void
   for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const; 
@@ -190,6 +193,8 @@ class FAT32Inode final : public Vnode {
   String _name;
 
   uint32_t _first_cluster_number;
+  uint32_t _parent_first_cluster_number;
+  uint32_t _parent_first_cluster_offset;
   UniquePtr<char[]> _content;
 };
 
