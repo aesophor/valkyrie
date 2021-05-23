@@ -2,7 +2,7 @@
 #include <vlibc.h>
 #include <cstring.h>
 
-#define DENTRY_NAME_LEN 16
+#define DENTRY_NAME_LEN 256
 
 struct DirectoryEntry {
   char name[DENTRY_NAME_LEN];

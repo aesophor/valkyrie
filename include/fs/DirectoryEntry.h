@@ -6,7 +6,7 @@
 #ifndef VALKYRIE_DIRECTORY_ENTRY_H_
 #define VALKYRIE_DIRECTORY_ENTRY_H_
 
-#define NAME_LEN 16
+#define NAME_LEN 256
 
 namespace valkyrie::kernel {
 

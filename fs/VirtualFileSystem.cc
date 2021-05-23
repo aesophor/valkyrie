@@ -26,7 +26,7 @@ VFS::VFS()
       _opened_files() {}
 
 
-void VFS::initialize_attached_storage_devices() {
+void VFS::mount_attached_storage_devices() {
   // TODO: currently it only supports SD card.
   auto sdcard = make_unique<StorageDevice>(SDCardDriver::get_instance());
   _storage_devices.push_back(move(sdcard));
@@ -38,7 +38,6 @@ void VFS::mount_rootfs(FileSystem& fs) {
   _rootfs = { &fs };
 }
 
-/*
 void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
   _rootfs = { &fs };
 
@@ -52,7 +51,6 @@ void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
     create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
   });
 }
-*/
 
 
 SharedPtr<Vnode> VFS::create(const String& pathname,
@@ -162,7 +160,6 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
     auto new_content = make_unique<char[]>(len);
     memcpy(new_content.get(), buf, len);
     file->vnode->set_content(move(new_content), len);
-
   } else {
     printk("vfs_write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
     return -1;
@@ -186,7 +183,6 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
     file->pos += len;
 
   } else if (file->vnode->is_directory()) {
-
     // Here `file->pos` is used as the index of the last iterated child.
     // FIXME: lol this is fooking slow, but i'm too busy this week...
     if (file->pos >= file->vnode->get_children_count()) {
@@ -195,6 +191,11 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
     } else {
       DirectoryEntry e;
       SharedPtr<Vnode> child_vnode = file->vnode->get_ith_child(file->pos);
+      if (!child_vnode) [[unlikely]] {
+        Kernel::panic("vfs_read: child_vnode == nullptr. "
+                      "get_ith_child() is probably buggy.\n");
+      }
+
       strncpy(e.name, child_vnode->get_name().c_str(), sizeof(e.name));
       memcpy(buf, reinterpret_cast<char*>(&e), sizeof(e));
       file->pos++;
@@ -219,6 +220,18 @@ int VFS::access(const String& pathname, int options) {
   }
 
   return 0;
+}
+
+int VFS::mkdir(const String& pathname, mode_t mode) {
+
+}
+
+int VFS::rmdir(const String& pathname) {
+
+}
+
+int VFS::unlink(const String& pathname) {
+
 }
 
 
@@ -260,6 +273,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
   auto vnode = _rootfs.fs->get_root_vnode();
 
   for (auto it = components.begin(); it != components.end(); it++) {
+
     if (out_parent && it.index() == components.size() - 1) {
       *out_parent = vnode;
     }

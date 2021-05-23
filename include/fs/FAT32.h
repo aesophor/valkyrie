@@ -8,6 +8,7 @@
 #include <dev/DiskPartition.h>
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
+#include <libs/Encoding.h>
 
 namespace valkyrie::kernel {
 
@@ -25,23 +26,46 @@ class FAT32 final : public FileSystem {
   virtual SharedPtr<Vnode> get_root_vnode() override;
 
  private:
-  struct [[gnu::packed]] ShortDirectoryEntry final {
-    ShortDirectoryEntry();
-    ShortDirectoryEntry(void* ptr);
-
+  // In FAT32 with LFN (Long File Name) support, there
+  // are two types of directory entries:
+  //
+  // 1. Filename Entry
+  // 2. Directory Entry
+  //
+  // This base class provides the methods that are common to
+  // both entries.
+  struct [[gnu::packed]] Entry {
     [[gnu::always_inline]] bool is_deleted() const {
-      return reinterpret_cast<const uint8_t&>(name[0]) == 0xe5;
+      return *reinterpret_cast<const uint8_t*>(this) == 0xe5;
     }
 
     [[gnu::always_inline]] bool is_end_of_cluster_chain() const {
-      return reinterpret_cast<const uint8_t&>(name[0]) == 0;
+      return *reinterpret_cast<const uint8_t*>(this) == 0;
     }
 
-    [[gnu::always_inline]] operator bool() const {
-      return reinterpret_cast<const uint8_t&>(name[0]) != 0;
-    }
+   protected:
+    Entry();
+    Entry(const void* ptr);
+  };
 
+  struct [[gnu::packed]] FilenameEntry final : public FAT32::Entry {
+    FilenameEntry() = default;
+    FilenameEntry(const void* ptr) : FAT32::Entry(ptr) {}
     String get_filename() const;
+
+    uint8_t sequence_number;
+    ucs2_char_t filename_part1[5];  // 5 UCS-2 characters
+    uint8_t attributes;             // always 0x0f
+    uint8_t type;                   // always 0x00 for VFAT LFN
+    uint8_t checksum;
+    ucs2_char_t filename_part2[6];  // 6 UCS-2 characters
+    uint16_t first_cluster;         // always 0x0000
+    ucs2_char_t filename_part3[2];  // 2 UCS-2 characters
+  };
+
+  struct [[gnu::packed]] DirectoryEntry final : public FAT32::Entry {
+    DirectoryEntry() = default;
+    DirectoryEntry(const void* ptr) : FAT32::Entry(ptr) {}
     uint32_t get_first_cluster_number() const;
 
     char name[8];
@@ -57,6 +81,20 @@ class FAT32 final : public FileSystem {
     uint16_t last_write_date;
     uint16_t first_cluster_low;
     uint32_t size;
+  };
+
+  // A non-owning reference to a FAT32::DirectoryEntry.
+  //
+  // The existence of this structure is to eliminate the gap
+  // between FilenameEntry and DirectoryEntry, where
+  // the long filename is stored in FilenameEntry but
+  // the rest are stored in DirectoryEntry.
+  struct DirectoryEntryView final {
+    String name;
+    FAT32::DirectoryEntry dentry;
+    uint32_t index;  // `index`-th child of its parent
+    uint32_t parent_cluster_number;
+    uint32_t parent_cluster_offset;
   };
 
   struct [[gnu::packed]] BootSector final {
@@ -92,8 +130,9 @@ class FAT32 final : public FileSystem {
     uint8_t fat_type_label[8];
   };
 
+  static_assert(sizeof(FilenameEntry) == 32);
+  static_assert(sizeof(DirectoryEntry) == 32);
   static_assert(sizeof(BootSector) == 90);
-  static_assert(sizeof(ShortDirectoryEntry) == 32);
 
 
   [[gnu::always_inline]]
@@ -151,8 +190,8 @@ class FAT32Inode final : public Vnode {
   FAT32Inode(FAT32& fs,
              const String& name,
              uint32_t first_cluster_number,
-             uint32_t parent_first_cluster_number,
-             uint32_t parent_first_cluster_offset,
+             uint32_t parent_cluster_number,
+             uint32_t parent_cluster_offset,
              off_t size,
              mode_t mode,
              uid_t uid,
@@ -181,20 +220,22 @@ class FAT32Inode final : public Vnode {
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
 
  private:
-  FAT32::ShortDirectoryEntry
-  find_child_if(Function<bool (const FAT32::ShortDirectoryEntry&)> predicate,
-                uint32_t* out_offset = nullptr); 
+  SharedPtr<FAT32Inode>
+  find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> predicate,
+                uint32_t* out_offset = nullptr) const; 
 
-  void
-  for_each_child(Function<void (const FAT32::ShortDirectoryEntry&)> callback) const; 
+  // This method can be used to:
+  // 1. iterate through all children and apply the callback `f` on each children, or
+  // 2. iterate through all children and return when the predicate `f` yields true.
+  void iterate_children(Function<bool (const FAT32::DirectoryEntryView&)> f) const; 
 
 
   FAT32& _fs;
   String _name;
 
   uint32_t _first_cluster_number;
-  uint32_t _parent_first_cluster_number;
-  uint32_t _parent_first_cluster_offset;
+  uint32_t _parent_cluster_number;
+  uint32_t _parent_cluster_offset;
   UniquePtr<char[]> _content;
 };
 

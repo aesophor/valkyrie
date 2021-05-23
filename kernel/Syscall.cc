@@ -29,6 +29,9 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_kill),
   SYSCALL_DECL(sys_signal),
   SYSCALL_DECL(sys_access),
+  SYSCALL_DECL(sys_mkdir),
+  SYSCALL_DECL(sys_rmdir),
+  SYSCALL_DECL(sys_unlink),
 };
 
 
@@ -165,6 +168,18 @@ int sys_signal(int signal, void (*handler)()) {
 
 int sys_access(const char* pathname, int options) {
   return VFS::get_instance().access(pathname, options);
+}
+
+int sys_mkdir(const char* pathname, mode_t mode) {
+  return VFS::get_instance().mkdir(pathname, mode);
+}
+
+int sys_rmdir(const char* pathname) {
+  return VFS::get_instance().rmdir(pathname);
+}
+
+int sys_unlink(const char* pathname) {
+  return VFS::get_instance().unlink(pathname);
 }
 
 }  // namespace valkyrie::kernel
