@@ -51,15 +51,19 @@ class String {
 
   char& operator [](size_t i) { return _s[i]; }
 
-  bool operator ==(const String& other) const {
-    return !strcmp(c_str(), other.c_str());
+  bool operator ==(const String& r) const {
+    return !strcmp(c_str(), r.c_str());
   }
 
-  String operator +(const String& other) const {
+  String operator +(const String& r) const {
+    if (r.empty()) {
+      return *this;
+    }
+
     String ret;
-    ret._s = make_unique<char[]>(size() + other.size() + 1);
+    ret._s = make_unique<char[]>(size() + r.size() + 1);
     strcpy(ret._s.get(), _s.get());
-    strcat(ret._s.get(), other._s.get());
+    strcat(ret._s.get(), r._s.get());
     return ret;
   }
 
