@@ -26,7 +26,7 @@ VFS::VFS()
       _opened_files() {}
 
 
-void VFS::mount_attached_storage_devices() {
+void VFS::mount_rootfs() {
   // TODO: currently it only supports SD card.
   auto sdcard = make_unique<StorageDevice>(SDCardDriver::get_instance());
   _storage_devices.push_back(move(sdcard));

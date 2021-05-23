@@ -26,9 +26,7 @@ class VFS final {
   VFS& operator =(VFS&&) = delete;
 
 
-  void mount_attached_storage_devices();
-  void mount_rootfs(FileSystem& fs);
-  void mount_rootfs(FileSystem& fs, const CPIOArchive& archive);
+  void mount_rootfs();
 
   SharedPtr<File> open(const String& pathname, int options);
   int close(SharedPtr<File> file);
@@ -44,6 +42,9 @@ class VFS final {
 
  private:
   VFS();
+
+  void mount_rootfs(FileSystem& fs);
+  void mount_rootfs(FileSystem& fs, const CPIOArchive& archive);
 
   SharedPtr<Vnode> create(const String& pathname,
                           const char* content,
