@@ -1,10 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
-#include <fs/CPIOArchive.h>
-#include <fs/FAT32.h>
-#include <fs/TmpFS.h>
-
 namespace valkyrie::kernel {
 
 Kernel& Kernel::get_instance() {
