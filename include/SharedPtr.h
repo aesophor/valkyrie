@@ -61,7 +61,9 @@ class SharedPtr {
 
   // Copy assignment operator
   SharedPtr& operator =(const SharedPtr& r) {
-    reset();
+    if (is_valid()) {
+      reset();
+    }
 
     _ctrl = r._ctrl;
     _alias = r._alias;
@@ -79,7 +81,9 @@ class SharedPtr {
 
   // Move assignment operator
   SharedPtr& operator =(SharedPtr&& r) noexcept {
-    reset();
+    if (is_valid()) {
+      reset();
+    }
 
     _ctrl = r._ctrl;
     _alias = r._alias;
