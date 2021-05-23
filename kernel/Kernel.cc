@@ -31,7 +31,7 @@ void Kernel::run() {
   */
  
   printk("VFS: mounting rootfs...\n");
-  _vfs.mount_attached_storage_devices();
+  _vfs.mount_rootfs();
 
   printk("starting task scheduler...\n");
   _task_scheduler.run();
