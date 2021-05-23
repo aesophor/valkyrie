@@ -61,6 +61,8 @@ class SharedPtr {
 
   // Copy assignment operator
   SharedPtr& operator =(const SharedPtr& r) {
+    reset();
+
     _ctrl = r._ctrl;
     _alias = r._alias;
     inc_use_count();
@@ -77,9 +79,8 @@ class SharedPtr {
 
   // Move assignment operator
   SharedPtr& operator =(SharedPtr&& r) noexcept {
-    if (is_valid()) {
-      dec_use_count();
-    }
+    reset();
+
     _ctrl = r._ctrl;
     _alias = r._alias;
     r._ctrl = nullptr;
