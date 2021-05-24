@@ -5,6 +5,7 @@
 #include <Functional.h>
 #include <List.h>
 #include <Memory.h>
+#include <Types.h>
 #include <dev/DiskPartition.h>
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
@@ -39,7 +40,7 @@ class FAT32 final : public FileSystem {
       return *reinterpret_cast<const uint8_t*>(this) == 0xe5;
     }
 
-    [[gnu::always_inline]] bool is_end_of_cluster_chain() const {
+    [[gnu::always_inline]] bool is_the_end() const {
       return *reinterpret_cast<const uint8_t*>(this) == 0;
     }
 
@@ -165,13 +166,13 @@ class FAT32 final : public FileSystem {
 
 
   // Read/Write the i-th entry of the first FAT.
-  uint32_t fat_read(const uint32_t i) const;
-  void fat_write(const uint32_t i, const uint32_t val) const;
+  uint32_t fat_read(const uint32_t fat_entry_index) const;
+  void fat_write(const uint32_t fat_entry_index, const uint32_t val) const;
   uint32_t fat_find_free_cluster() const;
 
   // Read/Write the i-th cluster from/to the data region.
-  void cluster_read(const uint32_t i, void* buf) const;
-  void cluster_write(const uint32_t i, const void* buf) const;
+  void cluster_read(const uint32_t cluster_number, void* buf) const;
+  void cluster_write(const uint32_t cluster_number, const void* buf) const;
 
 
   DiskPartition& _disk_partition;

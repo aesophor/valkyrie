@@ -35,7 +35,7 @@ StorageDevice::StorageDevice(BlockDeviceDriver& driver,
     _partitions.push_back(
         make_unique<DiskPartition>(*this, start_block_index, end_block_index, String("sda") + "1"));
 
-    printk("partition [%d]: begin = 0x%x, size = 0x%x\n", i, start_block_index, mbr->partitions[i].nr_sectors);
+    //printk("partition [%d]: begin = 0x%x, size = 0x%x\n", i, start_block_index, mbr->partitions[i].nr_sectors);
   }
 
 }

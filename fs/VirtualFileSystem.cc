@@ -32,6 +32,7 @@ void VFS::mount_rootfs() {
   _storage_devices.push_back(move(sdcard));
 
   mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
+  printk("VFS: mounted root filesystem\n");
 }
 
 void VFS::mount_rootfs(FileSystem& fs) {
