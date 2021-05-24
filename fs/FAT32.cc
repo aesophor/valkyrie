@@ -108,7 +108,7 @@ String FAT32::FilenameEntry::get_filename() const {
 
   memcpy(filename, filename_part1, 5 * 2);
   memcpy(filename + 5, filename_part2, 6 * 2);
-  memcpy(filename + 5 + 6, filename_part3, 2 * 2);
+  memcpy(filename + 11, filename_part3, 2 * 2);
   filename[13] = 0;
 
   ucs2utf(reinterpret_cast<utf8_char_t*>(out), filename);
@@ -154,37 +154,50 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                           mode_t mode,
                                           uid_t uid,
                                           gid_t gid) {
-  // 1. Find an empty entry in the FAT table.
-  uint32_t free_cluster_number = _fs.fat_find_free_cluster();
-
   List<String> name_segments;
   for (size_t i = 0; i < name.size(); i += 13) {
     name_segments.push_front(name.substr(i, 13));
   }
 
-  // 2. Find `name_segments.size()` contiguous free entries in the target directory.
+  // Find `name_segments.size() +` contiguous free entries in the target directory.
+  // See if we can find n contiguous free entries in the target directory,
+  // where n = name_segment.size() + 1
+  //           -------------------   -
+  //               # of fentry      # of dentry
   auto cluster = make_unique<char[]>(512);
   uint32_t cluster_number = 0;
   uint32_t cluster_offset = 0;
   uint32_t counter = 0;
 
   // Follow the directory's cluster chain until EoC is found.
-  for (uint32_t n = _first_cluster_number; !FAT32_IS_EOC(n); n = _fs.fat_read(n)) {
+  for (uint32_t n = _first_cluster_number;
+       !FAT32_IS_EOC(n) && counter < name_segments.size() + 1;
+       n = _fs.fat_read(n)) {
     _fs.cluster_read(n, cluster.get());
 
     // Scan each fentry/dentry in this cluster.
-    for (char* ptr = cluster.get(); ptr < cluster.get() + 512; ptr += 32) {
+    for (char* ptr = cluster.get();
+         ptr < cluster.get() + 512 && counter < name_segments.size() + 1;
+         ptr += 32) {
       const FAT32::FilenameEntry fentry(ptr);
       
       if (fentry.is_deleted()) {
+        // Keep track of the first free cluster number and offset.
+        if (counter == 0) {
+          cluster_number = n;
+          cluster_offset = ptr - cluster.get();
+        }
+
+        // If we've found enough entries to reuse, we can break the loop.
         if (++counter == name_segments.size() + 1) {
           break;
         }
+
+        // Otherwise, keep searching.
         continue;
       }
 
-      cluster_number = n;
-      cluster_offset = ptr - cluster.get();
+      // We've reached a normal entry? Reset counter.
       counter = 0;
 
       if (fentry.is_the_end()) {
@@ -200,7 +213,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   // At this point, `cluster_number` and `cluster_offset`
   // will refer to the EoC entry of this directory. We should
   // add n empty entries to this directory.
-  if (counter == 0) {
+  if (counter < name_segments.size() + 1) {
+    //printk("no reusable contiguous deleted entries, appending to the end\n");
     size_t entries_to_allocate = name_segments.size() + 1;
 
     // Follow the directory's cluster chain until EoC is found.
@@ -210,7 +224,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
       _fs.cluster_read(n, cluster.get());
 
       // Scan each fentry/dentry in this cluster.
-      for (char* ptr = cluster.get();
+      for (char* ptr = cluster.get() + cluster_offset;
            ptr < cluster.get() + 512 && entries_to_allocate > 0;
            ptr += 32) {
 
@@ -233,24 +247,23 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     counter = name_segments.size();
   }
 
-
   // Now write the fentry(s) and the dentry to the entries
   // that are referred to by `cluster_number` and `cluster_offset`.
   bool has_written_0x40 = false;
-  List<String>::Iterator it = name_segments.begin();
+  auto it = name_segments.begin();
 
   // Follow the directory's cluster chain until EoC is found.
   for (uint32_t n = cluster_number; !FAT32_IS_EOC(n); n = _fs.fat_read(n)) {
     _fs.cluster_read(n, cluster.get());
 
     // Scan each fentry/dentry in this cluster.
-    for (char* ptr = cluster.get(); ptr < cluster.get() + 512; ptr += 32) {
+    for (char* ptr = cluster.get() + cluster_offset; ptr < cluster.get() + 512; ptr += 32) {
       if (--counter > 0) {
         ucs2_char_t name_part_ucs2[14];
-        const String& name_part_utf8 = *it++;
+        String name_part_utf8 = *it;
         utf2ucs(name_part_ucs2, reinterpret_cast<const utf8_char_t*>(name_part_utf8.c_str()));
 
-        auto fentry = reinterpret_cast<FAT32::FilenameEntry*>(ptr);
+        FAT32::FilenameEntry* fentry = reinterpret_cast<FAT32::FilenameEntry*>(ptr);
         fentry->sequence_number = counter;
         fentry->attributes = ATTR_LFN_ENTRY;
         fentry->first_cluster = 0;
@@ -264,31 +277,44 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         }
 
         _fs.cluster_write(n, cluster.get());
+        it++;
 
       } else {
+        // Find an empty entry in the FAT table.
+        uint32_t free_cluster_number = _fs.fat_find_free_cluster();
+
+        if (free_cluster_number == static_cast<uint32_t>(-1)) {
+          return nullptr;
+        }
+
         auto dentry = reinterpret_cast<FAT32::DirectoryEntry*>(ptr);
         dentry->attributes = 0;
         dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
         dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
         dentry->size = size;
+        memcpy(dentry->name, name_segments.front().c_str(), 11);
+
+        if (dentry->name[0] == 0) {
+          Kernel::panic("this shit shouldnt be zero\n");
+        }
 
         _fs.cluster_write(n, cluster.get());
         _fs.fat_write(free_cluster_number, FAT32_EOC_MAX);
 
         return make_shared<FAT32Inode>(_fs,
-            name,
-            free_cluster_number,
-            cluster_number,
-            cluster_offset,
-            0,  // dentry->size
-            mode,
-            0,
-            0);
+                                       name,
+                                       free_cluster_number,
+                                       n,
+                                       ptr - cluster.get(),
+                                       0,  // dentry->size
+                                       mode,
+                                       0,
+                                       0);
       }
     }
   }
 
-  // Shouldn't have reached here.
+  Kernel::panic("fat32inode: create_child: shouldn't have reached here\n");
   return nullptr;
 }
 

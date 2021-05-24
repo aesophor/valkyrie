@@ -76,8 +76,8 @@ class List {
 
   Iterator begin() { return Iterator::begin(*this); }
   Iterator end() { return Iterator::end(*this); }
-  ConstIterator begin() const { return ConstIterator::begin(*this); }
-  ConstIterator end() const { return ConstIterator::end(*this); }
+  //ConstIterator begin() const { return ConstIterator::begin(*this); }
+  //ConstIterator end() const { return ConstIterator::end(*this); }
 
 
   template <typename U>
