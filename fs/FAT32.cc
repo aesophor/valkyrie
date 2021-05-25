@@ -85,14 +85,20 @@ void FAT32::cluster_write(const uint32_t cluster_number, const void* buf) const 
 }
 
 String FAT32::generate_short_filename(String long_filename) const {
+  if (long_filename.empty()) [[unlikely]] {
+    // TODO: maybe don't just panic here...
+    Kernel::panic("fat32: generate_short_filename() takes an empty string\n");
+  }
+
+  bool lossy_conversion = false;
+  int chars_copied = 0;
   char basis[8];
-  char numeric_tail[3];
+  char extension[3];
 
   // 1. The UNICODE name passed to the file system is converted to upper case.
   long_filename.to_upper();
 
   // 2. The upper cased UNICODE name is converted to OEM.
-  bool lossy_conversion = false;
   for (auto& c : long_filename) {
     if (!is_valid_short_filename_char(c)) {
       c = '_';
@@ -107,7 +113,37 @@ String FAT32::generate_short_filename(String long_filename) const {
   long_filename = long_filename.substr(long_filename.find_first_not_of('.'));
 
   // 5. (No desc)
+  for (const auto c : long_filename) {
+    if (c == '.' || chars_copied >= 8) {
+      break;
+    }
+    basis[7] = c;
+  }
 
+  // 6. Insert a dot at the end of the primary components of the basis-name
+  //    iff the basis name has an extension after the last period in the name.
+  if (long_filename.find_last_of('.') != long_filename.size() - 1) {
+    basis[7] = '.';
+  }
+
+  // 7. Scan for the last embedded period in the long name.
+  chars_copied = 0;
+  if (auto pos = long_filename.find_last_of('.') != String::npos) {
+    for (size_t i = pos + 1; i < long_filename.size(); i++) {
+      if (chars_copied >= 3) {
+        break;
+      }
+      extension[chars_copied++] = long_filename[i];
+    }
+  }
+
+
+  // Generate numeric tail.
+  if (!lossy_conversion) {
+
+  } else {
+
+  }
 }
 
 bool FAT32::is_valid_short_filename_char(const uint8_t c) const {
