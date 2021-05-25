@@ -168,40 +168,45 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   uint32_t cluster_number = 0;
   uint32_t cluster_offset = 0;
   uint32_t counter = 0;
+  bool keep_searching = true;
 
   // Follow the directory's cluster chain until EoC is found.
   for (uint32_t n = _first_cluster_number;
-       !FAT32_IS_EOC(n) && counter < name_segments.size() + 1;
+       !FAT32_IS_EOC(n) && keep_searching;
        n = _fs.fat_read(n)) {
     _fs.cluster_read(n, cluster.get());
 
     // Scan each fentry/dentry in this cluster.
     for (char* ptr = cluster.get();
-         ptr < cluster.get() + 512 && counter < name_segments.size() + 1;
+         ptr < cluster.get() + 512 && keep_searching;
          ptr += 32) {
-      const FAT32::FilenameEntry fentry(ptr);
-      
-      if (fentry.is_deleted()) {
-        // Keep track of the first free cluster number and offset.
-        if (counter == 0) {
+      const FAT32::FilenameEntry entry(ptr);
+
+      if (entry.is_the_end()) {
+        cluster_number = n;
+        cluster_offset = ptr - cluster.get();
+        counter = 0;
+        keep_searching = false;
+        break;
+      }
+
+      if (entry.attributes == ATTR_LFN_ENTRY) {
+        if (counter++ == 0) {
           cluster_number = n;
           cluster_offset = ptr - cluster.get();
         }
-
-        // If we've found enough entries to reuse, we can break the loop.
-        if (++counter == name_segments.size() + 1) {
+      } else {
+        // The fentries of a deleted dentry are usually untouched
+        // even after deletion, so we only confirm whether we can
+        // reuse these entries until we've reached the deleted dentry.
+        if (!entry.is_deleted()) {
+          cluster_number = n;
+          cluster_offset = ptr - cluster.get();
+          counter = 0;
+        } else if (++counter == name_segments.size() + 1) {
+          keep_searching = false;
           break;
         }
-
-        // Otherwise, keep searching.
-        continue;
-      }
-
-      // We've reached a normal entry? Reset counter.
-      counter = 0;
-
-      if (fentry.is_the_end()) {
-        break;
       }
     }
   }
@@ -214,8 +219,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   // will refer to the EoC entry of this directory. We should
   // add n empty entries to this directory.
   if (counter < name_segments.size() + 1) {
-    //printk("no reusable contiguous deleted entries, appending to the end\n");
-    size_t entries_to_allocate = name_segments.size() + 1;
+    printk("no reusable contiguous deleted entries, appending to the end\n");
+    size_t entries_to_allocate = name_segments.size() + 2;  // +2 because for end entry
 
     // Follow the directory's cluster chain until EoC is found.
     for (uint32_t n = cluster_number;
@@ -229,14 +234,24 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
            ptr += 32) {
 
         if (FAT32::DirectoryEntry(ptr).is_the_end()) {
+          *ptr = 0;
 
           // Allocate a new cluster if needed.
+          // Important note: after allocating a new cluster,
+          // we also need to make each of its entries start with a null byte.
           if (ptr == cluster.get() + 512 - 32) {
             uint32_t new_cluster_number = _fs.fat_find_free_cluster();
             if (new_cluster_number == static_cast<uint32_t>(-1)) [[unlikely]] {
               return nullptr;
             }
             _fs.fat_write(n, new_cluster_number);
+            _fs.fat_write(new_cluster_number, FAT32_EOC_MAX);
+
+            _fs.cluster_read(new_cluster_number, cluster.get());
+            for (char* ptr = cluster.get(); ptr < cluster.get() + 512; ptr += 32) {
+              *ptr = 0;
+            }
+            _fs.cluster_write(new_cluster_number, cluster.get());
           }
 
           entries_to_allocate--;
@@ -244,22 +259,33 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
       }
     }
 
-    counter = name_segments.size();
+    counter = name_segments.size() + 1;
+  } else {
+    printk("found %d reusable slots, cluster = %d, offset = %d\n", counter, cluster_number, cluster_offset);
   }
+
+  /*
+  printk("name_segments: [");
+  for (const auto& s : name_segments) {
+    printf("%s,", s.c_str());
+  }
+  printf("]\n");
+  */
 
   // Now write the fentry(s) and the dentry to the entries
   // that are referred to by `cluster_number` and `cluster_offset`.
+  counter = name_segments.size() + 1;
   bool has_written_0x40 = false;
   auto it = name_segments.begin();
 
   // Follow the directory's cluster chain until EoC is found.
-  for (uint32_t n = cluster_number; !FAT32_IS_EOC(n); n = _fs.fat_read(n)) {
+  for (uint32_t n = cluster_number; !FAT32_IS_EOC(n); n = _fs.fat_read(n), cluster_offset = 0) {
     _fs.cluster_read(n, cluster.get());
 
     // Scan each fentry/dentry in this cluster.
     for (char* ptr = cluster.get() + cluster_offset; ptr < cluster.get() + 512; ptr += 32) {
       if (--counter > 0) {
-        ucs2_char_t name_part_ucs2[14];
+        ucs2_char_t name_part_ucs2[14] = {0};
         String name_part_utf8 = *it;
         utf2ucs(name_part_ucs2, reinterpret_cast<const utf8_char_t*>(name_part_utf8.c_str()));
 
@@ -276,6 +302,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
           has_written_0x40 = true;
         }
 
+        printk("writing fentry: %s (n = %d, offset = %d)\n", name_part_utf8.c_str(), n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         it++;
 
@@ -292,15 +319,21 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
         dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
         dentry->size = size;
-        memcpy(dentry->name, name_segments.front().c_str(), 11);
 
-        if (dentry->name[0] == 0) {
-          Kernel::panic("this shit shouldnt be zero\n");
+        memset(dentry, ' ', 11);
+        if (name_segments.back().front() < 127) {
+          memcpy(dentry->name, name_segments.back().c_str(), 11);
+        } else {
+          dentry->name[0] = '_';
+          dentry->name[1] = '~';
+          dentry->name[2] = '1';
         }
 
+        printk("writing dentry (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         _fs.fat_write(free_cluster_number, FAT32_EOC_MAX);
 
+        printk("---\n");
         return make_shared<FAT32Inode>(_fs,
                                        name,
                                        free_cluster_number,
@@ -314,7 +347,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     }
   }
 
-  Kernel::panic("fat32inode: create_child: shouldn't have reached here\n");
+  // Shouldn't have reached here.
+  Kernel::panic("should not have reached here\n");
   return nullptr;
 }
 
@@ -446,16 +480,36 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
       const FAT32::FilenameEntry fentry(ptr);
 
       if (fentry.is_deleted()) {
+        /*
+        printk("found deleted entry (%d, %d)\n", n, ptr - cluster.get());
+        for (int i = 0; i < 13; i++) {
+          printf("%x ", ptr[i]);
+        }
+        printf("\n");
+        */
         continue;
       }
 
       if (fentry.is_the_end()) {
+        /*
+        printk("found end marker (%d, %d)\n", n, ptr - cluster.get());
+        for (int i = 0; i < 13; i++) {
+          printf("%x ", ptr[i]);
+        }
+        printf("\n");
+        */
         return;
       }
 
       if (fentry.attributes == ATTR_LFN_ENTRY) {
+        if (fentry.sequence_number & 0x40) {
+          dentry_view.name.clear();
+        }
+
+        printk("found fentry (%d, %d): %s\n", n, ptr - cluster.get(), fentry.get_filename().c_str());
         dentry_view.name = fentry.get_filename() + dentry_view.name;
       } else {
+        printk("found dentry (%d, %d)\n", n, ptr - cluster.get());
         const FAT32::DirectoryEntry dentry(ptr);
         dentry_view.dentry = dentry;
         dentry_view.parent_cluster_number = n;
@@ -466,7 +520,6 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
         }
 
         dentry_view.index++;
-        dentry_view.name.clear();
       }
     }
   }
