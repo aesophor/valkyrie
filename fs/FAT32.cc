@@ -84,6 +84,64 @@ void FAT32::cluster_write(const uint32_t cluster_number, const void* buf) const 
   _disk_partition.write_block(cluster_sector_index(cluster_number), buf);
 }
 
+String FAT32::generate_short_filename(String long_filename) const {
+  char basis[8];
+  char numeric_tail[3];
+
+  // 1. The UNICODE name passed to the file system is converted to upper case.
+  long_filename.to_upper();
+
+  // 2. The upper cased UNICODE name is converted to OEM.
+  bool lossy_conversion = false;
+  for (auto& c : long_filename) {
+    if (!is_valid_short_filename_char(c)) {
+      c = '_';
+      lossy_conversion = true;
+    }
+  }
+
+  // 3. Strip all leading and embedded spaces from the long name.
+  long_filename.remove(' ');
+
+  // 4. Strip all leading periods from the long name.
+  long_filename = long_filename.substr(long_filename.find_first_not_of('.'));
+
+  // 5. (No desc)
+
+}
+
+bool FAT32::is_valid_short_filename_char(const uint8_t c) const {
+  // According to: https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+  // Legal characters for DOS short filenames include the following:
+  // 1. Upper case letters A–Z
+  // 2. Numbers 0–9
+  // 3. Space
+  // 4. ! # $ % & ' ( ) - @ ^ _ ` { } ~
+  // 5. Characters 128–228
+  // 6. Characters 230–255
+  return (c >= 'A' && c <= 'Z') ||
+         (c >= '0' && c <= '9') ||
+         (c >= 128 && c <= 228) ||
+         (c >= 230 && c <= 255) ||
+         (c == ' ') ||
+         (c == '!') ||
+         (c == '#') ||
+         (c == '$') ||
+         (c == '%') ||
+         (c == '&') ||
+         (c == '\'') ||
+         (c == '(') ||
+         (c == ')') ||
+         (c == '-') ||
+         (c == '@') ||
+         (c == '^') ||
+         (c == '_') ||
+         (c == '`') ||
+         (c == '{') ||
+         (c == '}') ||
+         (c == '~');
+}
+
 
 SharedPtr<Vnode> FAT32::get_root_vnode() {
   return _root_inode;

@@ -135,6 +135,31 @@ class String {
   }
 
 
+  // FIXME: maybe we should conform to the STL version...
+  // but I'm too busy this week @_@
+  void remove(const char val) {
+    int slow = 0;
+    int fast = 0;
+    
+    while (fast < size()) {
+      if (_s[fast] == val) {
+        fast++;
+      } else {
+        _s[slow] = _s[fast];
+        slow++;
+        fast++;
+      }
+    }
+    
+    size_t new_size = size() - (fast - slow);
+    if (new_size > 0) {
+      _s[new_size - 1] = 0;
+    } else {
+      _s[0] = 0;
+    }
+  }
+
+
   String substr(size_t begin, size_t len = npos) const {
     if (empty()) {
       return {};
@@ -179,7 +204,7 @@ class String {
     return substrings;
   }
 
-  String& to_upper() {
+  void to_upper() {
     constexpr int offset = 'a' - 'A';
 
     for (auto& c : *this) {
@@ -187,10 +212,9 @@ class String {
         c -= offset;
       }
     }
-    return *this;
   }
 
-  String& to_lower() {
+  void to_lower() {
     constexpr int offset = 'a' - 'A';
 
     for (auto& c : *this) {
@@ -198,7 +222,6 @@ class String {
         c += offset;
       }
     }
-    return *this;
   }
 
 

@@ -174,6 +174,13 @@ class FAT32 final : public FileSystem {
   void cluster_read(const uint32_t cluster_number, void* buf) const;
   void cluster_write(const uint32_t cluster_number, const void* buf) const;
 
+  // Generate short file name from a given long file name.
+  // The algorithm is provided in Microsoft's fatspec.pdf p.30
+  String generate_short_filename(String long_filename) const;
+
+  // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+  bool is_valid_short_filename_char(const uint8_t c) const;
+
 
   DiskPartition& _disk_partition;
   const BootSector _metadata;
