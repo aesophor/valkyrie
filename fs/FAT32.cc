@@ -155,6 +155,7 @@ String FAT32::generate_short_filename(String long_filename) const {
     // the value of the "~n" is chosen so that:
     // 1. the name thus formed does not collide with any existing short name, and
     // 2. the primary name does not exceed eight characters in length.
+    // TODO: prevent agaisnt SFN collision...
     basis[6] = '~';
     basis[7] = '1';
   }
@@ -277,15 +278,30 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                           gid_t gid) {
   String short_filename = _fs.generate_short_filename(name);
 
-  size_t filename_ucs_len = name.size() * 2;
-  ucs2_char_t filename_ucs[filename_ucs_len + 1];
-  memset(filename_ucs, static_cast<uint8_t>(0xffff), filename_ucs_len);
+  // UTF-8 is a variable-width character encoding scheme, while
+  // UCS-2 is a fixed-with character encoding shceme. Therefore,
+  // we'll first create a buffer which has sufficent space to hold
+  // the longest string possible, and then recalculate the length later.
+  size_t name_size = name.size();
+  ucs2_char_t filename_ucs[name_size + 1];
+  memset(filename_ucs, 0xff, name_size * 2);
   utf2ucs(filename_ucs, reinterpret_cast<const utf8_char_t*>(name.c_str()));
 
+  name_size = 0;
+  for (auto c : filename_ucs) {
+    if (c == 0x0000) {
+      break;
+    }
+    name_size++;
+  }
+
   List<ucs2_char_t*> name_segments;
-  for (size_t i = 0; i < filename_ucs_len; i += 13) {
+  for (size_t i = 0; i < name_size; i += 13) {
     name_segments.push_front(filename_ucs + i);
   }
+
+  printk("fat32: creating child: %s, name_size = %d, name_segments.size() = %d\n",
+      name.c_str(), name_size, name_segments.size());
 
 
   // Find `name_segments.size() +` contiguous free entries in the target directory.
@@ -431,7 +447,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
           has_written_0x40 = true;
         }
 
-        //printk("writing fentry: %s (n = %d, offset = %d)\n", name_part_utf8.c_str(), n, ptr - cluster.get());
+        printk("writing fentry: (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         it++;
 
@@ -627,11 +643,13 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
           dentry_view.name.clear();
         }
 
+        /*
         printk("found fentry (%d, %d): %s ", n, ptr - cluster.get(), fentry.get_filename().c_str());
         for (size_t i = 0; i < 32; i++) {
           printf("%x ", ptr[i]);
         }
         printf("\n");
+        */
 
         dentry_view.name = fentry.get_filename() + dentry_view.name;
       } else {
@@ -639,15 +657,17 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
         char sfn[12] = {};
         memcpy(sfn, dentry.name, 11);
 
-        printk("found dentry (%d, %d): %s ", n, ptr - cluster.get(), sfn);
+        //printk("found dentry (%d, %d): %s ", n, ptr - cluster.get(), sfn);
         dentry_view.dentry = dentry;
         dentry_view.parent_cluster_number = n;
         dentry_view.parent_cluster_offset = ptr - cluster.get();
 
+        /*
         for (size_t i = 0; i < 32; i++) {
           printf("%x ", ptr[i]);
         }
         printf("\n");
+        */
 
         if (f(dentry_view)) {
           return;
