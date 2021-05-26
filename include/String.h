@@ -138,8 +138,8 @@ class String {
   // FIXME: maybe we should conform to the STL version...
   // but I'm too busy this week @_@
   void remove(const char val) {
-    int slow = 0;
-    int fast = 0;
+    size_t slow = 0;
+    size_t fast = 0;
     
     while (fast < size()) {
       if (_s[fast] == val) {

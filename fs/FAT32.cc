@@ -84,6 +84,16 @@ void FAT32::cluster_write(const uint32_t cluster_number, const void* buf) const 
   _disk_partition.write_block(cluster_sector_index(cluster_number), buf);
 }
 
+uint8_t FAT32::lfn_checksum(const uint8_t* short_filename) const {
+  int i;
+  unsigned char sum = 0;
+
+  for (i = 11; i; i--) {
+    sum = ((sum & 1) << 7) + (sum >> 1) + *short_filename++;
+  }
+  return sum;
+}
+
 String FAT32::generate_short_filename(String long_filename) const {
   if (long_filename.empty()) [[unlikely]] {
     // TODO: maybe don't just panic here...
@@ -92,8 +102,10 @@ String FAT32::generate_short_filename(String long_filename) const {
 
   bool lossy_conversion = false;
   int chars_copied = 0;
-  char basis[8];
-  char extension[3];
+  char basis[12];
+
+  // Fill `basis` with space characters.
+  memset(basis, ' ', 11);
 
   // 1. The UNICODE name passed to the file system is converted to upper case.
   long_filename.to_upper();
@@ -120,30 +132,36 @@ String FAT32::generate_short_filename(String long_filename) const {
     basis[7] = c;
   }
 
-  // 6. Insert a dot at the end of the primary components of the basis-name
-  //    iff the basis name has an extension after the last period in the name.
-  if (long_filename.find_last_of('.') != long_filename.size() - 1) {
-    basis[7] = '.';
-  }
-
-  // 7. Scan for the last embedded period in the long name.
+  // 6. Scan for the last embedded period in the long name.
   chars_copied = 0;
   if (auto pos = long_filename.find_last_of('.') != String::npos) {
     for (size_t i = pos + 1; i < long_filename.size(); i++) {
       if (chars_copied >= 3) {
         break;
       }
-      extension[chars_copied++] = long_filename[i];
+      basis[8 + chars_copied++] = long_filename[i];
     }
   }
 
 
   // Generate numeric tail.
-  if (!lossy_conversion) {
-
+  if (!lossy_conversion &&
+      can_fit_within_83_short_filename(long_filename)
+      /* TODO: basis name shouldn't collide with any existing short name)*/) {
+    // The short name is only the basis-name without the numeric tail.
+    return basis;
   } else {
-
+    // Insert a numeric-tail "~n" to the end of the primary name such that
+    // the value of the "~n" is chosen so that:
+    // 1. the name thus formed does not collide with any existing short name, and
+    // 2. the primary name does not exceed eight characters in length.
+    basis[6] = '~';
+    basis[7] = '1';
   }
+
+  // Make sure the string is NULL-terminated.
+  basis[sizeof(basis) - 1] = 0;
+  return basis;
 }
 
 bool FAT32::is_valid_short_filename_char(const uint8_t c) const {
@@ -176,6 +194,15 @@ bool FAT32::is_valid_short_filename_char(const uint8_t c) const {
          (c == '{') ||
          (c == '}') ||
          (c == '~');
+}
+
+bool FAT32::can_fit_within_83_short_filename(const String& long_filename) const {
+  auto first_period_pos = long_filename.find_first_of('.');
+  auto last_period_pos = long_filename.find_last_of('.');
+
+  return long_filename.size() <= 11 &&
+         (first_period_pos == String::npos || first_period_pos <= 8)  &&
+         (last_period_pos == String::npos || long_filename.size() - last_period_pos <= 3);
 }
 
 
@@ -248,10 +275,13 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                           mode_t mode,
                                           uid_t uid,
                                           gid_t gid) {
+  String short_filename = _fs.generate_short_filename(name);
+
   List<String> name_segments;
   for (size_t i = 0; i < name.size(); i += 13) {
     name_segments.push_front(name.substr(i, 13));
   }
+
 
   // Find `name_segments.size() +` contiguous free entries in the target directory.
   // See if we can find n contiguous free entries in the target directory,
@@ -379,13 +409,17 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     // Scan each fentry/dentry in this cluster.
     for (char* ptr = cluster.get() + cluster_offset; ptr < cluster.get() + 512; ptr += 32) {
       if (--counter > 0) {
-        ucs2_char_t name_part_ucs2[14] = {0};
+        ucs2_char_t name_part_ucs2[14];
         String name_part_utf8 = *it;
+
+        memset(name_part_ucs2, static_cast<uint8_t>(0xffff), 14 * 2);
         utf2ucs(name_part_ucs2, reinterpret_cast<const utf8_char_t*>(name_part_utf8.c_str()));
 
         FAT32::FilenameEntry* fentry = reinterpret_cast<FAT32::FilenameEntry*>(ptr);
         fentry->sequence_number = counter;
         fentry->attributes = ATTR_LFN_ENTRY;
+        fentry->type = 0;
+        fentry->checksum = _fs.lfn_checksum(reinterpret_cast<const uint8_t*>(short_filename.c_str()));
         fentry->first_cluster = 0;
         memcpy(fentry->filename_part1, name_part_ucs2, 5 * 2);
         memcpy(fentry->filename_part2, name_part_ucs2 + 5, 6 * 2);
@@ -413,16 +447,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
         dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
         dentry->size = size;
-
-        memset(dentry, ' ', 11);
-        if (name_segments.back().front() < 127) {
-          memcpy(dentry->name, name_segments.back().c_str(), 11);
-        } else {
-          dentry->name[0] = '_';
-          dentry->name[1] = '~';
-          dentry->name[2] = '1';
-        }
-
+        memcpy(dentry->name, short_filename.c_str(), 11);
+       
         printk("writing dentry (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         _fs.fat_write(free_cluster_number, FAT32_EOC_MAX);
@@ -600,14 +626,27 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
           dentry_view.name.clear();
         }
 
-        printk("found fentry (%d, %d): %s\n", n, ptr - cluster.get(), fentry.get_filename().c_str());
+        printk("found fentry (%d, %d): %s ", n, ptr - cluster.get(), fentry.get_filename().c_str());
+        for (size_t i = 0; i < 32; i++) {
+          printf("%x ", ptr[i]);
+        }
+        printf("\n");
+
         dentry_view.name = fentry.get_filename() + dentry_view.name;
       } else {
-        printk("found dentry (%d, %d)\n", n, ptr - cluster.get());
         const FAT32::DirectoryEntry dentry(ptr);
+        char sfn[12] = {};
+        memcpy(sfn, dentry.name, 11);
+
+        printk("found dentry (%d, %d): %s ", n, ptr - cluster.get(), sfn);
         dentry_view.dentry = dentry;
         dentry_view.parent_cluster_number = n;
         dentry_view.parent_cluster_offset = ptr - cluster.get();
+
+        for (size_t i = 0; i < 32; i++) {
+          printf("%x ", ptr[i]);
+        }
+        printf("\n");
 
         if (f(dentry_view)) {
           return;
