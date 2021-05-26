@@ -21,7 +21,7 @@
 - [x] Lab4: Exception and Interrupt Handling
 - [x] Lab5: Multitasking
 - [x] Lab6: Virtual Filesystem
-- [ ] Lab7: Filesystem Meets Hardware
+- [x] Lab7: Filesystem Meets Hardware
 - [ ] Lab8: Virtual Memory (vmm)
 
 ## Kernel Features
@@ -43,6 +43,12 @@
 - [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
 - [ ] Multi-level VFS
 - [ ] Procfs
+- [x] Parse MBR (Master Boot Record)
+- [x] FAT32 with LFN (Long File Name) support - open, read, write, close
+- [ ] Device file, mknod, UART device files
+- [ ] Component name cache mechanism for faster pathname lookup
+- [ ] Page cache mechanism for faster file r/w
+- [ ] sync() - write back cache data
 - [ ] ...
 
 ## Kernel C++20 STL Progress
