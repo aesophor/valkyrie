@@ -300,8 +300,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     name_segments.push_front(filename_ucs + i);
   }
 
-  printk("fat32: creating child: %s, name_size = %d, name_segments.size() = %d\n",
-      name.c_str(), name_size, name_segments.size());
+  //printk("fat32: creating child: %s, name_size = %d, name_segments.size() = %d\n",
+  //    name.c_str(), name_size, name_segments.size());
 
 
   // Find `name_segments.size() +` contiguous free entries in the target directory.
@@ -364,7 +364,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   // will refer to the EoC entry of this directory. We should
   // add n empty entries to this directory.
   if (counter < name_segments.size() + 1) {
-    printk("no reusable contiguous deleted entries, appending to the end\n");
+    //printk("no reusable contiguous deleted entries, appending to the end\n");
     size_t entries_to_allocate = name_segments.size() + 2;  // +2 because for end entry
 
     // Follow the directory's cluster chain until EoC is found.
@@ -406,7 +406,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
 
     counter = name_segments.size() + 1;
   } else {
-    printk("found %d reusable slots, cluster = %d, offset = %d\n", counter, cluster_number, cluster_offset);
+    //printk("found %d reusable slots, cluster = %d, offset = %d\n", counter, cluster_number, cluster_offset);
   }
 
   /*
@@ -447,7 +447,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
           has_written_0x40 = true;
         }
 
-        printk("writing fentry: (n = %d, offset = %d)\n", n, ptr - cluster.get());
+        //printk("writing fentry: (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         it++;
 
@@ -466,11 +466,11 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         dentry->size = size;
         memcpy(dentry->name, short_filename.c_str(), 11);
        
-        printk("writing dentry (n = %d, offset = %d)\n", n, ptr - cluster.get());
+        //printk("writing dentry (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         _fs.fat_write(free_cluster_number, FAT32_EOC_MAX);
 
-        printk("---\n");
+        //printk("---\n");
         return make_shared<FAT32Inode>(_fs,
                                        name,
                                        free_cluster_number,
