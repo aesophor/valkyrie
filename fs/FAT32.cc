@@ -277,9 +277,14 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                           gid_t gid) {
   String short_filename = _fs.generate_short_filename(name);
 
-  List<String> name_segments;
-  for (size_t i = 0; i < name.size(); i += 13) {
-    name_segments.push_front(name.substr(i, 13));
+  size_t filename_ucs_len = name.size() * 2;
+  ucs2_char_t filename_ucs[filename_ucs_len + 1];
+  memset(filename_ucs, static_cast<uint8_t>(0xffff), filename_ucs_len);
+  utf2ucs(filename_ucs, reinterpret_cast<const utf8_char_t*>(name.c_str()));
+
+  List<ucs2_char_t*> name_segments;
+  for (size_t i = 0; i < filename_ucs_len; i += 13) {
+    name_segments.push_front(filename_ucs + i);
   }
 
 
@@ -409,11 +414,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     // Scan each fentry/dentry in this cluster.
     for (char* ptr = cluster.get() + cluster_offset; ptr < cluster.get() + 512; ptr += 32) {
       if (--counter > 0) {
-        ucs2_char_t name_part_ucs2[14];
-        String name_part_utf8 = *it;
-
-        memset(name_part_ucs2, static_cast<uint8_t>(0xffff), 14 * 2);
-        utf2ucs(name_part_ucs2, reinterpret_cast<const utf8_char_t*>(name_part_utf8.c_str()));
+        ucs2_char_t* name_part = *it;
 
         FAT32::FilenameEntry* fentry = reinterpret_cast<FAT32::FilenameEntry*>(ptr);
         fentry->sequence_number = counter;
@@ -421,16 +422,16 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         fentry->type = 0;
         fentry->checksum = _fs.lfn_checksum(reinterpret_cast<const uint8_t*>(short_filename.c_str()));
         fentry->first_cluster = 0;
-        memcpy(fentry->filename_part1, name_part_ucs2, 5 * 2);
-        memcpy(fentry->filename_part2, name_part_ucs2 + 5, 6 * 2);
-        memcpy(fentry->filename_part3, name_part_ucs2 + 11, 2 * 2);
+        memcpy(fentry->filename_part1, name_part, 5 * 2);
+        memcpy(fentry->filename_part2, name_part + 5, 6 * 2);
+        memcpy(fentry->filename_part3, name_part + 11, 2 * 2);
 
         if (!has_written_0x40) {
           fentry->sequence_number |= 0x40;
           has_written_0x40 = true;
         }
 
-        printk("writing fentry: %s (n = %d, offset = %d)\n", name_part_utf8.c_str(), n, ptr - cluster.get());
+        //printk("writing fentry: %s (n = %d, offset = %d)\n", name_part_utf8.c_str(), n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         it++;
 
