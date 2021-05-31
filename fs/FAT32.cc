@@ -8,7 +8,7 @@
 
 #define FAT32_EOC_MIN   0x0ffffff8
 #define FAT32_EOC_MAX   0x0fffffff
-#define FAT32_IS_EOC(x) (FAT32_EOC_MIN <= x && x <= FAT32_EOC_MAX)
+#define FAT32_IS_EOC(x) (FAT32_EOC_MIN <= (x) && (x) <= FAT32_EOC_MAX)
 
 #define ATTR_READ_ONLY  0x01
 #define ATTR_HIDDEN     0x02
@@ -276,6 +276,11 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                           mode_t mode,
                                           uid_t uid,
                                           gid_t gid) {
+  if (!is_directory()) [[unlikely]] {
+    printk("fat32: create_child() called on a non-directory item\n");
+    return nullptr;
+  }
+
   String short_filename = _fs.generate_short_filename(name);
 
   // UTF-8 is a variable-width character encoding scheme, while
@@ -461,19 +466,25 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
 
         auto dentry = reinterpret_cast<FAT32::DirectoryEntry*>(ptr);
         dentry->attributes = 0;
-        dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
-        dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
         dentry->size = size;
+
+        if (mode & S_IFREG) {
+          dentry->first_cluster_high = 0;
+          dentry->first_cluster_low = 0;
+        } else if (mode & S_IFDIR) {
+          dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
+          dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
+        }
+
         memcpy(dentry->name, short_filename.c_str(), 11);
        
         //printk("writing dentry (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
-        _fs.fat_write(free_cluster_number, FAT32_EOC_MAX);
 
         //printk("---\n");
         return make_shared<FAT32Inode>(_fs,
                                        name,
-                                       free_cluster_number,
+                                       0,
                                        n,
                                        ptr - cluster.get(),
                                        0,  // dentry->size
@@ -509,6 +520,11 @@ size_t FAT32Inode::get_children_count() const {
 }
 
 char* FAT32Inode::get_content() {
+  if (!is_regular_file()) [[unlikely]] {
+    printk("fat32: get_content() is called on a non-regular-file item\n");
+    return nullptr;
+  }
+
   _content = make_unique<char[]>(round_up_to_multiple_of_n(_size, 512));
 
   int i = 0;
@@ -523,7 +539,7 @@ void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
   off_t buf_size = round_up_to_multiple_of_n(new_size, 512);
 
   uint32_t prev_free_cluster_number = 0;
-  uint32_t curr_free_cluster_number = _first_cluster_number;
+  uint32_t curr_free_cluster_number = _fs.fat_find_free_cluster();
 
   for (uint32_t i = 0; i < buf_size; i += 512) {
     if (curr_free_cluster_number == static_cast<uint32_t>(-1)) {
@@ -657,7 +673,7 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
         char sfn[12] = {};
         memcpy(sfn, dentry.name, 11);
 
-        //printk("found dentry (%d, %d): %s ", n, ptr - cluster.get(), sfn);
+        //printk("found dentry (%d, %d) [%d]: %s ", n, ptr - cluster.get(), dentry.get_first_cluster_number(), sfn);
         dentry_view.dentry = dentry;
         dentry_view.parent_cluster_number = n;
         dentry_view.parent_cluster_offset = ptr - cluster.get();
