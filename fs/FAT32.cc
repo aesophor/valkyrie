@@ -305,9 +305,6 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     name_segments.push_front(filename_ucs + i);
   }
 
-  //printk("fat32: creating child: %s, name_size = %d, name_segments.size() = %d\n",
-  //    name.c_str(), name_size, name_segments.size());
-
 
   // Find `name_segments.size() +` contiguous free entries in the target directory.
   // See if we can find n contiguous free entries in the target directory,
@@ -369,7 +366,6 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   // will refer to the EoC entry of this directory. We should
   // add n empty entries to this directory.
   if (counter < name_segments.size() + 1) {
-    //printk("no reusable contiguous deleted entries, appending to the end\n");
     size_t entries_to_allocate = name_segments.size() + 2;  // +2 because for end entry
 
     // Follow the directory's cluster chain until EoC is found.
@@ -410,18 +406,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     }
 
     counter = name_segments.size() + 1;
-  } else {
-    //printk("found %d reusable slots, cluster = %d, offset = %d\n", counter, cluster_number, cluster_offset);
   }
-
-  /*
-  printk("name_segments: [");
-  for (const auto& s : name_segments) {
-    printf("%s,", s.c_str());
-  }
-  printf("]\n");
-  */
-
+  
   // Now write the fentry(s) and the dentry to the entries
   // that are referred to by `cluster_number` and `cluster_offset`.
   counter = name_segments.size() + 1;
@@ -452,7 +438,6 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
           has_written_0x40 = true;
         }
 
-        //printk("writing fentry: (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
         it++;
 
@@ -478,10 +463,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
 
         memcpy(dentry->name, short_filename.c_str(), 11);
        
-        //printk("writing dentry (n = %d, offset = %d)\n", n, ptr - cluster.get());
         _fs.cluster_write(n, cluster.get());
 
-        //printk("---\n");
         return make_shared<FAT32Inode>(_fs,
                                        name,
                                        0,
@@ -641,43 +624,20 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
       const FAT32::FilenameEntry fentry(ptr);
 
       if (fentry.is_deleted()) {
-        /*
-        printk("found deleted entry (%d, %d)\n", n, ptr - cluster.get());
-        for (int i = 0; i < 13; i++) {
-          printf("%x ", ptr[i]);
-        }
-        printf("\n");
-        */
         continue;
       }
 
       if (fentry.is_the_end()) {
-        /*
-        printk("found end marker (%d, %d)\n", n, ptr - cluster.get());
-        for (int i = 0; i < 13; i++) {
-          printf("%x ", ptr[i]);
-        }
-        printf("\n");
-        */
         return;
       }
 
       if (fentry.attributes == ATTR_LFN_ENTRY) {
-        /*
-        printk("found fentry (%d, %d): %s ", n, ptr - cluster.get(), fentry.get_filename().c_str());
-        for (size_t i = 0; i < 32; i++) {
-          printf("%x ", ptr[i]);
-        }
-        printf("\n");
-        */
-
         dentry_view.name = fentry.get_filename() + dentry_view.name;
       } else {
         const FAT32::DirectoryEntry dentry(ptr);
         char sfn[12] = {};
         memcpy(sfn, dentry.name, 11);
 
-        //printk("found dentry (%d, %d) [%d]: %s\n", n, ptr - cluster.get(), dentry.get_first_cluster_number(), sfn);
         dentry_view.dentry = dentry;
         dentry_view.parent_cluster_number = n;
         dentry_view.parent_cluster_offset = ptr - cluster.get();
@@ -688,13 +648,6 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
             dentry_view.name[pos] = 0;
           }
         }
-
-        /*
-        for (size_t i = 0; i < 32; i++) {
-          printf("%x ", ptr[i]);
-        }
-        printf("\n");
-        */
 
         if (f(dentry_view)) {
           return;
