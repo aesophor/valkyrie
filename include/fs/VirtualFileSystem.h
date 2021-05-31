@@ -37,6 +37,11 @@ class VFS final {
   int rmdir(const String& pathname);
   int unlink(const String& pathname);
 
+  // Retrieves the target vnode by `pathname`.
+  SharedPtr<Vnode> resolve_path(const String& pathname,
+                                SharedPtr<Vnode>* out_parent = nullptr,
+                                String* out_basename = nullptr) const;
+
   FileSystem& get_rootfs();
   List<SharedPtr<File>>& get_opened_files();
 
@@ -52,11 +57,6 @@ class VFS final {
                           mode_t mode,
                           uid_t uid,
                           gid_t gid);
-
-  // Retrieves the target vnode by `pathname`.
-  SharedPtr<Vnode> resolve_path(const String& pathname,
-                                SharedPtr<Vnode>* out_parent = nullptr,
-                                String* out_basename = nullptr) const;
 
 
   Mount _rootfs;

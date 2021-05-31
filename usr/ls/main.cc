@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   }
 
   if (argc == 1) {
-    argv[1] = "/";
+    argv[1] = ".";
   }
 
   if ((fd = open(argv[1], 0)) == -1) {

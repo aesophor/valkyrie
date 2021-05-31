@@ -24,6 +24,7 @@ int sched_yield();
 long kill(pid_t pid, int signal);
 int signal(int signal, void (*handler)());
 int access(const char* pathname, int options);
+int chdir(const char* pathname);
 
 
 inline void __libc_putchar(void*, const char c) {

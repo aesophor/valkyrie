@@ -72,6 +72,11 @@ int run_shell(const char* username) {
     } else if (!strncmp(buf, "exit", sizeof(buf))) {
       break;
 
+    } else if (!strncmp(buf, "cd", sizeof(buf))) {
+      if (chdir(arguments[1]) == -1) {
+        printf("cd: no such file or directory: %s\n", arguments[1]);
+      }
+
     } else if (!strncmp(buf, "echo $?", sizeof(buf))) {
       printf("%d\n", wstatus);
 

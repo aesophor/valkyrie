@@ -321,7 +321,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   bool keep_searching = true;
 
   // Follow the directory's cluster chain until EoC is found.
-  for (uint32_t n = _first_cluster_number;
+  for (uint32_t n = dir_first_cluster_number();
        !FAT32_IS_EOC(n) && keep_searching;
        n = _fs.fat_read(n)) {
     _fs.cluster_read(n, cluster.get());
@@ -583,6 +583,14 @@ void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
 }
 
 
+uint32_t FAT32Inode::dir_first_cluster_number() const {
+  // If this fat32 inode represents a directory,
+  // but its `_first_cluster_number` is 0, then
+  // we should return the root directory's `_first_cluster_number`.
+  return _first_cluster_number ? _first_cluster_number
+                               : _fs._root_inode->_first_cluster_number;
+}
+
 SharedPtr<FAT32Inode>
 FAT32Inode::find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> predicate,
                           uint32_t* out_offset) const {
@@ -625,7 +633,7 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
   dentry_view.index = 0;
 
   // Follow the directory's cluster chain until EoC is found.
-  for (uint32_t n = _first_cluster_number; !FAT32_IS_EOC(n); n = _fs.fat_read(n)) {
+  for (uint32_t n = dir_first_cluster_number(); !FAT32_IS_EOC(n); n = _fs.fat_read(n)) {
     _fs.cluster_read(n, cluster.get());
 
     // Scan each fentry/dentry in this cluster.
@@ -655,10 +663,6 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
       }
 
       if (fentry.attributes == ATTR_LFN_ENTRY) {
-        if (fentry.sequence_number & 0x40) {
-          dentry_view.name.clear();
-        }
-
         /*
         printk("found fentry (%d, %d): %s ", n, ptr - cluster.get(), fentry.get_filename().c_str());
         for (size_t i = 0; i < 32; i++) {
@@ -673,10 +677,17 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
         char sfn[12] = {};
         memcpy(sfn, dentry.name, 11);
 
-        //printk("found dentry (%d, %d) [%d]: %s ", n, ptr - cluster.get(), dentry.get_first_cluster_number(), sfn);
+        //printk("found dentry (%d, %d) [%d]: %s\n", n, ptr - cluster.get(), dentry.get_first_cluster_number(), sfn);
         dentry_view.dentry = dentry;
         dentry_view.parent_cluster_number = n;
         dentry_view.parent_cluster_offset = ptr - cluster.get();
+
+        if (dentry_view.name.empty()) {
+          dentry_view.name = sfn;
+          if (auto pos = dentry_view.name.find_first_of(' '); pos != String::npos) {
+            dentry_view.name[pos] = 0;
+          }
+        }
 
         /*
         for (size_t i = 0; i < 32; i++) {
@@ -690,6 +701,7 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
         }
 
         dentry_view.index++;
+        dentry_view.name.clear();
       }
     }
   }

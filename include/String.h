@@ -84,7 +84,7 @@ class String {
   size_t find_first_of(char c, size_t pos = 0) const {
     size_t len = size();
     for (size_t i = 0; i < len; i++) {
-      if (at(i) == c) {
+      if (_s[i] == c) {
         return i;
       }
     }
@@ -94,7 +94,7 @@ class String {
   size_t find_first_not_of(char c, size_t pos = 0) const {
     size_t len = size();
     for (size_t i = 0; i < len; i++) {
-      if (at(i) != c) {
+      if (_s[i] != c) {
         return i;
       }
     }
@@ -113,7 +113,7 @@ class String {
 
     pos = (pos == npos) ? size() - 1 : pos;
     for (int i = pos; i >= 0; i--) {
-      if (at(i) == c) {
+      if (_s[i] == c) {
         return i;
       }
     }
@@ -127,7 +127,7 @@ class String {
 
     pos = (pos == npos) ? size() - 1 : pos;
     for (int i = pos; i >= 0; i--) {
-      if (at(i) != c) {
+      if (_s[i] != c) {
         return i;
       }
     }

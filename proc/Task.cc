@@ -37,7 +37,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _pending_signals(),
       _custom_signal_handlers(),
       _fd_table(),
-      _cwd_vnode(VFS::get_instance().get_rootfs().get_root_vnode().get()) {
+      _cwd_vnode(VFS::get_instance().get_rootfs().get_root_vnode()) {
 
   if (_pid == 1) [[unlikely]] {
     Task::_init = this;
@@ -189,6 +189,11 @@ int Task::do_fork() {
   // and used as the user mode SP.
   child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
   child->_trap_frame->sp_el0 = child->_ustack_page.add_offset(user_sp_offset);
+
+  // Duplicate current working directory vnode.
+  child->_cwd_vnode = _cwd_vnode;
+
+  // TODO: duplicate fd table
 
 out:
   return ret;

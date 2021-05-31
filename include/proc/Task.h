@@ -51,6 +51,12 @@ class Task {
   // Copy assignment operator
   Task& operator= (const Task& r) = delete;
 
+  // Move constructor
+  Task(Task&& r) noexcept = delete;
+
+  // Move assignment operator
+  Task& operator= (Task&& r) noexcept = delete;
+
 
   [[gnu::always_inline]] static Task* current() {
     Task* ret;
@@ -79,6 +85,7 @@ class Task {
   bool is_fd_valid(const int fd) const;
 
 
+  // FIXME: move all these definition to .cc
   Task::State get_state() const { return _state; }
   pid_t get_pid() const { return _pid; }
   TrapFrame* get_trap_frame() const { return _trap_frame; }
@@ -105,6 +112,14 @@ class Task {
     return _terminated_children.size();
   }
   
+
+  SharedPtr<Vnode> get_cwd_vnode() const {
+    return _cwd_vnode;
+  }
+
+  void set_cwd_vnode(SharedPtr<Vnode> vnode) {
+    _cwd_vnode = move(vnode);
+  }
 
  private:
   size_t copy_arguments_to_user_stack(const char* const _argv[]);
@@ -152,7 +167,7 @@ class Task {
   SharedPtr<File> _fd_table[NR_TASK_FD_LIMITS];
 
   // Current working directory
-  Vnode* _cwd_vnode;
+  SharedPtr<Vnode> _cwd_vnode;
 };
 
 }  // namespace valkyrie::kernel

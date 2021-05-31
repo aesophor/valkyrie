@@ -11,6 +11,7 @@
 #include <fs/Stat.h>
 #include <fs/Vnode.h>
 #include <kernel/Kernel.h>
+#include <proc/Task.h>
 
 namespace valkyrie::kernel {
 
@@ -239,6 +240,11 @@ int VFS::unlink(const String& pathname) {
 SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
                                    SharedPtr<Vnode>* out_parent,
                                    String* out_basename) const {
+  if (pathname == ".") {
+    // FIXME: what about out_parent and out_basename?
+    return Task::current()->get_cwd_vnode();
+  }
+
   List<String> components = pathname.split('/');
 
   if (components.empty()) {
@@ -253,12 +259,15 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
     return _rootfs.fs->get_root_vnode();
   }
 
+
+  const bool absolute = pathname.front() == '/';
+  auto root_vnode = (absolute) ? _rootfs.fs->get_root_vnode() :
+                                 Task::current()->get_cwd_vnode();
+
   // If `pathname` is something like "/bin",
   // then we can simply check if "bin" exists under the root vnode.
   // Also, `out_parent` is simply the root_vnode.
   if (components.size() == 1) {
-    auto root_vnode = _rootfs.fs->get_root_vnode();
-
     if (out_parent) {
       *out_parent = root_vnode;
     }
@@ -271,7 +280,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
   }
 
   // Otherwise, we need to search the tree.
-  auto vnode = _rootfs.fs->get_root_vnode();
+  auto vnode = root_vnode;
 
   for (auto it = components.begin(); it != components.end(); it++) {
 

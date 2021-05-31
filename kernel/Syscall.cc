@@ -29,6 +29,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_kill),
   SYSCALL_DECL(sys_signal),
   SYSCALL_DECL(sys_access),
+  SYSCALL_DECL(sys_chdir),
   SYSCALL_DECL(sys_mkdir),
   SYSCALL_DECL(sys_rmdir),
   SYSCALL_DECL(sys_unlink),
@@ -168,6 +169,17 @@ int sys_signal(int signal, void (*handler)()) {
 
 int sys_access(const char* pathname, int options) {
   return VFS::get_instance().access(pathname, options);
+}
+
+int sys_chdir(const char* pathname) {
+  auto& vfs = VFS::get_instance();
+
+  if (VFS::get_instance().access(pathname, 0) == -1) {
+    return -1;
+  }
+
+  Task::current()->set_cwd_vnode(vfs.resolve_path(pathname)); 
+  return 0;
 }
 
 int sys_mkdir(const char* pathname, mode_t mode) {

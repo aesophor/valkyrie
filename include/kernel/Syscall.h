@@ -29,6 +29,7 @@ enum Syscall {
   SYS_MKDIR,
   SYS_RMDIR,
   SYS_UNLINK,
+  SYS_CHDIR,
   __NR_syscall
 };
 
@@ -52,6 +53,7 @@ int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
 int sys_signal(int signal, void (*handler)());
 int sys_access(const char* pathname, int options);
+int sys_chdir(const char* pathname);
 int sys_mkdir(const char* pathname, mode_t mode);
 int sys_rmdir(const char* pathname);
 int sys_unlink(const char* pathname);
