@@ -372,6 +372,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
     for (uint32_t n = cluster_number;
          !FAT32_IS_EOC(n) && entries_to_allocate > 0;
          n = _fs.fat_read(n)) {
+
       _fs.cluster_read(n, cluster.get());
 
       // Scan each fentry/dentry in this cluster.
@@ -415,20 +416,26 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
   auto it = name_segments.begin();
 
   // Follow the directory's cluster chain until EoC is found.
-  for (uint32_t n = cluster_number; !FAT32_IS_EOC(n); n = _fs.fat_read(n), cluster_offset = 0) {
+  for (uint32_t n = cluster_number;
+       !FAT32_IS_EOC(n);
+       n = _fs.fat_read(n), cluster_offset = 0) {
+
     _fs.cluster_read(n, cluster.get());
 
     // Scan each fentry/dentry in this cluster.
-    for (char* ptr = cluster.get() + cluster_offset; ptr < cluster.get() + 512; ptr += 32) {
-      if (--counter > 0) {
-        ucs2_char_t* name_part = *it;
+    for (char* ptr = cluster.get() + cluster_offset;
+         ptr < cluster.get() + 512;
+         ptr += 32) {
 
+      if (--counter > 0) {
         FAT32::FilenameEntry* fentry = reinterpret_cast<FAT32::FilenameEntry*>(ptr);
         fentry->sequence_number = counter;
         fentry->attributes = ATTR_LFN_ENTRY;
         fentry->type = 0;
         fentry->checksum = _fs.lfn_checksum(reinterpret_cast<const uint8_t*>(short_filename.c_str()));
         fentry->first_cluster = 0;
+
+        ucs2_char_t* name_part = *it;
         memcpy(fentry->filename_part1, name_part, 5 * 2);
         memcpy(fentry->filename_part2, name_part + 5, 6 * 2);
         memcpy(fentry->filename_part3, name_part + 11, 2 * 2);
@@ -521,6 +528,10 @@ char* FAT32Inode::get_content() {
 void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
   off_t buf_size = round_up_to_multiple_of_n(new_size, 512);
 
+  if (!_first_cluster_number) {
+    allocate_first_cluster();
+  }
+
   uint32_t prev_free_cluster_number = 0;
   uint32_t curr_free_cluster_number = _fs.fat_find_free_cluster();
 
@@ -572,6 +583,31 @@ uint32_t FAT32Inode::dir_first_cluster_number() const {
   // we should return the root directory's `_first_cluster_number`.
   return _first_cluster_number ? _first_cluster_number
                                : _fs._root_inode->_first_cluster_number;
+}
+
+void FAT32Inode::allocate_first_cluster() const {
+  // Check if it already has the first cluster.
+  if (_first_cluster_number) [[unlikely]] {
+    printk("fat32: allocate_first_cluster(), but already has first cluster\n");
+    return;
+  }
+
+  
+  auto buffer = make_unique<char[]>(_fs._metadata.bytes_per_sector);
+  _fs.cluster_read(_parent_cluster_number, buffer.get());
+  
+  auto dentry
+    = reinterpret_cast<FAT32::DirectoryEntry*>(buffer.get() + _parent_cluster_offset);
+
+  uint32_t free_cluster_number = _fs.fat_find_free_cluster();
+  if (free_cluster_number == static_cast<uint32_t>(-1)) {
+    printk("fat32: unable to allocate first cluster: running out of space?\n");
+    return;
+  }
+  dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
+  dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
+
+  _fs.cluster_write(_parent_cluster_number, buffer.get());
 }
 
 SharedPtr<FAT32Inode>

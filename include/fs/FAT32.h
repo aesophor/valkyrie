@@ -234,6 +234,8 @@ class FAT32Inode final : public Vnode {
  private:
   uint32_t dir_first_cluster_number() const;
 
+  void allocate_first_cluster() const;
+
   SharedPtr<FAT32Inode>
   find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> predicate,
                 uint32_t* out_offset = nullptr) const; 
