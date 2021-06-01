@@ -9,9 +9,6 @@
 
 namespace valkyrie::kernel {
 
-// Forward declaration
-class FileSystem;
-
 class Vnode {
  public:
   Vnode(const uint32_t index,
