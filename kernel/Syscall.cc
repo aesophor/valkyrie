@@ -33,6 +33,8 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_mkdir),
   SYSCALL_DECL(sys_rmdir),
   SYSCALL_DECL(sys_unlink),
+  SYSCALL_DECL(sys_mount),
+  SYSCALL_DECL(sys_umount),
 };
 
 
@@ -182,8 +184,8 @@ int sys_chdir(const char* pathname) {
   return 0;
 }
 
-int sys_mkdir(const char* pathname, mode_t mode) {
-  return VFS::get_instance().mkdir(pathname, mode);
+int sys_mkdir(const char* pathname) {
+  return VFS::get_instance().mkdir(pathname);
 }
 
 int sys_rmdir(const char* pathname) {
@@ -192,6 +194,14 @@ int sys_rmdir(const char* pathname) {
 
 int sys_unlink(const char* pathname) {
   return VFS::get_instance().unlink(pathname);
+}
+
+int sys_mount(const char* device_name, const char* mountpoint, const char* fs_name) {
+  return VFS::get_instance().mount(device_name, mountpoint, fs_name);
+}
+
+int sys_umount(const char* mountpoint) {
+  return VFS::get_instance().umount(mountpoint);
 }
 
 }  // namespace valkyrie::kernel

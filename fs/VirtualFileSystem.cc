@@ -9,6 +9,7 @@
 #include <fs/DirectoryEntry.h>
 #include <fs/File.h>
 #include <fs/Stat.h>
+#include <fs/TmpFS.h>
 #include <fs/Vnode.h>
 #include <kernel/Kernel.h>
 #include <proc/Task.h>
@@ -22,9 +23,10 @@ VFS& VFS::get_instance() {
 
 
 VFS::VFS()
-    : _rootfs(),
-      _storage_devices(),
-      _opened_files() {}
+    : _mounts(),
+      _opened_files(),
+      _mem_based_fs(),
+      _storage_devices() {}
 
 
 void VFS::mount_rootfs() {
@@ -33,19 +35,23 @@ void VFS::mount_rootfs() {
   _storage_devices.push_back(move(sdcard));
 
   mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
-  printk("VFS: mounted root filesystem\n");
+  printk("vfs: mounted root filesystem\n");
 }
 
 void VFS::mount_rootfs(FileSystem& fs) {
-  _rootfs = { &fs };
+  if (!_mounts.empty()) [[unlikely]] {
+    Kernel::panic("vfs: root filesystem is already mounted!\n");
+  }
+
+  _mounts.push_back(make_unique<Mount>(fs, fs.get_root_vnode(), nullptr));
 }
 
 void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
-  _rootfs = { &fs };
+  mount_rootfs(fs);
 
   if (!archive.is_valid()) [[unlikely]] {
     printk("initramfs unpacking failed invalid magic at start of compressed archive\n");
-    Kernel::panic("VFS: unable to mount root fs\n");
+    Kernel::panic("vfs: unable to mount root fs\n");
   }
 
   archive.for_each([this](const auto& entry) {
@@ -103,7 +109,7 @@ SharedPtr<File> VFS::open(const String& pathname, int options) {
   // Otherwise, the file has not been opened by any process yet.
   // If the file exists, then we will open it now.
   if (target) {
-    _opened_files.push_back(make_shared<File>(*_rootfs.fs, target, options));
+    _opened_files.push_back(make_shared<File>(get_rootfs(), target, options));
     return _opened_files.back();
   }
 
@@ -115,7 +121,7 @@ SharedPtr<File> VFS::open(const String& pathname, int options) {
 
   // Okay, so the user wants to create this file...
   target = create(pathname, nullptr, 0, S_IFREG, 0, 0);
-  _opened_files.push_back(make_shared<File>(*_rootfs.fs, target, options));
+  _opened_files.push_back(make_shared<File>(get_rootfs(), target, options));
   return _opened_files.back();
 }
 
@@ -224,22 +230,68 @@ int VFS::access(const String& pathname, int options) {
   return 0;
 }
 
-int VFS::mkdir(const String& pathname, mode_t mode) {
-
+int VFS::mkdir(const String& pathname) {
+  if (create(pathname, nullptr, 0, S_IFDIR, 0, 0)) {
+    return 0;
+  }
+  return -1;
 }
 
 int VFS::rmdir(const String& pathname) {
-
+  return -1;
 }
 
 int VFS::unlink(const String& pathname) {
+  return -1;
+}
 
+int VFS::mount(const String& device_name,
+               const String& mountpoint,
+               const String& fs_name) {
+  // Check if `mountpoint` exists.
+  auto mountpoint_vnode = resolve_path(mountpoint);
+  if (!mountpoint_vnode) [[unlikely]] {
+    printk("vfs_mount: mountpoint %s does not exist\n", mountpoint.c_str());
+    return -1;
+  }
+
+  // For device-based filesystems, `device_name` should be
+  // a pathname of a device file that stores a file system.
+  // TODO: support device-based fs.
+
+  // For memory-based filesystems, `device_name` can be used as
+  // the name for the mounted file system.
+  
+  // `fs_name` is the filesystem’s name.
+  // The VFS should find and call the filesystem’s method to set up the mount.
+  if (fs_name == "tmpfs") {
+    printk("mounting tmpfs on %s\n", mountpoint.c_str());
+    auto tmpfs = make_unique<TmpFS>();
+    _mounts.push_back(make_unique<Mount>(*tmpfs, tmpfs->get_root_vnode(), mountpoint_vnode));
+    _mem_based_fs.push_back(move(tmpfs));
+  }
+
+  return 0;
+}
+
+int VFS::umount(const String& mountpoint) {
+  return 0;
+}
+
+
+SharedPtr<Vnode> VFS::get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode) {
+  auto it = _mounts.find_if([&vnode](const auto& mount) {
+    //printk("mount->host_vnode = %s, vnode = %s\n", mount->host_vnode->get_name().c_str(), vnode->get_name().c_str());
+    return mount->host_vnode == vnode;
+  });
+  auto guest_vnode = (it != _mounts.end()) ? (*it)->guest_vnode : nullptr;
+  return (guest_vnode) ? guest_vnode : vnode;
 }
 
 
 SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
                                    SharedPtr<Vnode>* out_parent,
-                                   String* out_basename) const {
+                                   String* out_basename) {
   if (pathname == ".") {
     // FIXME: what about out_parent and out_basename?
     return Task::current()->get_cwd_vnode();
@@ -256,12 +308,12 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
       *out_basename = "";
     }
 
-    return _rootfs.fs->get_root_vnode();
+    return get_rootfs().get_root_vnode();
   }
 
 
   const bool absolute = pathname.front() == '/';
-  auto root_vnode = (absolute) ? _rootfs.fs->get_root_vnode() :
+  auto root_vnode = (absolute) ? get_rootfs().get_root_vnode() :
                                  Task::current()->get_cwd_vnode();
 
   // If `pathname` is something like "/bin",
@@ -276,6 +328,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
       *out_basename = components.front();
     }
 
+    //return get_mounted_vnode_or_host_vnode(root_vnode->get_child(components.front()));
     return root_vnode->get_child(components.front());
   }
 
@@ -283,11 +336,11 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
   auto vnode = root_vnode;
 
   for (auto it = components.begin(); it != components.end(); it++) {
-
     if (out_parent && it.index() == components.size() - 1) {
       *out_parent = vnode;
     }
 
+    //auto child = get_mounted_vnode_or_host_vnode(vnode->get_child(*it));
     auto child = vnode->get_child(*it);
     if (!child) {
       vnode = nullptr;
@@ -305,7 +358,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
 
 
 FileSystem& VFS::get_rootfs() {
-  return *_rootfs.fs;
+  return _mounts.front()->guest_fs;
 }
 
 List<SharedPtr<File>>& VFS::get_opened_files() {

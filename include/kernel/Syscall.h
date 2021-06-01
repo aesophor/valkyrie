@@ -26,10 +26,12 @@ enum Syscall {
   SYS_KILL,
   SYS_SIGNAL,
   SYS_ACCESS,
+  SYS_CHDIR,
   SYS_MKDIR,
   SYS_RMDIR,
   SYS_UNLINK,
-  SYS_CHDIR,
+  SYS_MOUNT,
+  SYS_UMOUNT,
   __NR_syscall
 };
 
@@ -54,9 +56,11 @@ long sys_kill(pid_t pid, int signal);
 int sys_signal(int signal, void (*handler)());
 int sys_access(const char* pathname, int options);
 int sys_chdir(const char* pathname);
-int sys_mkdir(const char* pathname, mode_t mode);
+int sys_mkdir(const char* pathname);
 int sys_rmdir(const char* pathname);
 int sys_unlink(const char* pathname);
+int sys_mount(const char* device_name, const char* mountpoint, const char* fs_name);
+int sys_umount(const char* mountpoint);
 
 
 inline bool is_syscall_id_valid(const uint64_t id) {

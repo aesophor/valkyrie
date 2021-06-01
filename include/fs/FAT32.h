@@ -43,15 +43,9 @@ class FAT32 final : public FileSystem {
     [[gnu::always_inline]] bool is_the_end() const {
       return *reinterpret_cast<const uint8_t*>(this) == 0;
     }
-
-   protected:
-    Entry();
-    Entry(const void* ptr);
   };
 
   struct [[gnu::packed]] FilenameEntry final : public FAT32::Entry {
-    FilenameEntry() = default;
-    FilenameEntry(const void* ptr) : FAT32::Entry(ptr) {}
     String get_filename() const;
 
     uint8_t sequence_number;
@@ -65,8 +59,6 @@ class FAT32 final : public FileSystem {
   };
 
   struct [[gnu::packed]] DirectoryEntry final : public FAT32::Entry {
-    DirectoryEntry() = default;
-    DirectoryEntry(const void* ptr) : FAT32::Entry(ptr) {}
     uint32_t get_first_cluster_number() const;
     void set_first_cluster_number(const uint32_t n);
 
@@ -233,6 +225,7 @@ class FAT32Inode final : public Vnode {
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
 
  private:
+  bool is_root_directory_inode() const;
   uint32_t dir_first_cluster_number() const;
 
   void allocate_first_cluster() const;

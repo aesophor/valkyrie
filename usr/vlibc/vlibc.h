@@ -5,6 +5,16 @@
 #include <types.h>
 #include <printf.h>
 
+#define O_CREAT ((1 << 3))
+
+#define assert(pred) \
+  do {               \
+    if (!(pred)) {   \
+      exit(1);       \
+    }                \
+  } while (0)
+
+
 extern "C" {
 
 // System call wrappers
@@ -25,6 +35,11 @@ long kill(pid_t pid, int signal);
 int signal(int signal, void (*handler)());
 int access(const char* pathname, int options);
 int chdir(const char* pathname);
+int mkdir(const char* pathname);
+int rmdir(const char* pathname);
+int unlink(const char* pathname);
+int mount(const char* device_name, const char* mountpoint, const char* fs_name);
+int umount(const char* mountpoint);
 
 
 inline void __libc_putchar(void*, const char c) {

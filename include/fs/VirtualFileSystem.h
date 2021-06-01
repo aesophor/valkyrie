@@ -14,7 +14,9 @@ namespace valkyrie::kernel {
 class VFS final {
  public:
   struct Mount final {
-    FileSystem* fs;
+    FileSystem& guest_fs;
+    SharedPtr<Vnode> guest_vnode;
+    SharedPtr<Vnode> host_vnode;
   };
 
   static VFS& get_instance();
@@ -33,14 +35,17 @@ class VFS final {
   int write(SharedPtr<File> file, const void* buf, size_t len);
   int read(SharedPtr<File> file, void* buf, size_t len);
   int access(const String& pathname, int options);
-  int mkdir(const String& pathname, mode_t mode);
+  int mkdir(const String& pathname);
   int rmdir(const String& pathname);
   int unlink(const String& pathname);
+  int mount(const String& device_name, const String& mountpoint, const String& fs_name);
+  int umount(const String& mountpoint);
+
 
   // Retrieves the target vnode by `pathname`.
   SharedPtr<Vnode> resolve_path(const String& pathname,
                                 SharedPtr<Vnode>* out_parent = nullptr,
-                                String* out_basename = nullptr) const;
+                                String* out_basename = nullptr);
 
   FileSystem& get_rootfs();
   List<SharedPtr<File>>& get_opened_files();
@@ -58,10 +63,13 @@ class VFS final {
                           uid_t uid,
                           gid_t gid);
 
+  SharedPtr<Vnode> get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode);
 
-  Mount _rootfs;
-  List<UniquePtr<StorageDevice>> _storage_devices;
+
+  List<UniquePtr<Mount>> _mounts;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
+  List<UniquePtr<FileSystem>> _mem_based_fs;
+  List<UniquePtr<StorageDevice>> _storage_devices;
 };
 
 }  // namespace valkyrie::kernel

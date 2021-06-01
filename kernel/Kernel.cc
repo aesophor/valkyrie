@@ -30,7 +30,7 @@ void Kernel::run() {
   _timer_multiplexer.get_arm_core_timer().enable();
   */
  
-  printk("VFS: mounting rootfs...\n");
+  printk("vfs: mounting rootfs...\n");
   _vfs.mount_rootfs();
 
   printk("starting task scheduler...\n");
