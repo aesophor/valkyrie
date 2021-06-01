@@ -102,6 +102,15 @@ class SharedPtr {
   T& operator *() const { return *get(); }
   operator bool() const { return get(); }
 
+  bool operator ==(SharedPtr r) const {
+    return _ctrl == r._ctrl;
+  }
+
+  bool operator !=(SharedPtr r) const {
+    return _ctrl != r._ctrl;
+  }
+
+
   T* get() const {
     if (_alias) {
       return _alias;
@@ -195,6 +204,8 @@ class SharedPtr<T[]> : private SharedPtr<T> {
   using SharedPtr<T>::operator ->;
   using SharedPtr<T>::operator *;
   using SharedPtr<T>::operator bool;
+  using SharedPtr<T>::operator ==;
+  using SharedPtr<T>::operator !=;
 
   using SharedPtr<T>::get;
   using SharedPtr<T>::reset;

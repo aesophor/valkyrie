@@ -50,6 +50,15 @@ class UniquePtr {
   T& operator *() const { return *get(); }
   operator bool() const { return get(); }
 
+  bool operator ==(UniquePtr r) const {
+    return _p == r._p;
+  }
+
+  bool operator !=(UniquePtr r) const {
+    return _p != r._p;
+  }
+
+
   T* get() const { return _p; }
 
   void reset(T* p = nullptr) {
@@ -104,6 +113,8 @@ class UniquePtr<T[]> : private UniquePtr<T> {
   using UniquePtr<T>::operator ->;
   using UniquePtr<T>::operator *;
   using UniquePtr<T>::operator bool;
+  using UniquePtr<T>::operator ==;
+  using UniquePtr<T>::operator !=;
 
   using UniquePtr<T>::get;
   using UniquePtr<T>::release;
