@@ -68,6 +68,7 @@ class FAT32 final : public FileSystem {
     DirectoryEntry() = default;
     DirectoryEntry(const void* ptr) : FAT32::Entry(ptr) {}
     uint32_t get_first_cluster_number() const;
+    void set_first_cluster_number(const uint32_t n);
 
     char name[8];
     char extension[3];
@@ -235,6 +236,8 @@ class FAT32Inode final : public Vnode {
   uint32_t dir_first_cluster_number() const;
 
   void allocate_first_cluster() const;
+
+  void update_dentry_to_disk(Function<void (FAT32::DirectoryEntry*)> callback) const;
 
   SharedPtr<FAT32Inode>
   find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> predicate,

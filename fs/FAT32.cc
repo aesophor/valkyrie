@@ -243,6 +243,11 @@ uint32_t FAT32::DirectoryEntry::get_first_cluster_number() const {
   return (ret << 16) | first_cluster_low;
 }
 
+void FAT32::DirectoryEntry::set_first_cluster_number(const uint32_t n) {
+  first_cluster_high = (n & 0xffff0000) >> 16;
+  first_cluster_low  = (n & 0x0000ffff);
+}
+
 
 FAT32::BootSector::BootSector(DiskPartition& disk_partition) {
   char buf[512];
@@ -459,17 +464,9 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         auto dentry = reinterpret_cast<FAT32::DirectoryEntry*>(ptr);
         dentry->attributes = 0;
         dentry->size = size;
-
-        if (mode & S_IFREG) {
-          dentry->first_cluster_high = 0;
-          dentry->first_cluster_low = 0;
-        } else if (mode & S_IFDIR) {
-          dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
-          dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
-        }
+        dentry->set_first_cluster_number((mode & S_IFREG) ? 0 : free_cluster_number);
 
         memcpy(dentry->name, short_filename.c_str(), 11);
-       
         _fs.cluster_write(n, cluster.get());
 
         return make_shared<FAT32Inode>(_fs,
@@ -557,22 +554,9 @@ void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
 
 
   // Update dentry size in parent's cluster.
-  if (FAT32_IS_EOC(_parent_cluster_number)) [[unlikely]] {
-    printk("fat32: Are we setting the content of root directory?\n");
-    return;
-  }
+  update_dentry_to_disk([&new_size](auto dentry) { dentry->size = new_size; });
 
-  auto buffer = make_unique<char[]>(_fs._metadata.bytes_per_sector);
-  _fs.cluster_read(_parent_cluster_number, buffer.get());
-  
-  auto dentry
-    = reinterpret_cast<FAT32::DirectoryEntry*>(buffer.get() + _parent_cluster_offset);
-  dentry->size = new_size;
-
-  _fs.cluster_write(_parent_cluster_number, buffer.get());
-
-
-  _content = move(content);
+  _content.reset();  // we have written it to the disk, so we don't need it now.
   _size = new_size;
 }
 
@@ -592,21 +576,32 @@ void FAT32Inode::allocate_first_cluster() const {
     return;
   }
 
-  
+  update_dentry_to_disk([this](auto dentry) {
+    uint32_t free_cluster_number = _fs.fat_find_free_cluster();
+
+    if (free_cluster_number == static_cast<uint32_t>(-1)) [[unlikely]] {
+      printk("fat32: unable to allocate first cluster: running out of space?\n");
+      return;
+    }
+
+    dentry->set_first_cluster_number(free_cluster_number);
+  });
+}
+
+void FAT32Inode::update_dentry_to_disk(Function<void (FAT32::DirectoryEntry*)> callback) const {
+  if (FAT32_IS_EOC(_parent_cluster_number)) [[unlikely]] {
+    printk("fat32: update_dentry_to_disk: _parent_cluster_number is EoC\n");
+    return;
+  }
+
+  // Read the block of this inode from disk to memory.
   auto buffer = make_unique<char[]>(_fs._metadata.bytes_per_sector);
   _fs.cluster_read(_parent_cluster_number, buffer.get());
   
-  auto dentry
-    = reinterpret_cast<FAT32::DirectoryEntry*>(buffer.get() + _parent_cluster_offset);
+  // Perform user's work.
+  callback(reinterpret_cast<FAT32::DirectoryEntry*>(buffer.get() + _parent_cluster_offset));
 
-  uint32_t free_cluster_number = _fs.fat_find_free_cluster();
-  if (free_cluster_number == static_cast<uint32_t>(-1)) {
-    printk("fat32: unable to allocate first cluster: running out of space?\n");
-    return;
-  }
-  dentry->first_cluster_high = (free_cluster_number & 0xffff0000) >> 16;
-  dentry->first_cluster_low  = (free_cluster_number & 0x0000ffff);
-
+  // Write back the block of this inode from memory to disk.
   _fs.cluster_write(_parent_cluster_number, buffer.get());
 }
 
