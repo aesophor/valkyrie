@@ -3,6 +3,7 @@
 #define VALKYRIE_MINI_UART_H_
 
 #include <Types.h>
+#include <dev/CharacterDevice.h>
 #include <driver/GPIO.h>
 
 #define READ_BUFFER_SIZE  512
@@ -10,7 +11,7 @@
 
 namespace valkyrie::kernel {
 
-class MiniUART {
+class MiniUART : public CharacterDevice::Driver {
  public:
   static MiniUART& get_instance();
 
@@ -19,6 +20,9 @@ class MiniUART {
   MiniUART(MiniUART&&) = delete;
   MiniUART& operator =(const MiniUART&) = delete;
   MiniUART& operator =(MiniUART&&) = delete;
+
+  virtual char read_char() override;
+  virtual void write_char(const char c) override;
 
   char getchar();
   void gets(char* s);

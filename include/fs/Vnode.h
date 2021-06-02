@@ -6,6 +6,7 @@
 #include <Types.h>
 #include <Memory.h>
 #include <String.h>
+#include <dev/Device.h>
 #include <fs/Stat.h>
 
 namespace valkyrie::kernel {
@@ -21,7 +22,8 @@ class Vnode {
         _size(size),
         _mode(mode),
         _uid(uid),
-        _gid(gid) {}
+        _gid(gid),
+        _dev() {}
 
   virtual ~Vnode() = default;
 
@@ -65,18 +67,17 @@ class Vnode {
   time_t get_ctime() const { return _ctime; }
   time_t get_atime() const { return _atime; }
   time_t get_mtime() const { return _mtime; }
+  uint32_t get_dev_major() const { return Device::get_major(_dev); }
+  uint32_t get_dev_minor() const { return Device::get_minor(_dev); }
 
   void set_size(off_t size) { _size = size; }
   void set_ctime(time_t ctime) { _ctime = ctime; }
   void set_atime(time_t atime) { _atime = atime; }
   void set_mtime(time_t mtime) { _mtime = mtime; }
-
-  uint32_t get_dev_major() const { return _dev_major; }
-  uint32_t get_dev_minor() const { return _dev_minor; }
   void set_dev_number(uint32_t dev_major, uint32_t dev_minor) {
-    _dev_major = dev_major;
-    _dev_minor = dev_minor;
+    _dev = Device::encode(dev_major, dev_minor);
   }
+
 
  protected:
   const uint32_t _index;
@@ -87,8 +88,7 @@ class Vnode {
   time_t _ctime;  // create time 
   time_t _atime;  // last access time
   time_t _mtime;  // last modification time
-  uint32_t _dev_major;
-  uint32_t _dev_minor;
+  dev_t _dev;     // 32 bits in total, 12 major, 20 minor.
 };
 
 }  // namespace valkyrie::kernel

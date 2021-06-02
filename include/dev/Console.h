@@ -3,11 +3,21 @@
 #define VALKYRIE_CONSOLE_H_
 
 #include <Types.h>
-#include <dev/ConsoleColors.h>
 #include <driver/MiniUART.h>
 #include <libs/printf.h>
 
 namespace valkyrie::kernel::console {
+
+enum class Color {
+  BLACK,
+  RED,
+  GREEN,
+  YELLOW,
+  BLUE,
+  PURPLE,
+  CYAN,
+  WHITE
+};
 
 void initialize(MiniUART* mini_uart);
 

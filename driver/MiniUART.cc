@@ -128,6 +128,14 @@ MiniUART::MiniUART()
 }
 
 
+char MiniUART::read_char() {
+  return getchar();
+}
+
+void MiniUART::write_char(const char c) {
+  putchar(c);
+}
+
 
 char MiniUART::getchar() {
   return getchar_sync();

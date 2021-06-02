@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <dev/Device.h>
 #include <dev/StorageDevice.h>
 #include <fs/CPIOArchive.h>
 #include <fs/File.h>
@@ -49,11 +50,14 @@ class VFS final {
   int umount(const String& mountpoint);
   int mknod(const String& pathname, mode_t mode, dev_t dev);
 
-
   // Retrieves the target vnode by `pathname`.
   SharedPtr<Vnode> resolve_path(const String& pathname,
                                 SharedPtr<Vnode>* out_parent = nullptr,
                                 String* out_basename = nullptr);
+
+  // The API for each device to register itself to the VFS.
+  dev_t register_device(Device& device);
+
 
   FileSystem& get_rootfs();
   List<SharedPtr<File>>& get_opened_files();
