@@ -6,7 +6,7 @@
 
 namespace valkyrie::kernel {
 
-StorageDevice::StorageDevice(BlockDeviceDriver& driver,
+StorageDevice::StorageDevice(BlockDevice::Driver& driver,
                              size_t block_size)
     : BlockDevice(driver, block_size),
       _partitions() {

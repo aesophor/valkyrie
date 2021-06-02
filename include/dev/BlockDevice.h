@@ -4,14 +4,23 @@
 
 #include <Types.h>
 #include <Memory.h>
-#include <dev/BlockDeviceDriver.h>
+#include <dev/Device.h>
 #include <mm/Page.h>
 
 namespace valkyrie::kernel {
 
-class BlockDevice {
+class BlockDevice : public Device {
  public:
-  BlockDevice(BlockDeviceDriver& driver,
+  class Driver {
+   public:
+    virtual ~Driver() = default;
+
+    virtual void read_block(int block_index, void* buf) = 0;
+    virtual void write_block(int block_index, const void* buf) = 0;
+  };
+
+
+  BlockDevice(BlockDevice::Driver& driver,
               size_t block_size = PAGE_SIZE);
 
   virtual ~BlockDevice() = default;
@@ -20,14 +29,17 @@ class BlockDevice {
   BlockDevice& operator =(const BlockDevice&) = delete;
   BlockDevice& operator =(BlockDevice&&) = delete;
 
+  virtual bool is_character_device() const override;
+  virtual bool is_block_device() const override;
 
   virtual void read_block(int block_index, void* buf) = 0;
   virtual void write_block(int block_index, const void* buf) = 0;
 
+
   size_t get_block_size() const;
 
  protected:
-  BlockDeviceDriver& _driver;
+  BlockDevice::Driver& _driver;
   size_t _block_size;
 };
 

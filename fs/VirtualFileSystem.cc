@@ -35,7 +35,6 @@ void VFS::mount_rootfs() {
   _storage_devices.push_back(move(sdcard));
 
   mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
-  printk("VFS::mount_rootfs: mounted root filesystem\n");
 }
 
 void VFS::mount_rootfs(SharedPtr<FileSystem> fs) {
@@ -58,6 +57,17 @@ void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive) {
     mode_t mode = (entry.content_len) ? S_IFREG : S_IFDIR;
     create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
   });
+}
+
+void VFS::mount_devtmpfs() {
+  mount("devtmpfs", "/dev", "tmpfs");
+
+  printk("VFS::mount_devtmpfs: populating devtmpfs\n");
+
+}
+
+void VFS::mount_tmpfs() {
+
 }
 
 

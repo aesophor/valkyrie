@@ -11,7 +11,7 @@ namespace valkyrie::kernel {
 
 class StorageDevice : public BlockDevice {
  public:
-  StorageDevice(BlockDeviceDriver& driver,
+  StorageDevice(BlockDevice::Driver& driver,
                 size_t block_size = PAGE_SIZE);
 
   virtual ~StorageDevice() override = default;

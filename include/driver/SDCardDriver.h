@@ -2,13 +2,13 @@
 #ifndef VALKYRIE_SDCARD_DRIVER
 #define VALKYRIE_SDCARD_DRIVER
 
-#include <dev/BlockDeviceDriver.h>
+#include <dev/BlockDevice.h>
 #include <driver/IO.h>
 #include <driver/GPIO.h>
 
 namespace valkyrie::kernel {
 
-class SDCardDriver final : public BlockDeviceDriver {
+class SDCardDriver final : public BlockDevice::Driver {
  public:
   static SDCardDriver& get_instance();
 

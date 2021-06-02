@@ -30,10 +30,13 @@ void Kernel::run() {
   _timer_multiplexer.get_arm_core_timer().enable();
   */
  
-  printk("VFS: mounting rootfs...\n");
+  printk("VFS: mounting rootfs\n");
   _vfs.mount_rootfs();
 
-  printk("starting task scheduler...\n");
+  printk("VFS: mounting devtmpfs\n");
+  _vfs.mount_devtmpfs();
+
+  printk("starting task scheduler\n");
   _task_scheduler.run();
 
   Kernel::panic("you shouldn't have reached here...\n");

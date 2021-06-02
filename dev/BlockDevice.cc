@@ -3,11 +3,19 @@
 
 namespace valkyrie::kernel {
 
-BlockDevice::BlockDevice(BlockDeviceDriver& driver,
+BlockDevice::BlockDevice(BlockDevice::Driver& driver,
                          size_t block_size)
     : _driver(driver),
       _block_size(block_size) {}
 
+
+bool BlockDevice::is_character_device() const {
+  return false;
+}
+
+bool BlockDevice::is_block_device() const {
+  return true;
+}
 
 size_t BlockDevice::get_block_size() const {
   return _block_size;
