@@ -313,7 +313,7 @@ int VFS::umount(const String& mountpoint) {
 }
 
 int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
-
+  return -1;
 }
 
 
