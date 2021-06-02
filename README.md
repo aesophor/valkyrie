@@ -38,10 +38,10 @@
 - [ ] POSIX signals and custom signal handlers - sys_kill(), sys_signal(), sys_rt_sigreturn()
 - [ ] Wait Queues
 - [x] tmpfs
-- [x] Virtual filesystem - vfs_open(), vfs_close(), vfs_write(), vfs_read()
+- [x] Virtual filesystem (VFS)
 - [x] System-wide opened file table, Per-process file descriptor tables
 - [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
-- [ ] Multi-level VFS
+- [x] Multi-level VFS - sys_chdir(), sys_mkdir(), sys_mount(), sys_umount()
 - [ ] Procfs
 - [x] Parse MBR (Master Boot Record)
 - [x] FAT32 with LFN (Long File Name) support - open, read, write, close
