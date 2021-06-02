@@ -16,7 +16,7 @@ CXXFLAGS = -std=c++20\
 LD = aarch64-linux-gnu-ld
 LDFLAGS = -T ../vlibc/linker.ld
 
-ELF = vfs_test_mnt
+ELF = vfs_test_orw
 SRC = ../vlibc/vlibc.cc ../vlibc/syscall.S ../vlibc/printf.cc ../vlibc/cstring.cc main.cc
 OBJ = vlibc.o main.o syscall.o printf.o cstring.o
 

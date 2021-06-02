@@ -3,8 +3,15 @@
 #define VALKYRIE_CONSOLE_H_
 
 #include <Types.h>
-#include <driver/MiniUART.h>
 #include <libs/printf.h>
+
+namespace valkyrie::kernel {
+
+// Forward declaration
+class MiniUART;
+
+}
+
 
 namespace valkyrie::kernel::console {
 

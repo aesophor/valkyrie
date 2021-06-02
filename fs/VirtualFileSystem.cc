@@ -31,7 +31,7 @@ VFS::VFS()
 
 void VFS::mount_rootfs() {
   // TODO: currently it only supports SD card.
-  auto sdcard = make_unique<StorageDevice>(SDCardDriver::get_instance());
+  auto sdcard = make_unique<StorageDevice>("sda", SDCardDriver::get_instance());
   _storage_devices.push_back(move(sdcard));
 
   mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
@@ -313,7 +313,26 @@ int VFS::umount(const String& mountpoint) {
 }
 
 int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
-  return -1;
+  // This special filesystem node must be either:
+  // 1. a character device
+  // 2. a block device
+  // 3. a fifo device (pipe)
+  if (!(mode & S_IFCHR) ||
+      !(mode & S_IFBLK) ||
+      !(mode & S_IFIFO)) [[unlikely]] {
+    printk("VFS::mknod: invalid mode provided\n");
+    return -1;
+  }
+
+  SharedPtr<Vnode> vnode = create(pathname, nullptr, 0, mode, 0, 0);
+
+  if (!vnode) [[unlikely]] {
+    printk("VFS::mknod: failed to create %s\n", pathname.c_str());
+    return -1;
+  }
+
+  vnode->set_dev(dev);
+  return 0;
 }
 
 
@@ -394,6 +413,11 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
   }
 
   return vnode;
+}
+
+
+dev_t VFS::register_device(Device& device) {
+  return 0;
 }
 
 

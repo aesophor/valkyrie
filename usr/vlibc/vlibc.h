@@ -23,9 +23,6 @@ int read(int fd, void* buf, size_t count);
 int write(int fd, const void* buf, size_t count);
 int open(const char* pathname, int options);
 int close(int fd);
-size_t uart_read(char buf[], size_t size);
-size_t uart_write(const char buf[], size_t size);
-void uart_putchar(const char c);
 int fork();
 int exec(const char* name, const char *const argv[]);
 [[noreturn]] void exit(int error_code);
@@ -44,7 +41,7 @@ int umount(const char* mountpoint);
 
 
 inline void __libc_putchar(void*, const char c) {
-  uart_putchar(c);
+  write(1, &c, 1);
 }
 
 }

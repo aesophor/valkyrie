@@ -20,7 +20,8 @@ class CharacterDevice : public Device {
   };
 
 
-  CharacterDevice(CharacterDevice::Driver& driver);
+  CharacterDevice(const String& name,
+                  CharacterDevice::Driver& driver);
 
   virtual ~CharacterDevice() = default;
   CharacterDevice(const CharacterDevice&) = delete;

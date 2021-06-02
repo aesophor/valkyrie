@@ -3,12 +3,13 @@
 #define VALKYRIE_DEVICE_H_
 
 #include <Types.h>
+#include <String.h>
 
 namespace valkyrie::kernel {
 
 class Device {
  public:
-  Device() = default;
+  Device(const String& name);
 
   virtual ~Device() = default;
   Device(const Device&) = delete;
@@ -19,20 +20,25 @@ class Device {
   virtual bool is_character_device() const = 0;
   virtual bool is_block_device() const = 0;
 
+  const String& get_name() const;
+
 
   // Idea borrowed from Linux kernel. See:
   // https://elixir.bootlin.com/linux/latest/source/include/linux/kdev_t.h
-  static constexpr uint32_t get_major(const dev_t dev) {
+  static constexpr uint32_t get_major(dev_t dev) {
     return dev >> _minor_bits;
   }
 
-  static constexpr uint32_t get_minor(const dev_t dev) {
+  static constexpr uint32_t get_minor(dev_t dev) {
     return dev & _minor_mask;
   }
 
-  static constexpr uint32_t encode(const uint32_t major, const uint32_t minor) {
+  static constexpr uint32_t encode(uint32_t major, uint32_t minor) {
     return (major << _minor_bits) | minor;
   }
+
+ protected:
+  String _name;
 
  private:
   static constexpr int _minor_bits = 20;

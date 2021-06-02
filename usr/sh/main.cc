@@ -51,7 +51,7 @@ int run_shell(const char* username) {
   while (true) {
     memset(buf, 0, sizeof(buf));
     printf("[%s@localhost]%c ", username, prompt);
-    uart_read(buf, 255);
+    read(0, buf, 255);
 
     argc = get_argc(buf);
     str = buf;

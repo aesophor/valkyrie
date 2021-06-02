@@ -6,9 +6,10 @@
 
 namespace valkyrie::kernel {
 
-StorageDevice::StorageDevice(BlockDevice::Driver& driver,
+StorageDevice::StorageDevice(const String& name,
+                             BlockDevice::Driver& driver,
                              size_t block_size)
-    : BlockDevice(driver, block_size),
+    : BlockDevice(name, driver, block_size),
       _partitions() {
 
   auto buffer = make_unique<char[]>(block_size);

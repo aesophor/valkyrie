@@ -14,9 +14,6 @@ enum Syscall {
   SYS_WRITE,
   SYS_OPEN,
   SYS_CLOSE,
-  SYS_UART_READ,
-  SYS_UART_WRITE,
-  SYS_UART_PUTCHAR,
   SYS_FORK,
   SYS_EXEC,
   SYS_EXIT,
@@ -44,9 +41,6 @@ int sys_read(int fd, void* buf, size_t count);
 int sys_write(int fd, const void* buf, size_t count);
 int sys_open(const char* pathname, int options);
 int sys_close(int fd);
-size_t sys_uart_read(char buf[], size_t size);
-size_t sys_uart_write(const char buf[], size_t size);
-void sys_uart_putchar(const char c);
 int sys_fork();
 int sys_exec(const char* name, const char *const argv[]);
 [[noreturn]] void sys_exit(int error_code);

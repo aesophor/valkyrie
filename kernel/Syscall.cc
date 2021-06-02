@@ -7,6 +7,38 @@
 #include <proc/Task.h>
 #include <proc/TaskScheduler.h>
 
+namespace {
+
+int console_read(char buf[], size_t size) {
+  int i = 0;
+  while (i < (int) size) {
+    auto c = getchar();
+
+    if (c == 0x7f) {
+      if (i > 0) {
+        buf[--i] = 0;
+        puts("\b \b", /*newline=*/false);
+      }
+    } else if (c == '\n') {
+      return i;
+    } else {
+      buf[i++] = c;
+    }
+  }
+
+  return size;
+}
+
+int console_write(const char buf[], size_t size) {
+  for (size_t i = 0; i < size; i++) {
+    putchar(buf[i]);
+  }
+  return size;
+}
+
+}  // namespace
+
+
 namespace valkyrie::kernel {
 
 #define SYSCALL_DECL(func) \
@@ -17,9 +49,6 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_write),
   SYSCALL_DECL(sys_open),
   SYSCALL_DECL(sys_close),
-  SYSCALL_DECL(sys_uart_read),
-  SYSCALL_DECL(sys_uart_write),
-  SYSCALL_DECL(sys_uart_putchar),
   SYSCALL_DECL(sys_fork),
   SYSCALL_DECL(sys_exec),
   SYSCALL_DECL(sys_exit),
@@ -43,11 +72,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
 int sys_read(int fd, void* buf, size_t count) {
   // TODO: define stdin...
   if (fd == 0) {
-    char* s = reinterpret_cast<char*>(buf);
-    for (size_t i = 0; i < count; i++) {
-      s[i] = getchar();
-    }
-    return count;
+    return ::console_read(reinterpret_cast<char*>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -63,11 +88,7 @@ int sys_read(int fd, void* buf, size_t count) {
 int sys_write(int fd, const void* buf, size_t count) {
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
-    const char* s = reinterpret_cast<const char*>(buf);
-    for (size_t i = 0; i < count; i++) {
-      putchar(s[i]);
-    }
-    return count;
+    return ::console_write(reinterpret_cast<const char*>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -104,37 +125,6 @@ int sys_close(int fd) {
   }
 
   return VFS::get_instance().close(file);
-}
-
-size_t sys_uart_read(char buf[], size_t size) {
-  int i = 0;
-  while (i < (int) size) {
-    auto c = MiniUART::get_instance().getchar();
-
-    if (c == 0x7f) {
-      if (i > 0) {
-        buf[--i] = 0;
-        puts("\b \b", /*newline=*/false);
-      }
-    } else if (c == '\n') {
-      return i;
-    } else {
-      buf[i++] = c;
-    }
-  }
-
-  return size;
-}
-
-size_t sys_uart_write(const char buf[], size_t size) {
-  for (size_t i = 0; i < size; i++) {
-    MiniUART::get_instance().putchar(buf[i]);
-  }
-  return size;
-}
-
-void sys_uart_putchar(const char c) {
-  MiniUART::get_instance().putchar(c);
 }
 
 int sys_fork() {

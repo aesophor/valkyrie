@@ -67,6 +67,7 @@ class Vnode {
   time_t get_ctime() const { return _ctime; }
   time_t get_atime() const { return _atime; }
   time_t get_mtime() const { return _mtime; }
+  dev_t get_dev() const { return _dev; }
   uint32_t get_dev_major() const { return Device::get_major(_dev); }
   uint32_t get_dev_minor() const { return Device::get_minor(_dev); }
 
@@ -74,9 +75,7 @@ class Vnode {
   void set_ctime(time_t ctime) { _ctime = ctime; }
   void set_atime(time_t atime) { _atime = atime; }
   void set_mtime(time_t mtime) { _mtime = mtime; }
-  void set_dev_number(uint32_t dev_major, uint32_t dev_minor) {
-    _dev = Device::encode(dev_major, dev_minor);
-  }
+  void set_dev(dev_t dev) { _dev = dev; }
 
 
  protected:

@@ -3,9 +3,11 @@
 
 namespace valkyrie::kernel {
 
-BlockDevice::BlockDevice(BlockDevice::Driver& driver,
+BlockDevice::BlockDevice(const String& name,
+                         BlockDevice::Driver& driver,
                          size_t block_size)
-    : _driver(driver),
+    : Device(name),
+      _driver(driver),
       _block_size(block_size) {}
 
 

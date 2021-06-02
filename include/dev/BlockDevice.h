@@ -20,7 +20,8 @@ class BlockDevice : public Device {
   };
 
 
-  BlockDevice(BlockDevice::Driver& driver,
+  BlockDevice(const String& name,
+              BlockDevice::Driver& driver,
               size_t block_size = PAGE_SIZE);
 
   virtual ~BlockDevice() = default;

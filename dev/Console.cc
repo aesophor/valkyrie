@@ -1,6 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <dev/Console.h>
 
+#include <driver/MiniUART.h>
+
 namespace {
 
 valkyrie::kernel::MiniUART* mini_uart;

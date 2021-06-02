@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
       break;
 
     case 0: { // child
-      char* arguments[] = {"/bin/login", nullptr};
-      exec("/bin/login", arguments);
+      char* arguments[] = {"/sbin/login", nullptr};
+      exec("/sbin/login", arguments);
       break;
     }
 

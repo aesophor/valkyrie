@@ -16,10 +16,10 @@ int main(int argc, char **argv) {
     memset(password, 0, sizeof(password));
 
     printf("Localhost login: ");
-    uart_read(username, sizeof(username) - 1);
+    read(0, username, sizeof(username) - 1);
 
     printf("Password: ");
-    uart_read(password, sizeof(password) - 1);
+    read(0, password, sizeof(password) - 1);
 
     if (!validate_user(username, password)) {
       continue;
