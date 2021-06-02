@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_VNODE_H_
 #define VALKYRIE_VNODE_H_
 
+#include <Hash.h>
 #include <Types.h>
 #include <Memory.h>
 #include <String.h>
@@ -43,6 +44,7 @@ class Vnode {
   virtual const String& get_name() const = 0;
   virtual char* get_content() = 0;
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) = 0;
+  virtual size_t hash_code() const = 0;
 
 
   bool is_directory() const { return (_mode & S_IFMT) == S_IFDIR; }
@@ -69,6 +71,12 @@ class Vnode {
   void set_atime(time_t atime) { _atime = atime; }
   void set_mtime(time_t mtime) { _mtime = mtime; }
 
+  uint32_t get_dev_major() const { return _dev_major; }
+  uint32_t get_dev_minor() const { return _dev_minor; }
+  void set_dev_number(uint32_t dev_major, uint32_t dev_minor) {
+    _dev_major = dev_major;
+    _dev_minor = dev_minor;
+  }
 
  protected:
   const uint32_t _index;
@@ -79,7 +87,8 @@ class Vnode {
   time_t _ctime;  // create time 
   time_t _atime;  // last access time
   time_t _mtime;  // last modification time
-  dev_t _dev_number;  // 32 bits in total, 12 major, 20 minor.
+  uint32_t _dev_major;
+  uint32_t _dev_minor;
 };
 
 }  // namespace valkyrie::kernel

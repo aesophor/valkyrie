@@ -7,11 +7,12 @@
 
 #define O_CREAT ((1 << 3))
 
-#define assert(pred) \
-  do {               \
-    if (!(pred)) {   \
-      exit(1);       \
-    }                \
+#define assert(pred)                \
+  do {                              \
+    if (!(pred)) {                  \
+      printf("assertion failed\n"); \
+      exit(1);                      \
+    }                               \
   } while (0)
 
 

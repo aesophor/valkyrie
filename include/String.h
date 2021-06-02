@@ -3,6 +3,7 @@
 #define VALKYRIE_STRING_H_
 
 #include <Iterator.h>
+#include <Hash.h>
 #include <List.h>
 #include <Memory.h>
 #include <libs/CString.h>
@@ -50,6 +51,7 @@ class String {
 
 
   char& operator [](size_t i) { return _s[i]; }
+  const char& operator [](size_t i) const { return _s[i]; }
 
   bool operator ==(const String& r) const {
     return !strcmp(c_str(), r.c_str());
@@ -242,6 +244,21 @@ class String {
 
  private:
   UniquePtr<char[]> _s;
+};
+
+
+// Explicit (full) specialization of `struct Hash` for String.
+template <>
+struct Hash<String> final {
+  size_t operator ()(const String& s) const {
+    constexpr size_t prime = 19;
+    size_t ret = 5;
+
+    for (auto c : s) {
+      ret += prime * hash(c);
+    }
+    return ret;
+  }
 };
 
 }  // namespace valkyrie::kernel

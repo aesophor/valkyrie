@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
   write(fd, "Hi", 2);
   close(fd);
   chdir("mnt");
-  fd = open("./a.txt", 0);
+  fd = open("a.txt", 0);
   assert(fd >= 0);
   read(fd, buf, 2);
   assert(strncmp(buf, "Hi", 2) == 0);
@@ -26,5 +26,7 @@ int main(int argc, char **argv) {
   assert(fd >= 0);
   read(fd, buf, 2);
   assert(strncmp(buf, "Hi", 2) == 0);
+
+  printf("vfs_test_mnt passed successfully\n");
   return 0;
 }

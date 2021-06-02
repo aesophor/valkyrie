@@ -14,6 +14,10 @@ namespace valkyrie::kernel {
 class VFS final {
  public:
   struct Mount final {
+    Mount(FileSystem& guest_fs,
+          SharedPtr<Vnode> guest_vnode,
+          SharedPtr<Vnode> host_vnode);
+
     FileSystem& guest_fs;
     SharedPtr<Vnode> guest_vnode;
     SharedPtr<Vnode> host_vnode;

@@ -99,4 +99,8 @@ int TmpFSInode::chown(const uid_t uid, const gid_t gid) {
   return -1;
 }
 
+size_t TmpFSInode::hash_code() const {
+  return Hash<TmpFSInode>{}(*this);
+}
+
 }  // namespace valkyrie::kernel

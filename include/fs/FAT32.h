@@ -190,6 +190,7 @@ class FAT32 final : public FileSystem {
 class FAT32Inode final : public Vnode {
   // Friend declaration
   friend class FAT32;
+  friend struct Hash<FAT32Inode>;
 
  public:
   FAT32Inode(FAT32& fs,
@@ -223,6 +224,7 @@ class FAT32Inode final : public Vnode {
   virtual const String& get_name() const override { return _name; }
   virtual char* get_content() override;
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
+  virtual size_t hash_code() const override;
 
  private:
   bool is_root_directory_inode() const;
@@ -251,6 +253,23 @@ class FAT32Inode final : public Vnode {
   UniquePtr<char[]> _content;
 };
 
+
+// Explicit (full) specialization of `struct Hash` for FAT32Inode.
+template <>
+struct Hash<FAT32Inode> final {
+  size_t operator ()(const FAT32Inode& inode) {
+    constexpr size_t prime = 17;
+    size_t ret = 7;
+
+    ret += prime * hash(inode._size);
+    ret += prime * hash(inode._mode);
+    ret += hash(inode._name);
+    ret += prime * hash(inode._first_cluster_number);
+    ret += prime * hash(inode._parent_cluster_offset);
+    ret += prime * hash(inode._parent_cluster_offset);
+    return ret;
+  }
+};
 
 }  // namespace valkyrie::kernel
 

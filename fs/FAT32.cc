@@ -579,6 +579,10 @@ void FAT32Inode::set_content(UniquePtr<char[]> content, off_t new_size) {
   _size = new_size;
 }
 
+size_t FAT32Inode::hash_code() const {
+  return Hash<FAT32Inode>{}(*this);
+}
+
 
 bool FAT32Inode::is_root_directory_inode() const {
   return this == _fs._root_inode.get();

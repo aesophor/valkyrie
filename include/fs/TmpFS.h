@@ -33,6 +33,7 @@ class TmpFS final : public FileSystem {
 class TmpFSInode final : public Vnode {
   // Friend declaration
   friend class TmpFS;
+  friend struct Hash<TmpFSInode>;
 
  public:
   TmpFSInode(TmpFS& fs,
@@ -68,6 +69,7 @@ class TmpFSInode final : public Vnode {
     _content = move(content);
     _size = new_size;
   }
+  virtual size_t hash_code() const override;
 
 
  private:
@@ -77,6 +79,22 @@ class TmpFSInode final : public Vnode {
 
   TmpFSInode* _parent;  // FIXME: use WeakPtr
   List<SharedPtr<TmpFSInode>> _children;
+};
+
+
+// Explicit (full) specialization of struct `Hash` for TmpFSInode.
+template <>
+struct Hash<TmpFSInode> {
+  size_t operator ()(const TmpFSInode& inode) const {
+    constexpr size_t prime = 11;
+    size_t ret = 5;
+
+    ret += prime * hash(inode._size);
+    ret += prime * hash(inode._mode);
+    ret += hash(inode._name);
+    ret += prime * hash(inode._parent);
+    return ret;
+  }
 };
 
 }  // namespace valkyrie::kernel

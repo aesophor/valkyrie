@@ -2,6 +2,7 @@
 #include <fs/VirtualFileSystem.h>
 
 #include <Algorithm.h>
+#include <Hash.h>
 #include <List.h>
 #include <String.h>
 #include <driver/SDCardDriver.h>
@@ -35,15 +36,15 @@ void VFS::mount_rootfs() {
   _storage_devices.push_back(move(sdcard));
 
   mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
-  printk("vfs: mounted root filesystem\n");
+  printk("VFS::mount_rootfs: mounted root filesystem\n");
 }
 
 void VFS::mount_rootfs(FileSystem& fs) {
   if (!_mounts.empty()) [[unlikely]] {
-    Kernel::panic("vfs: root filesystem is already mounted!\n");
+    Kernel::panic("VFS::mount_rootfs: root filesystem is already mounted!\n");
   }
 
-  _mounts.push_back(make_unique<Mount>(fs, fs.get_root_vnode(), nullptr));
+  _mounts.push_back(make_unique<Mount>(fs, fs.get_root_vnode(), fs.get_root_vnode()));
 }
 
 void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
@@ -51,7 +52,7 @@ void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
 
   if (!archive.is_valid()) [[unlikely]] {
     printk("initramfs unpacking failed invalid magic at start of compressed archive\n");
-    Kernel::panic("vfs: unable to mount root fs\n");
+    Kernel::panic("VFS::mount_rootfs: unable to mount root fs\n");
   }
 
   archive.for_each([this](const auto& entry) {
@@ -169,7 +170,7 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
     memcpy(new_content.get(), buf, len);
     file->vnode->set_content(move(new_content), len);
   } else {
-    printk("vfs_write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
+    printk("VFS::write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
     return -1;
   }
 
@@ -200,7 +201,7 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
       DirectoryEntry e;
       SharedPtr<Vnode> child_vnode = file->vnode->get_ith_child(file->pos);
       if (!child_vnode) [[unlikely]] {
-        Kernel::panic("vfs_read: child_vnode == nullptr. "
+        Kernel::panic("VFS::read: child_vnode == nullptr. "
                       "get_ith_child() is probably buggy.\n");
       }
 
@@ -211,7 +212,7 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
     }
 
   } else {
-    printk("vfs_read on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
+    printk("VFS::read: on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
     return -1;
   }
 
@@ -249,9 +250,10 @@ int VFS::mount(const String& device_name,
                const String& mountpoint,
                const String& fs_name) {
   // Check if `mountpoint` exists.
-  auto mountpoint_vnode = resolve_path(mountpoint);
-  if (!mountpoint_vnode) [[unlikely]] {
-    printk("vfs_mount: mountpoint %s does not exist\n", mountpoint.c_str());
+  SharedPtr<Vnode> vnode = resolve_path(mountpoint);
+
+  if (!vnode) [[unlikely]] {
+    printk("VFS::mount: %s does not exist\n", mountpoint.c_str());
     return -1;
   }
 
@@ -265,9 +267,9 @@ int VFS::mount(const String& device_name,
   // `fs_name` is the filesystem’s name.
   // The VFS should find and call the filesystem’s method to set up the mount.
   if (fs_name == "tmpfs") {
-    printk("mounting tmpfs on %s\n", mountpoint.c_str());
+    printk("VFS::mount: mounting tmpfs on %s\n", mountpoint.c_str());
     auto tmpfs = make_unique<TmpFS>();
-    _mounts.push_back(make_unique<Mount>(*tmpfs, tmpfs->get_root_vnode(), mountpoint_vnode));
+    _mounts.push_back(make_unique<Mount>(*tmpfs, tmpfs->get_root_vnode(), vnode));
     _mem_based_fs.push_back(move(tmpfs));
   }
 
@@ -275,17 +277,43 @@ int VFS::mount(const String& device_name,
 }
 
 int VFS::umount(const String& mountpoint) {
+  // Check if `mountpoint` is valid.
+  SharedPtr<Vnode> vnode = resolve_path(mountpoint);
+
+  if (!vnode) [[unlikely]] {
+    printk("VFS::umount: %s does not exist\n", mountpoint.c_str());
+    return -1;
+  }
+
+  auto it = _mounts.find_if([&vnode](const auto& mount) {
+    return mount->guest_vnode == vnode;
+  });
+
+  if (it == _mounts.end()) [[unlikely]] {
+    printk("VFS::umount: %s has not been mounted yet\n", mountpoint.c_str());
+    return -1;
+  }
+  
+
+  printk("VFS::umount: umounting %s\n", mountpoint.c_str());
+  _mounts.remove_if([&vnode](const auto& mount) {
+    return mount->guest_vnode == vnode;
+  });
+  // FIXME: free the corresponding fs
   return 0;
 }
 
 
 SharedPtr<Vnode> VFS::get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode) {
+  if (!vnode) {
+    return nullptr;
+  }
+
   auto it = _mounts.find_if([&vnode](const auto& mount) {
-    //printk("mount->host_vnode = %s, vnode = %s\n", mount->host_vnode->get_name().c_str(), vnode->get_name().c_str());
-    return mount->host_vnode == vnode;
+    return mount->host_vnode->hash_code() == vnode->hash_code();
   });
-  auto guest_vnode = (it != _mounts.end()) ? (*it)->guest_vnode : nullptr;
-  return (guest_vnode) ? guest_vnode : vnode;
+
+  return (it != _mounts.end()) ? (*it)->guest_vnode : vnode;
 }
 
 
@@ -328,8 +356,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
       *out_basename = components.front();
     }
 
-    //return get_mounted_vnode_or_host_vnode(root_vnode->get_child(components.front()));
-    return root_vnode->get_child(components.front());
+    return get_mounted_vnode_or_host_vnode(root_vnode->get_child(components.front()));
   }
 
   // Otherwise, we need to search the tree.
@@ -340,8 +367,8 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
       *out_parent = vnode;
     }
 
-    //auto child = get_mounted_vnode_or_host_vnode(vnode->get_child(*it));
-    auto child = vnode->get_child(*it);
+    auto child = get_mounted_vnode_or_host_vnode(vnode->get_child(*it));
+
     if (!child) {
       vnode = nullptr;
       break;
@@ -364,5 +391,13 @@ FileSystem& VFS::get_rootfs() {
 List<SharedPtr<File>>& VFS::get_opened_files() {
   return _opened_files;
 }
+
+
+VFS::Mount::Mount(FileSystem& guest_fs,
+                  SharedPtr<Vnode> guest_vnode,
+                  SharedPtr<Vnode> host_vnode)
+    : guest_fs(guest_fs),
+      guest_vnode(move(guest_vnode)),
+      host_vnode(move(host_vnode)) {}
 
 }  // namespace valkyrie::kernel
