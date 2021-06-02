@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <Utility.h>
 #include <dev/Device.h>
 #include <dev/StorageDevice.h>
 #include <fs/CPIOArchive.h>
@@ -51,16 +52,17 @@ class VFS final {
   int mknod(const String& pathname, mode_t mode, dev_t dev);
 
   // Retrieves the target vnode by `pathname`.
+  [[nodiscard]]
   SharedPtr<Vnode> resolve_path(const String& pathname,
                                 SharedPtr<Vnode>* out_parent = nullptr,
                                 String* out_basename = nullptr);
 
   // The API for each device to register itself to the VFS.
-  dev_t register_device(Device& device);
+  [[nodiscard]] dev_t register_device(Device& device);
 
 
-  FileSystem& get_rootfs();
-  List<SharedPtr<File>>& get_opened_files();
+  [[nodiscard]] FileSystem& get_rootfs();
+  [[nodiscard]] List<SharedPtr<File>>& get_opened_files();
 
  private:
   VFS();
@@ -75,6 +77,9 @@ class VFS final {
                           uid_t uid,
                           gid_t gid);
 
+  [[nodiscard]] Device* find_registered_device(dev_t dev);
+
+  [[nodiscard]]
   SharedPtr<Vnode> get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode);
 
 
@@ -83,6 +88,7 @@ class VFS final {
   List<UniquePtr<Mount>> _mounts;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
   List<UniquePtr<StorageDevice>> _storage_devices;
+  List<Pair<dev_t, Device*>> _registered_devices;
 };
 
 }  // namespace valkyrie::kernel

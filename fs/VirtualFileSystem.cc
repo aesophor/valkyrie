@@ -28,7 +28,8 @@ VFS& VFS::get_instance() {
 VFS::VFS()
     : _mounts(),
       _opened_files(),
-      _storage_devices() {}
+      _storage_devices(),
+      _registered_devices() {}
 
 
 void VFS::mount_rootfs() {
@@ -183,6 +184,18 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
     auto new_content = make_unique<char[]>(len);
     memcpy(new_content.get(), buf, len);
     file->vnode->set_content(move(new_content), len);
+
+  } else if (file->vnode->is_character_device()) {
+    auto cdev = static_cast<CharacterDevice*>(find_registered_device(file->vnode->get_dev()));
+
+    if (cdev->get_name() == "console") {
+      Console::get_instance().write(reinterpret_cast<const char*>(buf), len);
+    } else {
+      for (size_t i = 0; i < len; i++) {
+        cdev->write_char(reinterpret_cast<const char*>(buf)[i]);
+      }
+    }
+
   } else {
     printk("VFS::write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
     return -1;
@@ -223,6 +236,17 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
       memcpy(buf, reinterpret_cast<char*>(&e), sizeof(e));
       file->pos++;
       len = sizeof(e);
+    }
+
+  } else if (file->vnode->is_character_device()) {
+    auto cdev = static_cast<CharacterDevice*>(find_registered_device(file->vnode->get_dev()));
+
+    if (cdev->get_name() == "console") {
+      Console::get_instance().read(reinterpret_cast<char*>(buf), len);
+    } else {
+      for (size_t i = 0; i < len; i++) {
+        reinterpret_cast<char*>(buf)[i] = cdev->read_char();
+      }
     }
 
   } else {
@@ -322,8 +346,8 @@ int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
   // 1. a character device
   // 2. a block device
   // 3. a fifo device (pipe)
-  if (!(mode & S_IFCHR) ||
-      !(mode & S_IFBLK) ||
+  if (!(mode & S_IFCHR) &&
+      !(mode & S_IFBLK) &&
       !(mode & S_IFIFO)) [[unlikely]] {
     printk("VFS::mknod: invalid mode provided\n");
     return -1;
@@ -422,7 +446,17 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
 
 
 dev_t VFS::register_device(Device& device) {
-  return Device::encode(_next_dev_major++, 0);
+  dev_t dev = Device::encode(_next_dev_major++, 0);
+  _registered_devices.push_back(Pair<dev_t, Device*>{dev, &device});
+  return dev;
+}
+
+Device* VFS::find_registered_device(dev_t dev) {
+  auto it = _registered_devices.find_if([dev](const auto& entry) {
+    return Device::get_major(dev) == Device::get_major(entry.first);
+  });
+
+  return (it != _registered_devices.end()) ? it->second : nullptr;
 }
 
 
