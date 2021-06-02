@@ -11,6 +11,7 @@
 #define VALKYRIE_SIGNAL_H_
 
 #include <Functional.h>
+#include <dev/Console.h>
 
 namespace valkyrie::kernel {
 

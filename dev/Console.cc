@@ -5,37 +5,78 @@
 
 namespace {
 
-valkyrie::kernel::MiniUART* mini_uart;
-
 // Required by tfp_printf()
 void _putchar(void*, char c) { putchar(c); }
 
 }  // namespace
 
 
-namespace valkyrie::kernel::console {
+namespace valkyrie::kernel {
 
-void initialize(MiniUART* mini_uart) {
-  ::mini_uart = mini_uart;
+Console& Console::get_instance() {
+  static Console instance(MiniUART::get_instance());
+  return instance;
+}
+
+Console::Console(CharacterDevice::Driver& driver)
+    : CharacterDevice("console", driver) {
   init_printf(nullptr, _putchar);
 }
 
-void set_color(Color fg_color, bool bold) {
+
+char Console::read_char() {
+  return _driver.read_char();
+}
+
+void Console::write_char(const char c) {
+  _driver.write_char(c);
+}
+
+int Console::read(char buf[], size_t size) {
+  int i = 0;
+  while (i < (int) size) {
+    auto c = read_char();
+
+    if (c == 0x7f) {
+      if (i > 0) {
+        buf[--i] = 0;
+        write_char('\b');
+        write_char(' ');
+        write_char('\b');
+      }
+    } else if (c == '\n') {
+      return i;
+    } else {
+      buf[i++] = c;
+    }
+  }
+
+  return size;
+}
+
+int Console::write(const char buf[], size_t size) {
+  for (size_t i = 0; i < size; i++) {
+    write_char(buf[i]);
+  }
+  return size;
+}
+
+
+void Console::set_color(Console::Color fg_color, bool bold) {
   printf("\033[%d;3%dm", bold, fg_color);
 }
 
-void clear_color() {
-  puts("\033[0m", /*newline=*/false);
+void Console::clear_color() {
+  static const char s[] = "\033[0m";
+  write(s, sizeof(s));
 }
 
 }  // namespace valkyrie::kernel::console
 
 
+using valkyrie::kernel::Console;
+
 extern "C" {
-
-char getchar() { return ::mini_uart->getchar(); }
-void gets(char* s) { ::mini_uart->gets(s); }
-void putchar(const char c) { ::mini_uart->putchar(c); }
-void puts(const char* s, bool newline) { ::mini_uart->puts(s, newline); }
-
+char getchar() { return Console::get_instance().read_char(); }
+void putchar(const char c) { Console::get_instance().write_char(c); }
 }

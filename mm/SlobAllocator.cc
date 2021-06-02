@@ -123,7 +123,7 @@ void SlobAllocator::deallocate(void* p) {
 }
 
 void SlobAllocator::dump_slob_info() const {
-  puts("--- dumping slob bins ---");
+  printf("--- dumping slob bins ---");
 
   Slob* ptr = nullptr;
 
@@ -144,7 +144,7 @@ void SlobAllocator::dump_slob_info() const {
     ptr = ptr->next;
   }
   printf("(null)\n");
-  puts("--- end dumping slob bins ---");
+  printf("--- end dumping slob bins ---");
 
   printf("_page_frame_allocatable_begin = 0x%x\n", _page_frame_allocatable_begin);
   printf("_top_chunk                    = 0x%x\n", _top_chunk);

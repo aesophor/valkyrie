@@ -17,6 +17,8 @@
 
 namespace valkyrie::kernel {
 
+uint32_t VFS::_next_dev_major = 1;
+
 VFS& VFS::get_instance() {
   static VFS instance;
   return instance;
@@ -50,7 +52,7 @@ void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive) {
 
   if (!archive.is_valid()) [[unlikely]] {
     printk("initramfs unpacking failed invalid magic at start of compressed archive\n");
-    Kernel::panic("VFS::mount_rootfs: unable to mount root fs\n");
+    Kernel::panic("VFS::mount_rootfs: unable to mount rootfs\n");
   }
 
   archive.for_each([this](const auto& entry) {
@@ -60,10 +62,13 @@ void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive) {
 }
 
 void VFS::mount_devtmpfs() {
-  mount("devtmpfs", "/dev", "tmpfs");
+  // Create `/dev` if it doesn't exist.
+  static_cast<void>(mkdir("/dev"));
 
-  printk("VFS::mount_devtmpfs: populating devtmpfs\n");
-
+  // Mount devtmpfs or panic.
+  if (mount("devtmpfs", "/dev", "tmpfs") == -1) [[unlikely]] {
+    Kernel::panic("VFS::mount_devtmpfs: unable to mount devtmpfs\n");
+  }
 }
 
 void VFS::mount_tmpfs() {
@@ -417,7 +422,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
 
 
 dev_t VFS::register_device(Device& device) {
-  return 0;
+  return Device::encode(_next_dev_major++, 0);
 }
 
 

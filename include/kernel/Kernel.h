@@ -51,16 +51,18 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char* fmt, Args&&... args) {
+  auto& console = Console::get_instance();
+
   uint64_t stack_pointer;
   asm volatile("mov %0, sp" : "=r" (stack_pointer));
 
-  console::clear_color();
+  console.clear_color();
   printk("");
-  console::set_color(console::Color::RED, /*bold=*/true);
+  console.set_color(Console::Color::RED, /*bold=*/true);
   printf(kernel_panic_msg);
-  console::set_color(console::Color::YELLOW);
+  console.set_color(Console::Color::YELLOW);
   printf(fmt, forward<Args>(args)...);
-  console::clear_color();
+  console.clear_color();
 
   printk("SP = 0x%x ", stack_pointer);
   /*
@@ -68,18 +70,18 @@ template <typename... Args>
     printf("PID = %d", Task::current()->get_pid());
   }
   */
-  puts("");
+  printf("\n");
 
 
   //MemoryManager::get_instance().dump_slob_allocator_info();
 
   printk("");
-  console::set_color(console::Color::RED, /*bold=*/true);
+  console.set_color(Console::Color::RED, /*bold=*/true);
   printf("---[ end ");
   printf(kernel_panic_msg);
-  console::set_color(console::Color::YELLOW);
+  console.set_color(Console::Color::YELLOW);
   printf(fmt, forward<Args>(args)...);
-  console::clear_color();
+  console.clear_color();
 
   ExceptionManager::get_instance().disable();
   _halt();

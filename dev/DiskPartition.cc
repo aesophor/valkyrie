@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <dev/DiskPartition.h>
 
+#include <dev/Console.h>
 #include <dev/StorageDevice.h>
 #include <fs/FAT32.h>
 

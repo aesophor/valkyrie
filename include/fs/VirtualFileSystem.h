@@ -78,6 +78,8 @@ class VFS final {
   SharedPtr<Vnode> get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode);
 
 
+  static uint32_t _next_dev_major;
+
   List<UniquePtr<Mount>> _mounts;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
   List<UniquePtr<StorageDevice>> _storage_devices;

@@ -7,38 +7,6 @@
 #include <proc/Task.h>
 #include <proc/TaskScheduler.h>
 
-namespace {
-
-int console_read(char buf[], size_t size) {
-  int i = 0;
-  while (i < (int) size) {
-    auto c = getchar();
-
-    if (c == 0x7f) {
-      if (i > 0) {
-        buf[--i] = 0;
-        puts("\b \b", /*newline=*/false);
-      }
-    } else if (c == '\n') {
-      return i;
-    } else {
-      buf[i++] = c;
-    }
-  }
-
-  return size;
-}
-
-int console_write(const char buf[], size_t size) {
-  for (size_t i = 0; i < size; i++) {
-    putchar(buf[i]);
-  }
-  return size;
-}
-
-}  // namespace
-
-
 namespace valkyrie::kernel {
 
 #define SYSCALL_DECL(func) \
@@ -72,7 +40,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
 int sys_read(int fd, void* buf, size_t count) {
   // TODO: define stdin...
   if (fd == 0) {
-    return ::console_read(reinterpret_cast<char*>(buf), count);
+    return Console::get_instance().read(reinterpret_cast<char*>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -88,7 +56,7 @@ int sys_read(int fd, void* buf, size_t count) {
 int sys_write(int fd, const void* buf, size_t count) {
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
-    return ::console_write(reinterpret_cast<const char*>(buf), count);
+    return Console::get_instance().write(reinterpret_cast<const char*>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);

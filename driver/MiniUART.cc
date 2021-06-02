@@ -122,9 +122,6 @@ MiniUART::MiniUART()
   io::put<uint32_t>(AUX_MU_BAUD_REG, 270);  // set baud rate to 115200
   io::put<uint32_t>(AUX_MU_IIR_REG, 1);     // FIFO empty, currently no irq pending
   io::put<uint32_t>(AUX_MU_CNTL_REG, 3);    // re-enable tx/rx
-
-  // Register MiniUART as the driver for console.
-  console::initialize(this);
 }
 
 

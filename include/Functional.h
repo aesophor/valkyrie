@@ -4,7 +4,6 @@
 
 #include <Concepts.h>
 #include <Memory.h>
-#include <dev/Console.h>
 
 namespace valkyrie::kernel {
 
@@ -60,9 +59,6 @@ class Function<ReturnType(Args...)> {
     // If it is, then we'll print a warning message
     // and there should be a data abort exception, which
     // causes the kernel to panic.
-    if (!_callable) [[unlikely]] {
-      printk("ERROR: invoking a Function which holds (0x%x)", this);
-    }
     return _callable->call(args...);
   }
 

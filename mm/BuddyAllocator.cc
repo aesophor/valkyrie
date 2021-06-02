@@ -111,7 +111,7 @@ void BuddyAllocator::deallocate(void* p) {
 }
 
 void BuddyAllocator::dump_memory_map() const {
-  puts("--- dumping buddy ---");
+  printf("--- dumping buddy ---");
 
   for (size_t i = 0; i < MAX_ORDER_NR_PAGES; i++) {
     if (_frame_array[i] == DONT_ALLOCATE) {
@@ -123,7 +123,7 @@ void BuddyAllocator::dump_memory_map() const {
     }
   }
 
-  puts("");
+  printf("");
 
   for (int i = 0; i < MAX_ORDER; i++) {
     printf("_free_lists[%d]: ", i);
@@ -135,7 +135,7 @@ void BuddyAllocator::dump_memory_map() const {
     printf("(null)\n");
   }
 
-  puts("--- end dumping buddy ---");
+  printf("--- end dumping buddy ---");
 }
 
 void* BuddyAllocator::allocate_one_page_frame() {

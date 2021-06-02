@@ -36,6 +36,9 @@ void Kernel::run() {
   printk("VFS: mounting devtmpfs\n");
   _vfs.mount_devtmpfs();
 
+  //printk("VFS: populating devtmpfs\n");
+  //_vfs.register_device(_mini_uart);
+
   printk("starting task scheduler\n");
   _task_scheduler.run();
 
@@ -44,11 +47,13 @@ void Kernel::run() {
 
 
 void Kernel::print_banner() {
-  console::set_color(console::Color::GREEN, /*bold=*/true);
-  puts("--- Valkyrie OS ---");
-  console::set_color(console::Color::YELLOW, /*bold=*/true);
-  puts("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>");
-  console::clear_color();
+  auto& console = Console::get_instance();
+
+  console.set_color(Console::Color::GREEN, /*bold=*/true);
+  printf("--- Valkyrie OS ---\n");
+  console.set_color(Console::Color::YELLOW, /*bold=*/true);
+  printf("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>\n");
+  console.clear_color();
 }
 
 void Kernel::print_hardware_info() {
