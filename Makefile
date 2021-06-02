@@ -29,7 +29,6 @@ valkyrie:
 run-debug:
 	qemu-system-aarch64 -M raspi3b\
 		-kernel $(BUILD_DIR)/$(IMG)\
-		-initrd initramfs.cpio\
 		-drive if=sd,file=../sd.img,format=raw\
 		-display none\
 		-serial null\
@@ -39,7 +38,6 @@ run-debug:
 run:
 	qemu-system-aarch64 -M raspi3\
 		-kernel $(BUILD_DIR)/$(IMG)\
-		-initrd initramfs.cpio\
 		-drive if=sd,file=../sd.img,format=raw\
 		-display none\
 		-serial null\

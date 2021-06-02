@@ -26,7 +26,6 @@ VFS& VFS::get_instance() {
 VFS::VFS()
     : _mounts(),
       _opened_files(),
-      _mem_based_fs(),
       _storage_devices() {}
 
 
@@ -39,15 +38,15 @@ void VFS::mount_rootfs() {
   printk("VFS::mount_rootfs: mounted root filesystem\n");
 }
 
-void VFS::mount_rootfs(FileSystem& fs) {
+void VFS::mount_rootfs(SharedPtr<FileSystem> fs) {
   if (!_mounts.empty()) [[unlikely]] {
     Kernel::panic("VFS::mount_rootfs: root filesystem is already mounted!\n");
   }
 
-  _mounts.push_back(make_unique<Mount>(fs, fs.get_root_vnode(), fs.get_root_vnode()));
+  _mounts.push_back(make_unique<Mount>(fs, fs->get_root_vnode(), fs->get_root_vnode()));
 }
 
-void VFS::mount_rootfs(FileSystem& fs, const CPIOArchive& archive) {
+void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive) {
   mount_rootfs(fs);
 
   if (!archive.is_valid()) [[unlikely]] {
@@ -268,9 +267,9 @@ int VFS::mount(const String& device_name,
   // The VFS should find and call the filesystem’s method to set up the mount.
   if (fs_name == "tmpfs") {
     printk("VFS::mount: mounting tmpfs on %s\n", mountpoint.c_str());
-    auto tmpfs = make_unique<TmpFS>();
-    _mounts.push_back(make_unique<Mount>(*tmpfs, tmpfs->get_root_vnode(), vnode));
-    _mem_based_fs.push_back(move(tmpfs));
+    auto tmpfs = make_shared<TmpFS>();
+    auto mount = make_unique<Mount>(tmpfs, tmpfs->get_root_vnode(), vnode);
+    _mounts.push_back(move(mount));
   }
 
   return 0;
@@ -301,6 +300,10 @@ int VFS::umount(const String& mountpoint) {
   });
   // FIXME: free the corresponding fs
   return 0;
+}
+
+int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
+
 }
 
 
@@ -385,7 +388,7 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
 
 
 FileSystem& VFS::get_rootfs() {
-  return _mounts.front()->guest_fs;
+  return *(_mounts.front()->guest_fs);
 }
 
 List<SharedPtr<File>>& VFS::get_opened_files() {
@@ -393,10 +396,10 @@ List<SharedPtr<File>>& VFS::get_opened_files() {
 }
 
 
-VFS::Mount::Mount(FileSystem& guest_fs,
+VFS::Mount::Mount(SharedPtr<FileSystem> guest_fs,
                   SharedPtr<Vnode> guest_vnode,
                   SharedPtr<Vnode> host_vnode)
-    : guest_fs(guest_fs),
+    : guest_fs(move(guest_fs)),
       guest_vnode(move(guest_vnode)),
       host_vnode(move(host_vnode)) {}
 

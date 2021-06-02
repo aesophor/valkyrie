@@ -38,14 +38,14 @@ class DiskPartition final {
   uint32_t get_start_block_index() const;
   uint32_t get_end_block_index() const;
   const String& get_name() const;
-  FileSystem& get_filesystem();
+  SharedPtr<FileSystem> get_filesystem() const;
 
  private:
   StorageDevice& _storage_device;
   uint32_t _start_block_index;
   uint32_t _end_block_index;
   String _name;
-  UniquePtr<FileSystem> _fs;
+  SharedPtr<FileSystem> _fs;
 };
 
 }  // namespace valkyrie::kernel

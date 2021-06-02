@@ -19,7 +19,7 @@ DiskPartition::DiskPartition(StorageDevice& storage_device,
   switch (detect_partition_type()) {
     case Type::FAT32:
       printk("/dev/%s: detected a FAT32 filesystem.\n", _name.c_str());
-      _fs = make_unique<FAT32>(*this);
+      _fs = make_shared<FAT32>(*this);
       break;
 
     default:
@@ -65,8 +65,8 @@ const String& DiskPartition::get_name() const {
   return _name;
 }
 
-FileSystem& DiskPartition::get_filesystem() {
-  return *_fs;
+SharedPtr<FileSystem> DiskPartition::get_filesystem() const {
+  return _fs;
 }
 
 }  // namespace valkyrie::kernel

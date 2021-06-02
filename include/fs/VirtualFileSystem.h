@@ -14,11 +14,11 @@ namespace valkyrie::kernel {
 class VFS final {
  public:
   struct Mount final {
-    Mount(FileSystem& guest_fs,
+    Mount(SharedPtr<FileSystem> guest_fs,
           SharedPtr<Vnode> guest_vnode,
           SharedPtr<Vnode> host_vnode);
 
-    FileSystem& guest_fs;
+    SharedPtr<FileSystem> guest_fs;
     SharedPtr<Vnode> guest_vnode;
     SharedPtr<Vnode> host_vnode;
   };
@@ -44,6 +44,7 @@ class VFS final {
   int unlink(const String& pathname);
   int mount(const String& device_name, const String& mountpoint, const String& fs_name);
   int umount(const String& mountpoint);
+  int mknod(const String& pathname, mode_t mode, dev_t dev);
 
 
   // Retrieves the target vnode by `pathname`.
@@ -57,8 +58,8 @@ class VFS final {
  private:
   VFS();
 
-  void mount_rootfs(FileSystem& fs);
-  void mount_rootfs(FileSystem& fs, const CPIOArchive& archive);
+  void mount_rootfs(SharedPtr<FileSystem> fs);
+  void mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive);
 
   SharedPtr<Vnode> create(const String& pathname,
                           const char* content,
@@ -72,7 +73,6 @@ class VFS final {
 
   List<UniquePtr<Mount>> _mounts;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
-  List<UniquePtr<FileSystem>> _mem_based_fs;
   List<UniquePtr<StorageDevice>> _storage_devices;
 };
 
