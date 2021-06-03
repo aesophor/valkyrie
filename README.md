@@ -45,7 +45,8 @@
 - [ ] Procfs
 - [x] Parse MBR (Master Boot Record)
 - [x] FAT32 with LFN (Long File Name) support - open, read, write, close
-- [ ] Device file, mknod, UART device files
+- [x] Character device, Block device
+- [x] Device file, mknod, device files
 - [ ] Component name cache mechanism for faster pathname lookup
 - [ ] Page cache mechanism for faster file r/w
 - [ ] sync() - write back cache data
