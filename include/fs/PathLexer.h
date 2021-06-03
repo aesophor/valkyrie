@@ -8,7 +8,7 @@ namespace valkyrie::kernel {
 
 class PathLexer final {
  public:
-  static String normalize(String path);
+  [[nodiscard]] static String normalize(String path);
 
  private:
   static void deduplicate_delimiters(String& path);
