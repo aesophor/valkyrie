@@ -25,11 +25,11 @@ class Device {
 
   // Idea borrowed from Linux kernel. See:
   // https://elixir.bootlin.com/linux/latest/source/include/linux/kdev_t.h
-  static constexpr uint32_t get_major(dev_t dev) {
+  static constexpr uint32_t major(dev_t dev) {
     return dev >> _minor_bits;
   }
 
-  static constexpr uint32_t get_minor(dev_t dev) {
+  static constexpr uint32_t minor(dev_t dev) {
     return dev & _minor_mask;
   }
 

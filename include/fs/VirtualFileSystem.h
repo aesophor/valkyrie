@@ -36,7 +36,7 @@ class VFS final {
 
   void mount_rootfs();
   void mount_devtmpfs();
-  void mount_tmpfs();
+  void populate_devtmpfs();
 
 
   SharedPtr<File> open(const String& pathname, int options);

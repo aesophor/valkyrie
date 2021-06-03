@@ -494,6 +494,8 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
 
           _fs.cluster_write(free_cluster_number, cluster.get());
           _fs.fat_write(free_cluster_number, FAT32_EOC_MAX);
+
+          inode->_first_cluster_number = free_cluster_number;
         }
 
         return inode;
@@ -507,11 +509,24 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
 }
 
 SharedPtr<Vnode> FAT32Inode::get_child(const String& name) {
-  return find_child_if([&name](const auto& v) { return v.name == name; });
+  return find_child_if([&name](const auto& view) {
+    return view.name == name;
+  });
 }
 
 SharedPtr<Vnode> FAT32Inode::get_ith_child(size_t i) {
-  return find_child_if([&i](const auto& v) { return v.index == i; });
+  return find_child_if([&i](const auto& view) {
+    return view.index == i;
+  });
+}
+
+Vnode* FAT32Inode::get_parent() {
+  if (this == _fs._root_inode.get()) {
+    return nullptr;
+  }
+
+  auto parent = get_child("..").get();
+  return (parent) ? parent : _fs._root_inode.get();
 }
 
 size_t FAT32Inode::get_children_count() const {
@@ -523,6 +538,10 @@ size_t FAT32Inode::get_children_count() const {
   });
 
   return ret;
+}
+
+String FAT32Inode::get_name() const {
+  return _name;
 }
 
 char* FAT32Inode::get_content() {
@@ -643,6 +662,8 @@ FAT32Inode::find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> pred
            (__dentry_view = v, true);
   });
 
+  // If __dentry_view.index is -1, then it means
+  // there is no such a child. that
   if (__dentry_view.index == static_cast<uint32_t>(-1)) {
     return nullptr;
   }

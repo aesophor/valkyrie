@@ -38,6 +38,7 @@ int rmdir(const char* pathname);
 int unlink(const char* pathname);
 int mount(const char* device_name, const char* mountpoint, const char* fs_name);
 int umount(const char* mountpoint);
+int getcwd(char* buf);
 
 
 inline void __libc_putchar(void*, const char c) {

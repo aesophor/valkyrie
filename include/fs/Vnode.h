@@ -38,12 +38,13 @@ class Vnode {
   virtual SharedPtr<Vnode> remove_child(const String& name) = 0;
   virtual SharedPtr<Vnode> get_child(const String& name) = 0;
   virtual SharedPtr<Vnode> get_ith_child(size_t i) = 0;
+  virtual Vnode* get_parent() = 0;
   virtual size_t get_children_count() const = 0;
 
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
 
-  virtual const String& get_name() const = 0;
+  virtual String get_name() const = 0;
   virtual char* get_content() = 0;
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) = 0;
   virtual size_t hash_code() const = 0;
@@ -68,8 +69,8 @@ class Vnode {
   time_t get_atime() const { return _atime; }
   time_t get_mtime() const { return _mtime; }
   dev_t get_dev() const { return _dev; }
-  uint32_t get_dev_major() const { return Device::get_major(_dev); }
-  uint32_t get_dev_minor() const { return Device::get_minor(_dev); }
+  uint32_t get_dev_major() const { return Device::major(_dev); }
+  uint32_t get_dev_minor() const { return Device::minor(_dev); }
 
   void set_size(off_t size) { _size = size; }
   void set_ctime(time_t ctime) { _ctime = ctime; }

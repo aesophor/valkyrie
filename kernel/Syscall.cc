@@ -33,6 +33,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
   SYSCALL_DECL(sys_mount),
   SYSCALL_DECL(sys_umount),
   SYSCALL_DECL(sys_mknod),
+  SYSCALL_DECL(sys_getcwd),
 };
 
 
@@ -165,6 +166,10 @@ int sys_umount(const char* mountpoint) {
 
 int sys_mknod(const char *pathname, mode_t mode, dev_t dev) {
   return VFS::get_instance().mknod(pathname, mode, dev);
+}
+
+int sys_getcwd(char* buf) {
+  return 0;
 }
 
 }  // namespace valkyrie::kernel

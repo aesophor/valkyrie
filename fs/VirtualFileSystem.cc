@@ -72,8 +72,22 @@ void VFS::mount_devtmpfs() {
   }
 }
 
-void VFS::mount_tmpfs() {
+void VFS::populate_devtmpfs() {
+  // Create `/dev/console` for a character device whose drvier is MiniUART.
+  dev_t dev = register_device(Console::get_instance());
+  mknod("/dev/console", S_IFCHR, Device::encode(Device::major(dev), 1));
 
+  /*
+  // Create `/dev/sdX` for each attached storage device.
+  for (auto it = _storage_devices.begin(); it != _storage_devices.end(); it++) {
+    static constexpr char table[5] = "abcd";
+    char pathname[16] = {};
+    sprintf(pathname, "/dev/sd%c", table[it.index()]);
+
+    dev_t dev = register_device(**it);
+    mknod(pathname, S_IFBLK, Device::encode(Device::major(dev), 1));
+  }
+  */
 }
 
 
@@ -453,7 +467,7 @@ dev_t VFS::register_device(Device& device) {
 
 Device* VFS::find_registered_device(dev_t dev) {
   auto it = _registered_devices.find_if([dev](const auto& entry) {
-    return Device::get_major(dev) == Device::get_major(entry.first);
+    return Device::major(dev) == Device::major(entry.first);
   });
 
   return (it != _registered_devices.end()) ? it->second : nullptr;

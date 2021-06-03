@@ -216,12 +216,13 @@ class FAT32Inode final : public Vnode {
   virtual SharedPtr<Vnode> remove_child(const String& name) override { return nullptr; }
   virtual SharedPtr<Vnode> get_child(const String& name) override;
   virtual SharedPtr<Vnode> get_ith_child(size_t i) override;
+  virtual Vnode* get_parent() override;
   virtual size_t get_children_count() const override;
 
   virtual int chmod(const mode_t) override { return 0; }
   virtual int chown(const uid_t, const gid_t) override { return 0; }
 
-  virtual const String& get_name() const override { return _name; }
+  virtual String get_name() const override;
   virtual char* get_content() override;
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
   virtual size_t hash_code() const override;

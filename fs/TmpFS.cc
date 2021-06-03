@@ -87,6 +87,10 @@ SharedPtr<Vnode> TmpFSInode::get_ith_child(size_t i) {
   return nullptr;
 }
 
+Vnode* TmpFSInode::get_parent() {
+  return _parent;
+}
+
 size_t TmpFSInode::get_children_count() const {
   return _children.size();
 }

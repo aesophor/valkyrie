@@ -35,10 +35,7 @@ void Kernel::run() {
 
   printk("VFS: mounting devtmpfs\n");
   _vfs.mount_devtmpfs();
-
-  printk("VFS: populating devtmpfs\n");
-  dev_t dev = _vfs.register_device(Console::get_instance());
-  _vfs.mknod("/dev/console", S_IFCHR, Device::encode(Device::get_major(dev), 1));
+  _vfs.populate_devtmpfs();
 
   printk("starting task scheduler\n");
   _task_scheduler.run();

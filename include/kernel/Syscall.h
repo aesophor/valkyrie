@@ -30,6 +30,7 @@ enum Syscall {
   SYS_MOUNT,
   SYS_UMOUNT,
   SYS_MKNOD,
+  SYS_GETCWD,
   __NR_syscall
 };
 
@@ -57,6 +58,7 @@ int sys_unlink(const char* pathname);
 int sys_mount(const char* device_name, const char* mountpoint, const char* fs_name);
 int sys_umount(const char* mountpoint);
 int sys_mknod(const char *pathname, mode_t mode, dev_t dev);
+int sys_getcwd(char* buf);
 
 
 inline bool is_syscall_id_valid(const uint64_t id) {
