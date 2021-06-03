@@ -69,6 +69,10 @@ class String {
     return ret;
   }
 
+  String& operator +=(const String& r) {
+    return *this = move(*this + r);
+  }
+
   //operator bool() const { return !empty(); }
 
 
@@ -204,6 +208,25 @@ class String {
     }
 
     return substrings;
+  }
+
+  // Returns a string in which the string elements of sequence `seq`
+  // have been joined by *this.
+  // FIXME: pass by const ref (currently the ConstIterator is broken)
+  [[nodiscard]]
+  String join(List<String>& seq) {
+    const size_t len = seq.size();
+    String ret;
+
+    for (auto it = seq.begin(); it != seq.end(); it++) {
+      ret += *it;
+
+      if (it.index() != len - 1) [[likely]] {
+        ret += *this;
+      }
+    }
+
+    return ret;
   }
 
   void to_upper() {
