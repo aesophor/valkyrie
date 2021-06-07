@@ -48,7 +48,6 @@ __mmu_init:
   blr x2
 
 
-.global __create_kernel_page_tables
 __create_kernel_page_tables:
   mov x0, 0x0000 // PGD's page frame at 0x0
   mov x1, 0x1000 // PUD's page frame at 0x1000
