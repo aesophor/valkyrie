@@ -114,11 +114,6 @@ __mmu_init:
   blr x2
 
 __boot_rest:
-  // Initialize the stack pointer to the virtual address of _start,
-  // allowing it to grow toward lower address.
-  ldr x0, = _start
-  mov sp, x0
-
   // Initialize .bss by calling memset()
   ldr x0, = _bss_start
   mov x1, #0
