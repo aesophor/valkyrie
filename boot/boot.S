@@ -58,7 +58,7 @@ __switch_to_EL1:
 
   ldr x0, = _start - 0x10  // sets SP to 0xffff000000080000 - 0x10
   msr sp_el1, x0
-  eret  // eret to `__mmu_init()`, which will `ret` to `__boot_rest()`
+  eret  // eret to `__mmu_init()`, which will branch back to `__boot_rest()`
 
 .global __boot_rest
 __boot_rest:

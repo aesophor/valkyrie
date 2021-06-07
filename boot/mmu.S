@@ -32,7 +32,24 @@ __mmu_init:
   )
   msr mair_el1, x0
 
+  // Create kernel page tables and load its address to
+  // the translation base register of the upper va_space (i.e. kernel space).
+  bl __create_kernel_page_tables
+  msr ttbr1_el1, x0
 
+  // Enable MMU; cache remains disabled.
+  mrs x2, sctlr_el1
+  orr x2 , x2, 1
+  msr sctlr_el1, x2
+
+  // Indirect branch to the virtual address of `__boot_rest`.
+  // This symbol is defined in boot/boot.S
+  ldr x2, = __boot_rest
+  blr x2
+
+
+.global __create_kernel_page_tables
+__create_kernel_page_tables:
   mov x0, 0x0000 // PGD's page frame at 0x0
   mov x1, 0x1000 // PUD's page frame at 0x1000
 
@@ -48,14 +65,4 @@ __mmu_init:
   mov x3, 0x40000000
   orr x3, x2, x3
   str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
-
-  msr ttbr0_el1, x0 // load PGD to the bottom translation based register.
-
-  mrs x2, sctlr_el1
-  orr x2 , x2, 1
-  msr sctlr_el1, x2 // enable MMU, cache remains disabled
-
-  // Indirect branch to the virtual address of `__boot_rest`.
-  // This symbol is defined in boot/boot.S
-  ldr x2, = __boot_rest
-  blr x2
+  ret
