@@ -70,7 +70,10 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
       Kernel::panic("Trapped access to SVE functionality\n");
 
     case 0b100001:
-      Kernel::panic("Instruction Abort taken without a change in Exception level.\n");
+      Kernel::panic("Instruction Abort taken without a change in Exception level\n");
+
+    case 0b100100:
+      Kernel::panic("Data Abort from a lower Exception level\n");
 
     case 0b100101:
       Kernel::panic("Data Abort taken without a change in Exception level (invalid data access)\n");

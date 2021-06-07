@@ -22,8 +22,8 @@ void Kernel::run() {
   print_banner();
   print_hardware_info();
 
-  printk("switching to supervisor mode... (≧▽ ≦)\n");
-  _exception_manager.downgrade_exception_level(1);
+  //printk("switching to supervisor mode... (≧▽ ≦)\n");
+  //_exception_manager.downgrade_exception_level(1);
 
   /*
   printk("enabling timer interrupts\n");
@@ -37,8 +37,13 @@ void Kernel::run() {
   _vfs.mount_devtmpfs();
   _vfs.populate_devtmpfs();
 
+  printk("It works!");
+  _halt();
+
+  /*
   printk("starting task scheduler\n");
   _task_scheduler.run();
+  */
 
   Kernel::panic("you shouldn't have reached here...\n");
 }
