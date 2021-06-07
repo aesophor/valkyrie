@@ -3,8 +3,12 @@
 // boot.S - Valkyrie Kernel Entry Point
 //
 // The GPU of rpi3 will place the kernel8.img at 0x80000
-// and start executing the code there. In our case,
-// 0x80000 is the address of `_start` (see scripts/linker.ld for details).
+// and start executing the code there.
+//
+// In our case, the physical address of `_start` is 0x80000,
+// whereas the virtual address of `_start` is 0xffff000000080000.
+// All symbols in build/valkyrie.eif only exists at 0xffff*
+// because it is compiled in that way (see scripts/linker.ld for details).
 //
 // We will do the following tasks in boot.S:
 // 1. switch the Exception Level from EL2 (hypervisor) to EL1 (supervisor).
