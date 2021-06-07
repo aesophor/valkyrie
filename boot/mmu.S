@@ -30,6 +30,14 @@
 #define DEVICE_MEMORY_ATTR ((MAIR_IDX_DEVICE_nGnRnE << 2) | PD_ACCESS | PD_BLOCK)
 #define NORMAL_MEMORY_ATTR ((MAIR_IDX_NORMAL_NOCACHE << 2) | PD_ACCESS | PD_BLOCK)
 
+.macro WRITE_PAGE_DESCRIPTOR write_to_addr physical_addr attributes
+  mov x0, \write_to_addr
+  mov x1, \physical_addr
+  ldr x2, = \attributes
+  orr x2, x1, x2
+  str x2, [x0]
+.endm
+
 
 .section ".text"
 .global __mmu_init
@@ -61,60 +69,24 @@ __mmu_init:
 
 __create_kernel_page_tables:
   // Write a PGD at 0x0000
-  mov x0, KERNEL_PGD_PTR
-  mov x1, KERNEL_PUD_PTR
-  ldr x2, = PD_TABLE
-  orr x2, x1, x2
-  str x2, [x0]
+  WRITE_PAGE_DESCRIPTOR KERNEL_PGD_PTR, KERNEL_PUD_PTR, PD_TABLE
 
   // Write PUD at 0x1000
-  mov x0, KERNEL_PUD_PTR
-  mov x1, KERNEL_PMD_PTR
-  ldr x2, = PD_TABLE
-  orr x2, x1, x2
-  str x2, [x0]
+  WRITE_PAGE_DESCRIPTOR KERNEL_PUD_PTR, KERNEL_PMD_PTR, PD_TABLE
 
   // Write PMD at 0x2000
-  mov x0, KERNEL_PMD_PTR
-  mov x1, 0
-  ldr x2, = NORMAL_MEMORY_ATTR
-  orr x2, x1, x2
-  str x2, [x0]
+  WRITE_PAGE_DESCRIPTOR KERNEL_PMD_PTR, 0, NORMAL_MEMORY_ATTR
 
   // ARM local peripherals (0x40000000 - 0x7fffffff)
-  mov x0, KERNEL_PUD_PTR + 8
-  mov x1, 0x40000000
-  ldr x2, = DEVICE_MEMORY_ATTR
-  orr x2, x1, x2
-  str x2, [x0]
+  WRITE_PAGE_DESCRIPTOR (KERNEL_PUD_PTR + 8), 0x40000000, DEVICE_MEMORY_ATTR
 
   // GPU peripherals (0x3f000000 - 0x3fffffff)
-  mov x0, KERNEL_PMD_PTR + (0x3f000000 / 0x200000) * 8
-  mov x1, 0x3f000000
-  ldr x2, = DEVICE_MEMORY_ATTR
-  orr x2, x1, x2
-  str x2, [x0]
+  WRITE_PAGE_DESCRIPTOR (KERNEL_PMD_PTR + (0x3f000000 / 0x200000) * 8), 0x3f000000, DEVICE_MEMORY_ATTR
+  WRITE_PAGE_DESCRIPTOR (KERNEL_PMD_PTR + (0x3f200000 / 0x200000) * 8), 0x3f200000, DEVICE_MEMORY_ATTR
 
-  mov x0, KERNEL_PMD_PTR + (0x3f200000 / 0x200000) * 8
-  mov x1, 0x3f200000
-  ldr x2, = DEVICE_MEMORY_ATTR
-  orr x2, x1, x2
-  str x2, [x0]
-
-  // Zone1
-  mov x0, KERNEL_PMD_PTR + (0x10000000 / 0x200000) * 8
-  mov x1, 0x10000000
-  ldr x2, = NORMAL_MEMORY_ATTR
-  orr x2, x1, x2
-  str x2, [x0]
-
-  // Zone2
-  mov x0, KERNEL_PMD_PTR + (0x10200000 / 0x200000) * 8
-  mov x1, 0x10200000
-  ldr x2, = NORMAL_MEMORY_ATTR
-  orr x2, x1, x2
-  str x2, [x0]
-
+  // Kernel heap
+  WRITE_PAGE_DESCRIPTOR (KERNEL_PMD_PTR + (0x10000000 / 0x200000) * 8), 0x10000000, NORMAL_MEMORY_ATTR
+  WRITE_PAGE_DESCRIPTOR (KERNEL_PMD_PTR + (0x10200000 / 0x200000) * 8), 0x10200000, NORMAL_MEMORY_ATTR
 
   // Return the address of PGD
   mov x0, KERNEL_PGD_PTR
