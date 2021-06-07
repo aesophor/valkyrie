@@ -4,8 +4,8 @@
 
 #include <Types.h>
 
-#define KVA_BASE  0xffff000000000000
-#define MMIO_BASE (KVA_BASE + 0x3f000000)
+#define KERNEL_VA_SPACE_BASE (0xffff000000000000)
+#define MMIO_BASE            (KERNEL_VA_SPACE_BASE + 0x3f000000)
 
 namespace valkyrie::kernel::io {
 
