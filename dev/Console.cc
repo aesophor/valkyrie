@@ -3,14 +3,6 @@
 
 #include <driver/MiniUART.h>
 
-namespace {
-
-// Required by tfp_printf()
-void _putchar(void*, char c) { putchar(c); }
-
-}  // namespace
-
-
 namespace valkyrie::kernel {
 
 Console& Console::get_instance() {
@@ -20,7 +12,8 @@ Console& Console::get_instance() {
 
 Console::Console(CharacterDevice::Driver& driver)
     : CharacterDevice("console", driver) {
-  init_printf(nullptr, _putchar);
+  auto __putchar = [](void*, char c) { putchar(c); };
+  init_printf(nullptr, __putchar);
 }
 
 
