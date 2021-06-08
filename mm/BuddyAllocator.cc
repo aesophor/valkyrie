@@ -12,22 +12,28 @@ namespace valkyrie::kernel {
 BuddyAllocator::BuddyAllocator(const size_t zone_begin)
     : _zone_begin(zone_begin),
       _frame_array(),
-      _free_lists() {
+      _free_lists(),
+      _headers() {
   const int order = size_to_order(get_zone_end() - _zone_begin);
+
+  // Initialize the frame array, as well as the header pool.
+  _frame_array[0] = order;
+  _headers[0].index = 0;
 
   for (size_t i = 1; i < MAX_ORDER_NR_PAGES; i++) {
     _frame_array[i] = DONT_ALLOCATE;
+    _headers[i].index = i;
   }
-  _frame_array[0] = order;
 
-  _free_lists[order] = reinterpret_cast<Block*>(_zone_begin);
+  // Initialize the free lists.
+  _free_lists[order] = &_headers[0];
   _free_lists[order]->order = _frame_array[0];
   _free_lists[order]->next = nullptr;
 }
 
 
 size_t BuddyAllocator::get_block_header_size() {
-  return sizeof(Block);
+  return sizeof(BlockHeader);
 }
 
 void* BuddyAllocator::allocate(size_t requested_size) {
@@ -35,9 +41,9 @@ void* BuddyAllocator::allocate(size_t requested_size) {
     return nullptr;
   }
 
-  // For each allocation request x, add the block header size to x and
-  // raise that value to a power of 2 s.t. x >= the original requested_size.
-  requested_size = normalize_size(requested_size + sizeof(Block));
+  // For each allocation request x, raise that value to
+  // a power of 2 s.t. x >= the original requested_size.
+  requested_size = normalize_size(requested_size);
   int order = size_to_order(requested_size);
 
   if (order >= MAX_ORDER) [[unlikely]] {
@@ -47,7 +53,7 @@ void* BuddyAllocator::allocate(size_t requested_size) {
 
   // If there's an exact-fit free block from the free list,
   // then remove it from the free list and return that free block.
-  Block* victim = nullptr;
+  BlockHeader* victim = nullptr;
 
   if ((victim = _free_lists[order])) [[likely]] {
     mark_block_as_allocated(victim);
@@ -63,7 +69,7 @@ void* BuddyAllocator::allocate(size_t requested_size) {
     }
   }
 
-  if (order >= MAX_ORDER) [[unlikely]] {
+  if (order >= MAX_ORDER || !victim) [[unlikely]] {
     printk("unable to allocate physical memory of %d bytes\n", requested_size);
     return nullptr;
   }
@@ -74,7 +80,8 @@ void* BuddyAllocator::allocate(size_t requested_size) {
   mark_block_as_allocated(victim);
 
 out:
-  return victim + 1;  // skip the header
+  // Return the address of `victim->index`-th page frame.
+  return get_page_frame(victim->index);
 }
 
 void BuddyAllocator::deallocate(void* p) {
@@ -82,13 +89,13 @@ void BuddyAllocator::deallocate(void* p) {
     return;
   }
 
-  Block* block = reinterpret_cast<Block*>(p) - 1;  // 1 is for the header
-  Block* buddy = get_buddy(block);
+  BlockHeader* block = get_block_header(p);
+  BlockHeader* buddy = get_buddy(block);
 
   // When you can’t find the buddy of the merged block or
   // the merged block size is maximum-block-size,
   // the allocator stops and put the merged block to the linked-list.
-  while (!is_block_allocated(buddy) && block->order < MAX_ORDER - 1) {
+  while (block->order < MAX_ORDER - 1 && !is_block_allocated(buddy)) {
     // Remove the buddy from the free list.
     free_list_del_entry(buddy);
 
@@ -100,7 +107,9 @@ void BuddyAllocator::deallocate(void* p) {
     }
     block->order++;
 
-    buddy = get_buddy(block);
+    if (block->order < MAX_ORDER - 1) {
+      buddy = get_buddy(block);
+    }
   }
 
   // Put back the merged block to the free list.
@@ -111,7 +120,7 @@ void BuddyAllocator::deallocate(void* p) {
 }
 
 void BuddyAllocator::dump_memory_map() const {
-  printf("--- dumping buddy ---");
+  printf("--- dumping buddy ---\n");
 
   for (size_t i = 0; i < MAX_ORDER_NR_PAGES; i++) {
     if (_frame_array[i] == DONT_ALLOCATE) {
@@ -123,11 +132,11 @@ void BuddyAllocator::dump_memory_map() const {
     }
   }
 
-  printf("");
+  printf("\n");
 
   for (int i = 0; i < MAX_ORDER; i++) {
     printf("_free_lists[%d]: ", i);
-    Block* ptr = _free_lists[i];
+    BlockHeader* ptr = _free_lists[i];
     while (ptr) {
       printf("[%d 0x%x] -> ", ptr->order, ptr);
       ptr = ptr->next;
@@ -135,20 +144,38 @@ void BuddyAllocator::dump_memory_map() const {
     printf("(null)\n");
   }
 
-  printf("--- end dumping buddy ---");
+  printf("--- end dumping buddy ---\n");
 }
 
 void* BuddyAllocator::allocate_one_page_frame() {
-  return allocate(PAGE_SIZE - sizeof(Block));
+  return allocate(PAGE_SIZE);
 }
 
 
-int BuddyAllocator::get_page_frame_index(const Block* block) const {
-  return (reinterpret_cast<size_t>(block) - _zone_begin) / PAGE_SIZE;
+BuddyAllocator::BlockHeader* BuddyAllocator::get_block_header(const void* p) {
+  if (reinterpret_cast<size_t>(p) % PAGE_SIZE != 0) [[unlikely]] {
+    Kernel::panic("kernel heap corrupted: "
+                  "get_block_header(0x%x) misaligned\n", p);
+  }
+
+  const int idx = (reinterpret_cast<size_t>(p) - _zone_begin) / PAGE_SIZE;
+
+  if (idx < 0 || idx >= MAX_ORDER_NR_PAGES) [[unlikely]] {
+    Kernel::panic("kernel heap corrupted: "
+                  "get_block_header(0x%x) idx out of bound: idx = %d\n",
+                  p, idx);
+  }
+
+  return &_headers[idx];
 }
 
-void BuddyAllocator::mark_block_as_allocated(const Block* block) {
-  int idx = get_page_frame_index(block);
+void* BuddyAllocator::get_page_frame(const int index) const {
+  return reinterpret_cast<void*>(_zone_begin + index * PAGE_SIZE);
+}
+
+
+void BuddyAllocator::mark_block_as_allocated(const BlockHeader* block) {
+  int idx = block->index;
   int len = pow(2, block->order);
  
   for (int i = 0; i < len; i++) {
@@ -156,8 +183,8 @@ void BuddyAllocator::mark_block_as_allocated(const Block* block) {
   }
 }
 
-void BuddyAllocator::mark_block_as_allocatable(const Block* block) {
-  int idx = get_page_frame_index(block);
+void BuddyAllocator::mark_block_as_allocatable(const BlockHeader* block) {
+  int idx = block->index;
   int len = pow(2, block->order);
 
   _frame_array[idx] = block->order;
@@ -167,7 +194,7 @@ void BuddyAllocator::mark_block_as_allocatable(const Block* block) {
 }
 
 
-void BuddyAllocator::free_list_del_head(Block* block) {
+void BuddyAllocator::free_list_del_head(BlockHeader* block) {
   if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: free_list_del_head(nullptr)\n");
   }
@@ -185,7 +212,7 @@ void BuddyAllocator::free_list_del_head(Block* block) {
   block->next = nullptr;
 }
 
-void BuddyAllocator::free_list_add_head(Block* block) {
+void BuddyAllocator::free_list_add_head(BlockHeader* block) {
   if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: free_list_add_head(nullptr)\n");
   }
@@ -209,7 +236,7 @@ void BuddyAllocator::free_list_add_head(Block* block) {
   }
 }
 
-void BuddyAllocator::free_list_del_entry(Block* block) {
+void BuddyAllocator::free_list_del_entry(BlockHeader* block) {
   if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: free_list_del_entry(nullptr)\n");
   }
@@ -219,8 +246,8 @@ void BuddyAllocator::free_list_del_entry(Block* block) {
     return;
   }
 
-  Block* prev = nullptr;
-  Block* ptr = _free_lists[block->order];
+  BlockHeader* prev = nullptr;
+  BlockHeader* ptr = _free_lists[block->order];
 
   while (ptr) {
     if (ptr == block) {
@@ -235,8 +262,8 @@ void BuddyAllocator::free_list_del_entry(Block* block) {
 }
 
 
-BuddyAllocator::Block* BuddyAllocator::split_block(Block* block,
-                                                           const int target_order) {
+BuddyAllocator::BlockHeader* BuddyAllocator::split_block(BlockHeader* block,
+                                                         const int target_order) {
   if (!block) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: block == nullptr\n");
   }
@@ -253,7 +280,7 @@ BuddyAllocator::Block* BuddyAllocator::split_block(Block* block,
 
   // Update block headers
   block->order--;
-  Pair<Block*, Block*> buddies = {block, get_buddy(block)};
+  Pair<BlockHeader*, BlockHeader*> buddies = {block, get_buddy(block)};
   buddies.second->order = buddies.first->order;
 
   // Add buddy1 and buddy2 to the free list.
@@ -268,10 +295,13 @@ BuddyAllocator::Block* BuddyAllocator::split_block(Block* block,
   return split_block(buddies.first, target_order);
 }
 
-BuddyAllocator::Block* BuddyAllocator::get_buddy(Block* block) {
-  const size_t b1 = reinterpret_cast<size_t>(block);
+BuddyAllocator::BlockHeader* BuddyAllocator::get_buddy(BlockHeader* block) {
+  const size_t b1 = reinterpret_cast<size_t>(get_page_frame(block->index));
   const size_t b2 = b1 ^ (1 << (block->order)) * PAGE_SIZE;
-  return reinterpret_cast<Block*>(b2);
+  if (b2 < _zone_begin || b2 >= get_zone_end()) {
+    Kernel::panic("b1 = 0x%x { .order = %d, .index = %d }, b2 = 0x%x\n", b1, block->order, block->index, b2);
+  }
+  return get_block_header(reinterpret_cast<void*>(b2));
 }
 
 
@@ -284,8 +314,8 @@ int BuddyAllocator::order_to_size(const size_t order) const {
   return pow(2, order) * PAGE_SIZE;
 }
 
-bool BuddyAllocator::is_block_allocated(const Block* block) const {
-  return _frame_array[get_page_frame_index(block)] == ALLOCATED;
+bool BuddyAllocator::is_block_allocated(const BlockHeader* block) const {
+  return _frame_array[block->index] == ALLOCATED;
 }
 
 size_t BuddyAllocator::normalize_size(size_t size) const {

@@ -5,20 +5,20 @@
 
 namespace valkyrie::kernel {
 
-Page::Page(void* user_data_addr) : _user_data_addr(user_data_addr) {}
+Page::Page(void* p) : _p(p) {}
 
 
 void Page::copy_from(const Page& source) {
-  memcpy(get(), source.get(), PAGE_DATA_SIZE);
+  memcpy(get(), source.get(), PAGE_SIZE);
 }
 
 
 size_t Page::begin() const {
-  return reinterpret_cast<size_t>(_user_data_addr) - PAGE_HEADER_SIZE;
+  return reinterpret_cast<size_t>(_p);
 }
 
 size_t Page::data() const {
-  return reinterpret_cast<size_t>(_user_data_addr);
+  return reinterpret_cast<size_t>(_p);
 }
 
 size_t Page::end() const {
@@ -27,7 +27,7 @@ size_t Page::end() const {
 
 
 void* Page::get() const {
-  return _user_data_addr;
+  return _p;
 }
 
 }  // namespace valkyrie::kernel

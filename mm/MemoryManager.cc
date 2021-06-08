@@ -47,10 +47,7 @@ void* MemoryManager::get_free_page() {
 }
 
 void* MemoryManager::kmalloc(size_t size) {
-  // FIXME: clean up this shit ... ( ´•̥̥̥ω•̥̥̥` ) 
-  if (size +
-      BuddyAllocator::get_block_header_size() +
-      SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
+  if (size + SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
     return _zones[0].buddy_allocator.allocate(size);
   } else {
     auto ret = _zones[1].slob_allocator.allocate(size);
@@ -60,10 +57,7 @@ void* MemoryManager::kmalloc(size_t size) {
 }
 
 void MemoryManager::kfree(void* p) {
-  size_t addr = reinterpret_cast<size_t>(p) -
-                BuddyAllocator::get_block_header_size();
-
-  if (addr % PAGE_SIZE == 0) {
+  if (is_address_aligned(p)) {
     _zones[0].buddy_allocator.deallocate(p);
   } else {
     _kasan.mark_free_chk(p);
@@ -83,6 +77,10 @@ void MemoryManager::dump_slob_allocator_info() const {
 
 size_t MemoryManager::get_ram_size() const {
   return _ram_size;
+}
+
+bool MemoryManager::is_address_aligned(const void* p) const {
+  return reinterpret_cast<size_t>(p) % PAGE_SIZE == 0;
 }
 
 }  // namespace valkyrie::kernel

@@ -30,6 +30,7 @@ class MemoryManager {
   MemoryManager();
 
   Zone* initialize_zones();
+  bool is_address_aligned(const void* p) const;
 
   const size_t _ram_size;
   Zone _zones[2];

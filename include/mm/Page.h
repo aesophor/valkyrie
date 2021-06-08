@@ -5,9 +5,7 @@
 #include <Types.h>
 #include <mm/BuddyAllocator.h>
 
-#define PAGE_SIZE        4096
-#define PAGE_HEADER_SIZE (BuddyAllocator::get_block_header_size())
-#define PAGE_DATA_SIZE   (PAGE_SIZE - PAGE_HEADER_SIZE)
+#define PAGE_SIZE 4096
 
 namespace valkyrie::kernel {
 
@@ -15,7 +13,7 @@ class Page final {
  public:
   // Constructor
   explicit
-  Page(void* user_data_addr);
+  Page(void* p);
 
 
   // Copies the user data only, will not touch the header.
@@ -42,7 +40,7 @@ class Page final {
   void* get() const;
 
  private:
-  void* _user_data_addr;
+  void* _p;
 };
 
 }  // namespace valkyrie::kernel

@@ -30,28 +30,30 @@ class BuddyAllocator {
   void* allocate_one_page_frame();
 
  private:
-  struct Block {
-    Block* next;
+  struct BlockHeader {
+    BlockHeader* next;
     int32_t order;
-    int32_t __unused;
+    int32_t index;
   };
 
-  int  get_page_frame_index(const Block* block) const;
-  void mark_block_as_allocated(const Block* block);
-  void mark_block_as_allocatable(const Block* block);
+  BlockHeader* get_block_header(const void* p);
+  void* get_page_frame(const int index) const;
+  
+  void mark_block_as_allocated(const BlockHeader* block);
+  void mark_block_as_allocatable(const BlockHeader* block);
 
-  void free_list_del_head(Block* block);
-  void free_list_add_head(Block* block);
-  void free_list_del_entry(Block* block);
+  void free_list_del_head(BlockHeader* block);
+  void free_list_add_head(BlockHeader* block);
+  void free_list_del_entry(BlockHeader* block);
 
   // Recursively split the given block
   // until it is exactly the size of PAGE_SIZE * 2^`target_order`.
-  Block* split_block(Block* block, const int target_order);
-  Block* get_buddy(Block* block);
+  BlockHeader* split_block(BlockHeader* block, const int target_order);
+  BlockHeader* get_buddy(BlockHeader* block);
 
   int size_to_order(const size_t size) const;
   int order_to_size(const size_t order) const;
-  bool is_block_allocated(const Block* block) const;
+  bool is_block_allocated(const BlockHeader* block) const;
   size_t normalize_size(size_t size) const;
   size_t get_zone_end() const;
 
@@ -78,7 +80,10 @@ class BuddyAllocator {
 
   // An array of Singly-linked Lists of free page frames of different sizes.
   // See: https://www.kernel.org/doc/gorman/html/understand/understand009.html
-  Block* _free_lists[MAX_ORDER];
+  BlockHeader* _free_lists[MAX_ORDER];
+
+  // Header pool
+  BlockHeader _headers[MAX_ORDER_NR_PAGES];
 };
 
 }  // namespace valkyrie::kernel
