@@ -1,11 +1,10 @@
 ## [NYCU, Operating System Capstone, Spring 2021](https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html)
 
+A 64-bit Unix-like operating system which runs on Raspberry Pi 3b+ (CPU: Arm Cortex A53, ARMv8)
+
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-| `309551004` | `aesophor` | `王冠中` | aesophor.cs09g@nctu.edu.tw |
-
-看起來是在寫 kernel，但其實都在自幹 STL...
-
+| `309551004` | `aesophor` | `王冠中` | aesophor.cs09g [at] nctu.edu.tw |
 
 <div align="center">
 <img src="/Documentation/cover.png">
@@ -50,6 +49,12 @@
 - [ ] Component name cache mechanism for faster pathname lookup
 - [ ] Page cache mechanism for faster file r/w
 - [ ] sync() - write back cache data
+- [x] kernel virtual address space
+- [ ] user virtual address space
+- [ ] mmap
+- [ ] ELF parser and loader
+- [ ] Page fault handler, Demand paging
+- [ ] Copy on Write
 - [ ] ...
 
 ## Kernel C++20 STL Progress
