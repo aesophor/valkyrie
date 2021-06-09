@@ -4,12 +4,12 @@
 namespace valkyrie::kernel {
 
 // Convert UTF8-coded characters into Unicode2-coded. 
-ucs2_char_t *utf2ucs (ucs2_char_t *dst, const utf8_char_t *src) {
+ucs2_char_t* utf2ucs(ucs2_char_t* dst, const utf8_char_t* src) {
   unsigned int i = 0;
   unsigned int j = 0;
   unsigned int next = 0;
 
-  while (src[i] != 0) {
+  while (src[i]) {
     ucs2_char_t temp = 0;
 
     if (src[i] & 0x80 && src[i+1] & 0x80) {
@@ -36,12 +36,12 @@ ucs2_char_t *utf2ucs (ucs2_char_t *dst, const utf8_char_t *src) {
 
 
 // Convert Unicode2-coded characters into UTF8-coded. 
-utf8_char_t *ucs2utf (utf8_char_t *dst, const ucs2_char_t *src) {
+utf8_char_t* ucs2utf(utf8_char_t* dst, const ucs2_char_t* src) {
   unsigned int i = 0;
   unsigned int j = 0;
   unsigned int next = 0;
 
-  while (src[i] != 0) {
+  while (src[i]) {
     if (src[i] < 0x80) { 
       next = 1;
       dst[j] = 0;
