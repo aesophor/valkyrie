@@ -80,5 +80,11 @@
 * [BUILD.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/BUILD.md)
 * [DEPLOY.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/DEPLOY.md)
 
+## Thanks
+
+* [Linux](https://github.com/torvalds/linux)
+* [SerenityOS](https://github.com/SerenityOS/serenity)
+* [OS67](https://github.com/SilverRainZ/OS67)
+
 ## License
 Available under the [MIT License](https://github.com/aesophor/valkyrie/blob/309551004/LICENSE)
