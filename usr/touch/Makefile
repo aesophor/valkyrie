@@ -14,7 +14,6 @@ CXXFLAGS = -std=c++20\
 	   -Wall
 
 LD = aarch64-linux-gnu-ld
-LDFLAGS = -T ../vlibc/linker.ld
 
 ELF = touch
 SRC = ../vlibc/vlibc.cc ../vlibc/syscall.S ../vlibc/printf.cc ../vlibc/cstring.cc main.cc
