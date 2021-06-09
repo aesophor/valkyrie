@@ -1,16 +1,18 @@
-## [NYCU, Operating System Capstone, Spring 2021](https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html)
-
-A 64-bit Unix-like operating system which runs on Raspberry Pi 3b+ (CPU: Arm Cortex A53, ARMv8)
-
-| 學號 | GitHub 帳號 | 姓名 | Email |
-| --- | ----------- | --- | --- |
-| `309551004` | `aesophor` | `王冠中` | aesophor.cs09g [at] nctu.edu.tw |
-
 <div align="center">
+
+<h3>VALKYRIE</h3>
+<p>64-bit unix-like kernel for Raspberry Pi 3B+ (CPU: Arm Cortex A53)</p>
+
 <img src="/Documentation/cover.png">
 </div>
 
 <br>
+
+## [NYCU, Operating System Capstone, Spring 2021](https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html)
+
+| 學號 | GitHub 帳號 | 姓名 | Email |
+| --- | ----------- | --- | --- |
+| `309551004` | `aesophor` | `王冠中` | aesophor.cs09g [at] nctu.edu.tw |
 
 ## Progress Overview
 
