@@ -62,13 +62,6 @@ __switch_to_EL1:
 
 .global __boot_rest
 __boot_rest:
-  // Initialize .bss by calling memset()
-  ldr x0, = _bss_start
-  mov x1, #0
-  ldr x2, = _bss_end
-  sub x2, x2, x0
-  bl memset
-
   // Transfer control to kmain(), see kernel/kmain.cc
   bl kmain
 
