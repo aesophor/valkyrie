@@ -18,8 +18,7 @@ class VMMap final {
 
  public:
   VMMap();
-
-  ~VMMap() = default;
+  ~VMMap();
   VMMap(const VMMap&) = delete;
   VMMap(VMMap&&) = delete;
   VMMap& operator =(const VMMap&) = delete;
@@ -42,6 +41,8 @@ class VMMap final {
   size_t* get_pgd() const;
 
  private:
+  void dfs_kfree_page(page_table_t* pt, const size_t level) const;
+
   page_table_t* const _pgd;  // points to PGD's page frame
 };
 

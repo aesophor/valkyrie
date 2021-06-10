@@ -5,7 +5,8 @@
 #include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
-#define PAGE_TABLE_DEPTH 4
+#define PAGE_TABLE_DEPTH  4
+#define NR_ENTRIES_PER_PT (PAGE_SIZE / sizeof(size_t))
 
 namespace valkyrie::kernel {
 
@@ -18,6 +19,36 @@ VMMap::VMMap()
   }
 
   memset(_pgd, 0, PAGE_SIZE);
+}
+
+VMMap::~VMMap() {
+  dfs_kfree_page(_pgd, 0);
+}
+
+void VMMap::dfs_kfree_page(page_table_t* pt, const size_t level) const {
+  // `level` begins from 0 (PGD), and goes all the way down to
+  // 1 (PUD), 2 (PMD), 3 (PTE). We'll stop at PTE and free all
+  // the pages that are pointed to by this PTE.
+  if (level == 3) {
+    for (size_t i = 0; i < NR_ENTRIES_PER_PT; i++) {
+      if (PD_INVALID(pt[i])) {
+        continue;
+      }
+      kfree(reinterpret_cast<void*>(pt[i] & PAGE_MASK));
+    }
+    return;
+  }
+
+  // DFS
+  for (size_t i = 0; i < NR_ENTRIES_PER_PT; i++) {
+    if (PD_INVALID(pt[i])) {
+      continue;
+    }
+    dfs_kfree_page(reinterpret_cast<page_table_t*>(pt[i] & PAGE_MASK), level + 1);
+  }
+
+  // Finally free PGD page frame
+  kfree(_pgd);
 }
 
 
@@ -49,7 +80,9 @@ void VMMap::map(const size_t vaddr,
     // is not present yet. Hence, we should allocate
     // the next-level page table now.
     if (PD_INVALID(pd)) {
-      next_level_pt_addr = reinterpret_cast<size_t>(get_free_page());
+      void* page_frame = get_free_page();
+      memset(page_frame, 0, PAGE_SIZE);
+      next_level_pt_addr = reinterpret_cast<size_t>(page_frame);
       pt[pt_index] = next_level_pt_addr | PD_TABLE;
     } else {
       next_level_pt_addr = pt[pt_index] & PAGE_MASK;
