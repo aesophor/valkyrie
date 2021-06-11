@@ -23,7 +23,7 @@
 - [x] Lab5: Multitasking
 - [x] Lab6: Virtual Filesystem
 - [x] Lab7: Filesystem Meets Hardware
-- [ ] Lab8: Virtual Memory (vmm)
+- [x] Lab8: Virtual Memory (vmm)
 
 ## Kernel Features
 - [x] I/O: MiniUART - supports sync/async I/O
@@ -52,7 +52,7 @@
 - [ ] Page cache mechanism for faster file r/w
 - [ ] sync() - write back cache data
 - [x] kernel virtual address space
-- [ ] user virtual address space
+- [x] user virtual address space
 - [ ] mmap
 - [ ] ELF parser and loader
 - [ ] Page fault handler, Demand paging
