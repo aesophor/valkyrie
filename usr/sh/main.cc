@@ -49,7 +49,9 @@ int run_shell(const char* username) {
 
   while (true) {
     memset(buf, 0, sizeof(buf));
-    printf("[%s@localhost]%c ", username, prompt);
+    write(1, "[", 1);
+    write(1, username, strlen(username));
+    write(1, "]# ", 3);
     read(0, buf, 255);
 
     argc = get_argc(buf);
@@ -73,11 +75,14 @@ int run_shell(const char* username) {
 
     } else if (!strncmp(buf, "cd", sizeof(buf))) {
       if (chdir(arguments[1]) == -1) {
-        printf("cd: no such file or directory: %s\n", arguments[1]);
+        char msg[] = "cd: no such file or directory: ";
+        write(1, msg, sizeof(msg) - 1);
+        write(1, arguments[1], strlen(arguments[1]));
+        write(1, "\n", 1);
       }
 
     } else if (!strncmp(buf, "echo $?", sizeof(buf))) {
-      printf("%d\n", wstatus);
+      //printf("%d\n", wstatus);
 
     } else if (access(arguments[0], 0) != -1) {
       int pid;
@@ -85,13 +90,12 @@ int run_shell(const char* username) {
 
       switch ((pid = fork())) {
         case -1:
-          printf("fork failed\n");
+          write(1, "fork failed\n", 12);
           break;
 
         case 0: {
           exec(arguments[0], arguments);
-
-          printf("exec failed\n");
+          write(1, "exec failed\n", 12);
           exit(-1);
           break;
         }
@@ -102,7 +106,10 @@ int run_shell(const char* username) {
       }
 
     } else {
-      printf("sh: command not found: %s\n", arguments[0]);
+      char msg[] = "sh: command not found: ";
+      write(1, msg, sizeof(msg) - 1);
+      write(1, arguments[0], strlen(arguments[0]));
+      write(1, "\n", 1);
     }
   }
 

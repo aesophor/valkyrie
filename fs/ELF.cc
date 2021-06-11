@@ -22,10 +22,10 @@ const char* ELF::get_raw_content() const {
   return reinterpret_cast<const char*>(_header);
 }
 
-void ELF::load_at(void* dest) const {
+void ELF::load(const VMMap& vmmap) const {
   //size_t p = reinterpret_cast<size_t>(dest);
   //size_t base = p;
-  memcpy(dest, _header, _size);
+  //memcpy(dest, _header, _size);
 
   /*
   auto header = reinterpret_cast<const ELF::FileHeader*>(p);

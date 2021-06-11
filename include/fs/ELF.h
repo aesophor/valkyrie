@@ -4,6 +4,7 @@
 
 #include <Types.h>
 #include <Utility.h>
+#include <mm/VMMap.h>
 
 #define EI_NIDENT (16)
 
@@ -66,7 +67,7 @@ class ELF {
   bool is_valid() const;
 
   const char* get_raw_content() const;
-  void load_at(void* dest) const;
+  void load(const VMMap& vmmap) const;
   void* get_entry_point() const;
 
   size_t get_size() const;
