@@ -40,9 +40,6 @@ int mount(const char* device_name, const char* mountpoint, const char* fs_name);
 int umount(const char* mountpoint);
 int getcwd(char* buf);
 
-
-void __libc_putchar(void*, const char c);
-
 }
 
 #endif  // VALKYRIE_LIBC_H_

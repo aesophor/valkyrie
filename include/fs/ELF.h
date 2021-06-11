@@ -1,10 +1,45 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+//
+// ELF.h - Executable and Linkable Format
+//
+// [1] https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab8.html#elf-loader
+// [2] https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
+// [3] https://docs.oracle.com/cd/E19683-01/816-1386/chapter6-83432/index.html
+// [4] https://www.jollen.org/blog/2007/03/elf_program_loading_2_pht.html
+
 #ifndef VALKYRIE_ELF_H_
 #define VALKYRIE_ELF_H_
 
 #include <Types.h>
 #include <Utility.h>
 #include <mm/VMMap.h>
+
+// Default base address where an ELF will be loaded.
+#define ELF_DEFAULT_BASE 0x400000
+
+// ELF Segments Type
+// https://docs.oracle.com/cd/E19683-01/816-1386/chapter6-83432/index.html
+#define PT_NULL               0
+#define PT_LOAD               1
+#define PT_DYNAMIC            2
+#define PT_INTERP             3
+#define PT_NOTE               4
+#define PT_SHLIB              5
+#define PT_PHDR               6
+#define PT_LOSUNW    0x6ffffffa
+#define PT_SUNWBSS   0x6ffffffb
+#define PT_SUNWSTACK 0x6ffffffa
+#define PT_HISUNW    0x6fffffff
+#define PT_LOPROC    0x70000000
+#define PT_HIPROC    0x7fffffff
+
+// Legal values for p_flags (segment flags).
+// https://www.jollen.org/blog/2007/03/elf_program_loading_2_pht.html
+#define PF_X            (1 << 0)        /* Segment is executable */
+#define PF_W            (1 << 1)        /* Segment is writable */
+#define PF_R            (1 << 2)        /* Segment is readable */
+#define PF_MASKOS       0x0ff00000      /* OS-specific */
+#define PF_MASKPROC     0xf0000000      /* Processor-specific */
 
 #define EI_NIDENT (16)
 

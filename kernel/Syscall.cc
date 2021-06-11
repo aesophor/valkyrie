@@ -57,9 +57,7 @@ int sys_read(int fd, void __user* buf, size_t count) {
 }
 
 int sys_write(int fd, const void __user* buf, size_t count) {
-  printf("buf(0x%x) __user\n", buf);
   buf = copy_from_user<const void*>(buf);
-  printf("buf(0x%x) = %s\n", buf, buf);
 
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
@@ -109,9 +107,6 @@ int sys_fork() {
 }
 
 int sys_exec(const char __user* name, const char __user* argv[]) {
-  printk("name (0x%x, 0x%x)\n", name, copy_from_user<const char*>(name));
-  printk("argv(0x%x, 0x%x)\n", argv, copy_from_user<const char*>(argv));
-
   name = copy_from_user<const char*>(name);
   argv = copy_from_user<const char**>(argv);
   return Task::current()->do_exec(name, argv);

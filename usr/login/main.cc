@@ -9,18 +9,14 @@ int main(int argc, char **argv) {
   char username[32];
   char password[32];
 
-  char msg1[] = "Localhost login: ";
-  char msg2[] = "Password: ";
-  char msg3[] = "fork failed\n";
-
   while (true) {
     memset(username, 0, sizeof(username));
     memset(password, 0, sizeof(password));
 
-    write(1, msg1, sizeof(msg1));
+    printf("Localhost login: ");
     read(0, username, sizeof(username) - 1);
 
-    write(1, msg2, sizeof(msg2));
+    printf("Password: ");
     read(0, password, sizeof(password) - 1);
 
     if (!validate_user(username, password)) {
@@ -29,7 +25,7 @@ int main(int argc, char **argv) {
 
     switch ((pid = fork())) {
       case -1:
-        printf(msg3);
+        printf("fork failed\n");
         break;
 
       case 0: {

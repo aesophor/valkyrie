@@ -30,7 +30,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (ex.ec == 0b10101 && ex.iss == 0) [[likely]] {
-    printk("switching to kernel space\n");
+    //printk("switching to kernel space\n");
     switch_user_va_space(nullptr);
 
     Task::current()->set_trap_frame(trap_frame);
@@ -46,14 +46,13 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                        trap_frame->x3,
                                                        trap_frame->x4,
                                                        trap_frame->x5);
-    printk("do_syscall done\n");
     // Handle pending POSIX signals.
     Task::current()->handle_pending_signals();
 
     // User preemption.
     TaskScheduler::get_instance().maybe_reschedule();
 
-    printk("switched to user space\n");
+    //printk("switched to user space\n");
     switch_user_va_space(Task::current()->get_ttbr0_el1());
     return;
   }

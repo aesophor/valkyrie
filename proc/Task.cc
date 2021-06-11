@@ -76,6 +76,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
   _fd_table[1] = File::opened;
   _fd_table[2] = File::opened;
 
+  /*
   printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
       this,
       _name,
@@ -83,14 +84,17 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _entry_point,
       _kstack_page.begin(),
       _ustack_page.begin());
+  */
 }
 
 
 Task::~Task() {
+  /*
   printk("destructing thread 0x%x [%s] (pid = %d)\n",
         this,
         _name,
         _pid);
+  */
 
   // If the current task still has running children,
   // make the init task adopt these orphans.
@@ -144,7 +148,6 @@ Task* Task::get_by_pid(const pid_t pid) {
 
 
 int Task::do_fork() {
-  printk("do_fork()\n");
   // Duplicate task
   save_context();
 
@@ -152,14 +155,11 @@ int Task::do_fork() {
   size_t parent_usp;
   asm volatile("mrs %0, sp_el0" : "=r" (parent_usp));
 
-  printk("calculating offsets\n");
   size_t kernel_sp_offset = _kstack_page.offset_of(_context.sp);
   size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
-  printk("offsets ok\n");
 
 
   // Duplicate task.
-  printk("creating new task\n");
   auto task = make_unique<Task>(/*parent=*/this, _entry_point, _name);
   Task* child = task.get();
 
@@ -185,10 +185,8 @@ int Task::do_fork() {
   TaskScheduler::get_instance().enqueue_task(move(task));
 
   // Copy kernel/user stack content
-  printk("copying stack\n");
   child->_kstack_page.copy_from(_kstack_page);
   child->_ustack_page.copy_from(_ustack_page);
-  printk("copy stack done\n");
  
   /* ------ You can safely modify the child now ------ */
 
@@ -219,38 +217,25 @@ int Task::do_fork() {
   // TODO: duplicate fd table
 
 out:
-  printk("do_fork: returning\n");
   return ret;
 }
 
 
 int Task::do_exec(const char* name, const char* const _argv[]) {
-  printk("do_exec: %s, argv: 0x%x\n", name, _argv);
-  //for (int i = 0; i < 1; i++) {
-  //  printf("%s\n", _argv[i]);
-  //}
-
   // Acquire a new page and use it as the user stack page.
   _ustack_page = get_free_page();
 
-
-
   // Update task name
-  printk("copying name: 0x%x <- 0x%x\n", _name, name);
   strncpy(_name, name, TASK_NAME_MAX_LEN - 1);
-  printk("copy name ok\n");
 
   // Construct the argv chain on the user stack.
   // Currently `_ustack_page` and `user_sp` contains physical addresses.
-  printk("copying argv\n");
   size_t user_sp = copy_arguments_to_user_stack(_argv);
-  printk("copy argv ok, user_sp = 0x%x\n", user_sp);
   size_t kernel_sp = _kstack_page.end() - 0x10;
 
   // Convert `user_sp` to virtual addresses.
   size_t offset = _ustack_page.offset_of(user_sp);
   user_sp = USER_STACK_PAGE + offset;
-  printk("virtual user_sp = 0x%x\n", user_sp);
 
   // Reset the stack pointer.
   _context.sp = user_sp;
@@ -265,7 +250,6 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   // Map .text, .bss and .data
   ELF elf({ file->vnode->get_content(), file->vnode->get_size() });
-  size_t nr_pages = 0;
 
   if (!elf.is_valid()) {
     goto failed;
@@ -273,33 +257,21 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
 
   // Release the vmmap, freeing the old _ustack_page.
-  printk("clearing user address space\n");
+  //printk("clearing user address space\n");
   _vmmap.reset();
 
-  printk("mapping stack\n");
+  //printk("mapping stack\n");
   _ustack_page.set_v_addr(reinterpret_cast<void*>(USER_STACK_PAGE));
   _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), PAGE_RWX);
 
-  printk("mapping binary and loading ELF at v_addr = 0x%x\n", USER_BINARY_PAGE);
-  nr_pages = elf.get_size() / PAGE_SIZE + static_cast<bool>(elf.get_size() % PAGE_SIZE);
-  for (size_t i = 0; i < nr_pages; i++) {
-    void* page_frame = get_free_page();
-    memcpy(page_frame, elf.get_raw_content() + i * PAGE_SIZE, PAGE_SIZE);
-    _vmmap.map(USER_BINARY_PAGE + i * PAGE_SIZE, page_frame, PAGE_RWX);
-  }
+  //printk("loading ELF\n");
+  elf.load(_vmmap);
 
   VFS::get_instance().close(move(file));
 
-  printk("pgd = 0x%x\n", _vmmap.get_pgd());
-
-  //if (_vmmap.get_physical_address(reinterpret_cast<void*>(USER_STACK_PAGE))
-  //    != _ustack_page.p_addr()) {
-  //  Kernel::panic("user stack page mismatch with page table's mapping\n");
-  //}
-
   // Jump to the entry point.
-  printk("executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table = 0x%x\n",
-         _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(), _vmmap.get_pgd());
+  //printk("executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table = 0x%x\n",
+  //       _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(), _vmmap.get_pgd());
 
   // When the CPU generates an exception,
   // TTBR0_EL1 still points to user's page table,
@@ -309,15 +281,6 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
                       user_sp,
                       KERNEL_PAGE + kernel_sp,
                       _vmmap.get_pgd());
-
-  /*
-  ExceptionManager::get_instance()
-    .downgrade_exception_level(0,
-                               reinterpret_cast<void*>(elf.get_entry_point()),
-                               reinterpret_cast<void*>(kernel_sp),
-                               reinterpret_cast<void*>(user_sp),
-                               _vmmap.get_pgd());
-  */
 failed:
   printk("exec failed: pid = %d [%s]\n", _pid, _name);
   return -1;
@@ -392,7 +355,6 @@ int Task::do_signal(int signal, void (*handler)()) {
 
 
 size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
-  printk("copy_arguments_to_user_stack: argv = 0x%x\n", argv);
   int argc = 0;
   char** copied_argv = nullptr;
   char** copied_argv_ptr = nullptr;
@@ -405,19 +367,14 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
   }
 
   // Probe for argc from `_argv`.
-  for (const char* s = argv[0]; s; s = argv[++argc]) {
-    printf("%s\n", copy_from_user<char*>(s));
-  }
+  for (const char* s = argv[0]; s; s = argv[++argc]);
 
   strings = make_unique<String[]>(argc);
   copied_str_addrs = make_unique<char*[]>(argc);
-  printk("ready: strings = 0x%x, copied_str_addrs = 0x%x\n",
-      strings.get(), copied_str_addrs.get());
 
   // Copy all `argv` to kernel heap.
   for (int i = 0; i < argc; i++) {
     strings[i] = copy_from_user<const char*>(argv[i]);
-    printk("strings[%d] (0x%x)\n", i, strings[i].c_str());
   }
 
   // Actually copy all C strings to user stack,
@@ -427,7 +384,6 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
     user_sp -= len;
 
     char* s = reinterpret_cast<char*>(user_sp);
-    printk("writing %s to: 0x%x\n", strings[i].c_str(), user_sp);
     strcpy(reinterpret_cast<char*>(user_sp), strings[i].c_str());
     copied_str_addrs[i] = s;
   }
@@ -440,12 +396,9 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
   copied_argv = reinterpret_cast<char**>(user_sp);
   for (int i = 0; i < argc; i++) {
     copied_argv[i] = PHYS_TO_VIRT(copied_str_addrs[i], char*);
-    printk("copied_argv[%d] = 0x%x\n", i, copied_argv[i]);
   }
   copied_argv[argc] = nullptr;
   copied_argv_ptr = PHYS_TO_VIRT(&copied_argv[0], char**);
-
-  printk("copied_argv_ptr = 0x%x\n", copied_argv_ptr);
 
 out:
   user_sp -= 8;

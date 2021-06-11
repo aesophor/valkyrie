@@ -55,7 +55,7 @@ void VMMap::dfs_kfree_page(page_table_t* pt, const size_t level) const {
 void VMMap::map(const size_t v_addr,
                 const void* p_addr,
                 const size_t attr) const {
-  printk("VMMap::map: v_addr = 0x%x, p_addr = 0x%x\n", v_addr, p_addr);
+  //printk("VMMap::map: v_addr = 0x%x, p_addr = 0x%x\n", v_addr, p_addr);
 
   // Extract the page table indices from `v_addr`.
   size_t pt_indices[PAGE_TABLE_DEPTH] = {
@@ -81,7 +81,6 @@ void VMMap::map(const size_t v_addr,
     // the next-level page table now.
     if (PD_INVALID(pd)) {
       void* page_frame = get_free_page();
-      printk("memset(0x%x, 0, 0x1000)\n", page_frame);
       memset(page_frame, 0, PAGE_SIZE);
       next_level_pt_addr = reinterpret_cast<size_t>(page_frame);
       pt[pt_index] = next_level_pt_addr | PD_TABLE;
@@ -107,7 +106,7 @@ void VMMap::map(const size_t v_addr,
 }
 
 void VMMap::unmap(const size_t v_addr) const {
-  printk("VMMap::unmap: v_addr = 0x%x\n", v_addr);
+  //printk("VMMap::unmap: v_addr = 0x%x\n", v_addr);
 
   // Extract the page table indices from `v_addr`.
   size_t pt_indices[PAGE_TABLE_DEPTH] = {
@@ -180,7 +179,7 @@ void* VMMap::get_physical_address(const void* const v_addr) const {
     // it indicates that the next-level page table
     // is not present yet. Hence, we can return immediately.
     if (PD_INVALID(pd)) {
-      printk("VMMap: v_addr: 0x%x has not been mapped yet...\n", v_addr);
+      //printk("VMMap: v_addr: 0x%x has not been mapped yet...\n", v_addr);
       return const_cast<void*>(v_addr);
     }
 
@@ -201,16 +200,14 @@ void* VMMap::get_physical_address(const void* const v_addr) const {
   size_t p_addr = (pt[pt_index] & PAGE_MASK) +
                   PAGE_OFFSET(reinterpret_cast<size_t>(v_addr));
 
-  printk("v_addr: 0x%x, p_addr: page = 0x%x, offset = 0x%x\n",
-      v_addr, (pt[pt_index] & PAGE_MASK), PAGE_OFFSET(reinterpret_cast<size_t>(v_addr)));
+  //printk("v_addr: 0x%x, p_addr: page = 0x%x, offset = 0x%x\n",
+  //    v_addr, (pt[pt_index] & PAGE_MASK), PAGE_OFFSET(reinterpret_cast<size_t>(v_addr)));
 
   return reinterpret_cast<void*>(p_addr);
 }
 
 void VMMap::copy_from(const VMMap& r) const {
-  printk("copying vmmap...\n");
   dfs_copy_page(r._pgd, _pgd, 0);
-  printk("copied vmmap!\n");
 }
 
 void VMMap::dfs_copy_page(const page_table_t* pt_old,
@@ -219,8 +216,6 @@ void VMMap::dfs_copy_page(const page_table_t* pt_old,
   // `level` begins from 0 (PGD), and goes all the way down to
   // 1 (PUD), 2 (PMD), 3 (PTE). We'll stop at PTE and duplicate
   // all the underlying page frames.
-  printk("lvl %d\n", level);
-
   if (level == 3) {
     for (size_t i = 0; i < NR_ENTRIES_PER_PT; i++) {
       if (PD_INVALID(pt_old[i])) {
@@ -247,7 +242,6 @@ void VMMap::dfs_copy_page(const page_table_t* pt_old,
     auto old_page_frame = reinterpret_cast<page_table_t*>(pt_old[i] & PAGE_MASK);
     auto new_page_frame = reinterpret_cast<page_table_t*>(get_free_page());
     memset(new_page_frame, 0, PAGE_SIZE);
-    printk("new_page_frame = 0x%x\n", new_page_frame);
 
     pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | PD_TABLE;
     dfs_copy_page(old_page_frame, new_page_frame, level + 1);

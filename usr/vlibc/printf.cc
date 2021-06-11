@@ -19,11 +19,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 */
 
-#include "printf.h"
+#include <printf.h>
+
+#include <vlibc.h>
 
 typedef void (*putcf) (void*,char);
-
-extern "C" void __libc_putchar(void*, const char c);
 
 
 #ifdef PRINTF_LONG_SUPPORT
@@ -204,9 +204,11 @@ void tfp_format(void* putp,putcf putf,char *fmt, va_list va)
 
 void tfp_printf(char *fmt, ...)
     {
+    auto __putchar = [](void*, const char c) { write(1, &c, 1); };
+
     va_list va;
     va_start(va,fmt);
-    tfp_format(nullptr,__libc_putchar,fmt,va);
+    tfp_format(nullptr,__putchar,fmt,va);
     va_end(va);
     }
 

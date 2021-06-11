@@ -45,9 +45,9 @@ void Kernel::print_banner() {
   auto& console = Console::get_instance();
 
   console.set_color(Console::Color::GREEN, /*bold=*/true);
-  printf("--- Valkyrie OS ---\n");
+  printf("--- Valkyrie OS (Virtual Memory Edition) ---\n");
   console.set_color(Console::Color::YELLOW, /*bold=*/true);
-  printf("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>\n");
+  printf("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>\n\n");
   console.clear_color();
 }
 

@@ -83,7 +83,6 @@ size_t do_syscall(const uint64_t id, Args... args) {
   }
 
   // Invoke the specified system call.
-  printk("syscall: id = 0x%x\n", id);
   return reinterpret_cast<size_t (*)(Args...)>(__syscall_table[id])(args...);
 }
 
