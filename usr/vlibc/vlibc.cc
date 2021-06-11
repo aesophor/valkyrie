@@ -7,3 +7,7 @@ extern "C" [[noreturn]] void _start() {
                 bl main          \n\
                 b  exit            ");
 }
+
+extern "C" void __libc_putchar(void*, const char c) {
+  write(1, &c, 1);
+}

@@ -5,20 +5,22 @@
 bool validate_user(const char* username, const char* password);
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
-
   int pid;
   char username[32];
   char password[32];
+
+  char msg1[] = "Localhost login: ";
+  char msg2[] = "Password: ";
+  char msg3[] = "fork failed\n";
 
   while (true) {
     memset(username, 0, sizeof(username));
     memset(password, 0, sizeof(password));
 
-    printf("Localhost login: ");
+    write(1, msg1, sizeof(msg1));
     read(0, username, sizeof(username) - 1);
 
-    printf("Password: ");
+    write(1, msg2, sizeof(msg2));
     read(0, password, sizeof(password) - 1);
 
     if (!validate_user(username, password)) {
@@ -27,7 +29,7 @@ int main(int argc, char **argv) {
 
     switch ((pid = fork())) {
       case -1:
-        printf("fork failed\n");
+        printf(msg3);
         break;
 
       case 0: {

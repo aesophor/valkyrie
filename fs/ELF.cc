@@ -18,6 +18,10 @@ bool ELF::is_valid() const {
   return !memcmp(_header->ident, ELF_MAGIC, ELF_MAGIC_LEN);
 }
 
+const char* ELF::get_raw_content() const {
+  return reinterpret_cast<const char*>(_header);
+}
+
 void ELF::load_at(void* dest) const {
   //size_t p = reinterpret_cast<size_t>(dest);
   //size_t base = p;
@@ -52,11 +56,8 @@ void ELF::load_at(void* dest) const {
   */
 }
 
-void* ELF::get_entry_point(const void* elf_base) const {
-  // The implementation of this method is temporary
-  // as virtual memory hasn't been enabled yet.
-  size_t entry = reinterpret_cast<size_t>(elf_base) + 0x10000;
-  return reinterpret_cast<void*>(entry);
+void* ELF::get_entry_point() const {
+  return reinterpret_cast<void*>(0x400000 + _header->entry);
 }
 
 

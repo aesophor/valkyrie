@@ -5,8 +5,6 @@
 #define O_CREAT ((1 << 3))
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
-
   char s[] = "this message is written to /dev/console, "
              "now type something: ";
 

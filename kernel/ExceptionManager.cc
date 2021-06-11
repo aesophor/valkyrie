@@ -18,10 +18,7 @@ ExceptionManager& ExceptionManager::get_instance() {
 
 ExceptionManager::ExceptionManager()
     : _is_enabled(),
-      _tasklet_scheduler() {
-  // Install the address of exception vector table to VBAR_EL1.
-  asm volatile("msr VBAR_EL1, %0" :: "r"(&evt));
-}
+      _tasklet_scheduler() {}
 
 
 void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
@@ -33,6 +30,9 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (ex.ec == 0b10101 && ex.iss == 0) [[likely]] {
+    printk("switching to kernel space\n");
+    switch_user_va_space(nullptr);
+
     Task::current()->set_trap_frame(trap_frame);
 
     // A process may return from `do_syscall()`,
@@ -46,12 +46,15 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                        trap_frame->x3,
                                                        trap_frame->x4,
                                                        trap_frame->x5);
-
+    printk("do_syscall done\n");
     // Handle pending POSIX signals.
     Task::current()->handle_pending_signals();
 
     // User preemption.
     TaskScheduler::get_instance().maybe_reschedule();
+
+    printk("switched to user space\n");
+    switch_user_va_space(Task::current()->get_ttbr0_el1());
     return;
   }
 
@@ -63,11 +66,14 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 
   // For ec and iss, see ARMv8 manual p.1877
   switch (ex.ec) {
-    case 0b11000:
+    case 0b011000:
       Kernel::panic("Trapped MSR, MRS, or System instruction execution\n");
 
     case 0b011001:
       Kernel::panic("Trapped access to SVE functionality\n");
+
+    case 0b100000:
+      Kernel::panic("Instruction Abort from a lower Exception Level\n");
 
     case 0b100001:
       Kernel::panic("Instruction Abort taken without a change in Exception level\n");
@@ -116,7 +122,9 @@ uint8_t ExceptionManager::get_exception_level() const {
 void ExceptionManager::downgrade_exception_level(const uint8_t level,
                                                  void* ret_addr,
                                                  void* high_level_sp,
-                                                 void* low_level_sp) {
+                                                 void* low_level_sp,
+                                                 void* page_table) {
+  printk("page_table = 0x%x\n", page_table);
   // If the user hasn't specified `ret_addr` (which means it is nullptr),
   // then we will use the address out `out` as the new PC after `eret`
   // so that the program will keep executing like a normal function.
@@ -148,6 +156,9 @@ void ExceptionManager::downgrade_exception_level(const uint8_t level,
     default:
       goto out;
   }
+
+  printk("switching ttbr0_el1 to 0x%x\n", page_table);
+  switch_user_va_space(page_table);
 
   // Each user task will have a kernel stack and a user stack.
   // The value of SP before `eret` will be the SP after the user task

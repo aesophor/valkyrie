@@ -5,7 +5,6 @@
 int run_shell(const char* username);
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
   return run_shell(argv[1]);
 }
 

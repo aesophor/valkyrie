@@ -5,14 +5,11 @@
 #include <List.h>
 #include <Memory.h>
 #include <Types.h>
-#include <dev/Console.h>
 #include <fs/File.h>
 #include <fs/Vnode.h>
-#include <libs/CString.h>
 #include <mm/Page.h>
-#include <mm/MemoryManager.h>
+#include <mm/VMMap.h>
 #include <proc/Signal.h>
-#include <proc/TrapFrame.h>
 
 #define TASK_TIME_SLICE    3
 #define TASK_NAME_MAX_LEN 16
@@ -121,6 +118,9 @@ class Task {
     _cwd_vnode = move(vnode);
   }
 
+  const VMMap& get_vmmap() const { return _vmmap; }
+  size_t* get_ttbr0_el1() const { return _vmmap.get_pgd(); }
+
  private:
   size_t copy_arguments_to_user_stack(const char* const _argv[]);
 
@@ -143,6 +143,7 @@ class Task {
     uint64_t fp;
     uint64_t lr;
     uint64_t sp;
+    uint64_t ttbr0_el1;
   } _context;
 
   Task* _parent;
@@ -152,8 +153,8 @@ class Task {
   int _error_code;
   pid_t _pid;
   int _time_slice;
+  VMMap _vmmap;
   void (*_entry_point)();
-  void* _elf_dest;
   Page _kstack_page;
   Page _ustack_page;
   TrapFrame* _trap_frame;

@@ -7,7 +7,7 @@
 
 namespace valkyrie::kernel {
 
-class MemoryManager {
+class MemoryManager final {
  public:
   static MemoryManager& get_instance();
 
@@ -29,9 +29,6 @@ class MemoryManager {
  private:
   MemoryManager();
 
-  Zone* initialize_zones();
-  bool is_address_aligned(const void* p) const;
-
   const size_t _ram_size;
   Zone _zones[2];
   AddressSanitizer _kasan;
@@ -39,6 +36,8 @@ class MemoryManager {
 
 }  // namespace valkyrie::kernel
 
+
+extern "C" void* switch_user_va_space(void* ttbr0_el1);
 
 extern "C" inline void* get_free_page() {
   return valkyrie::kernel::MemoryManager::get_instance().get_free_page();

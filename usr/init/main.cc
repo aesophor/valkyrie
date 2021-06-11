@@ -2,8 +2,6 @@
 #include <vlibc.h>
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
-
   int pid;
   int wstatus;
 

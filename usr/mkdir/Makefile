@@ -20,8 +20,7 @@ SRC = ../vlibc/vlibc.cc ../vlibc/syscall.S ../vlibc/printf.cc ../vlibc/cstring.c
 OBJ = vlibc.o main.o syscall.o printf.o cstring.o
 
 all:
-	$(CXX) $(CXXFLAGS) -c $(SRC)
-	$(LD) $(LDFLAGS) -o $(ELF) $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(ELF) $(SRC)
 
 clean:
 	rm $(ELF) $(OBJ)

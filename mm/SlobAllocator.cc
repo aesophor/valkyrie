@@ -65,6 +65,11 @@ void* SlobAllocator::allocate(size_t requested_size) {
 
   victim = split_from_top_chunk(requested_size);
 
+  if (reinterpret_cast<size_t>(victim + 1) % PAGE_SIZE == 0) [[unlikely]] {
+    Kernel::panic("fatal error: _top_chunk = 0x%x, _page_frame_allocatable_begin = 0x%x, req_size = 0x%x, victim = 0x%x\n",
+        _top_chunk, _page_frame_allocatable_begin, requested_size, victim);
+  }
+
 out:
   return victim + 1;  // skip the header
 }

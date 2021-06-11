@@ -7,8 +7,6 @@ int main(int argc, char **argv) {
   int ret;
   char buf[512] = {0};
 
-  init_printf(nullptr, __libc_putchar);
-
   if (argc < 1) {
     printf("cat: argv[0] should be the path to cat\n");
     ret = -1;

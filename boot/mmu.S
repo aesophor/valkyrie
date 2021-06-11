@@ -1,7 +1,4 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-//
-// mmu.S - Set up Kernel Space Virtual Memory
-
 #include <mm/mmu.h>
 
 // MMU Configuration
@@ -41,6 +38,7 @@ __mmu_init:
   // Create kernel page tables and load its address to
   // the translation base register of the upper va_space (i.e. kernel space).
   bl __create_kernel_page_tables
+  msr ttbr0_el1, x0
   msr ttbr1_el1, x0
 
   // Enable MMU with cache disabled.

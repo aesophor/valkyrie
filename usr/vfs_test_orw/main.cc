@@ -4,8 +4,6 @@
 #define O_CREAT ((1 << 3))
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
-
   char buf[32];
   for (int i = 0; i < 32; i++) {
     buf[i] = 0;

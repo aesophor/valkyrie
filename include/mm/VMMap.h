@@ -28,15 +28,22 @@ class VMMap final {
   // Maps a single page.
   // Returns `paddr` to the caller.
   //
-  // * `vaddr`: specifies the base virtual address of the target page.
-  // * `paddr`: specifies the base physical address of the page frame.
-  // * `attr`:  page attribute; see include/mm/mmu.h
-  void map(const size_t vaddr,
-           const void* paddr,
+  // * `v_addr`: specifies the base virtual address of the target page.
+  // * `p_addr`: specifies the base physical address of the page frame.
+  // * `attr`:   page attribute; see include/mm/mmu.h
+  void map(const size_t v_addr,
+           const void* p_addr,
            const size_t attr = PAGE_RWX) const;
 
   // Unmaps a single page.
-  void unmap(const size_t vaddr) const;
+  void unmap(const size_t v_addr) const;
+
+  // Clear page table.
+  void reset() const;
+
+  // Gets the physical address from a virtual address
+  // by parsing the page table.
+  void* get_physical_address(const void* const v_addr) const;
 
   // Deep copy the entire page table and the underlying page frames.
   // Returns the new _pgd.

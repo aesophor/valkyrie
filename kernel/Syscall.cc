@@ -38,7 +38,9 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
 
 
 
-int sys_read(int fd, void* buf, size_t count) {
+int sys_read(int fd, void __user* buf, size_t count) {
+  buf = copy_from_user<void*>(buf);
+
   // TODO: define stdin...
   if (fd == 0) {
     return Console::get_instance().read(reinterpret_cast<char*>(buf), count);
@@ -54,7 +56,11 @@ int sys_read(int fd, void* buf, size_t count) {
   return VFS::get_instance().read(file, buf, count);
 }
 
-int sys_write(int fd, const void* buf, size_t count) {
+int sys_write(int fd, const void __user* buf, size_t count) {
+  printf("buf(0x%x) __user\n", buf);
+  buf = copy_from_user<const void*>(buf);
+  printf("buf(0x%x) = %s\n", buf, buf);
+
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
     return Console::get_instance().write(reinterpret_cast<const char*>(buf), count);
@@ -70,7 +76,9 @@ int sys_write(int fd, const void* buf, size_t count) {
   return VFS::get_instance().write(file, buf, count);
 }
 
-int sys_open(const char* pathname, int options) {
+int sys_open(const char __user* pathname, int options) {
+  pathname = copy_from_user<const char*>(pathname);
+
   SharedPtr<File> file = VFS::get_instance().open(pathname, options);
 
   if (!file) {
@@ -100,11 +108,17 @@ int sys_fork() {
   return Task::current()->do_fork();
 }
 
-int sys_exec(const char* name, const char* const argv[]) {
+int sys_exec(const char __user* name, const char __user* argv[]) {
+  printk("name (0x%x, 0x%x)\n", name, copy_from_user<const char*>(name));
+  printk("argv(0x%x, 0x%x)\n", argv, copy_from_user<const char*>(argv));
+
+  name = copy_from_user<const char*>(name);
+  argv = copy_from_user<const char**>(argv);
   return Task::current()->do_exec(name, argv);
 }
 
-int sys_wait(int* wstatus) {
+int sys_wait(int __user* wstatus) {
+  wstatus = copy_from_user<int*>(wstatus);
   return Task::current()->do_wait(wstatus);
 }
 
@@ -125,18 +139,21 @@ long sys_kill(pid_t pid, int signal) {
   return Task::current()->do_kill(pid, static_cast<Signal>(signal));
 }
 
-int sys_signal(int signal, void (*handler)()) {
+int sys_signal(int signal, void (__user* handler)()) {
   return Task::current()->do_signal(signal, handler);
 }
 
-int sys_access(const char* pathname, int options) {
+int sys_access(const char __user* pathname, int options) {
+  pathname = copy_from_user<const char*>(pathname);
   return VFS::get_instance().access(pathname, options);
 }
 
-int sys_chdir(const char* pathname) {
+int sys_chdir(const char __user* pathname) {
+  pathname = copy_from_user<const char*>(pathname);
+
   auto& vfs = VFS::get_instance();
 
-  if (VFS::get_instance().access(pathname, 0) == -1) {
+  if (vfs.access(pathname, 0) == -1) {
     return -1;
   }
 
@@ -144,31 +161,42 @@ int sys_chdir(const char* pathname) {
   return 0;
 }
 
-int sys_mkdir(const char* pathname) {
+int sys_mkdir(const char __user* pathname) {
+  pathname = copy_from_user<const char*>(pathname);
   return VFS::get_instance().mkdir(pathname);
 }
 
-int sys_rmdir(const char* pathname) {
+int sys_rmdir(const char __user* pathname) {
+  pathname = copy_from_user<const char*>(pathname);
   return VFS::get_instance().rmdir(pathname);
 }
 
-int sys_unlink(const char* pathname) {
+int sys_unlink(const char __user* pathname) {
+  pathname = copy_from_user<const char*>(pathname);
   return VFS::get_instance().unlink(pathname);
 }
 
-int sys_mount(const char* device_name, const char* mountpoint, const char* fs_name) {
+int sys_mount(const char __user* device_name,
+              const char __user* mountpoint,
+              const char __user* fs_name) {
+  device_name = copy_from_user<const char*>(device_name);
+  mountpoint = copy_from_user<const char*>(mountpoint);
+  fs_name = copy_from_user<const char*>(fs_name);
+
   return VFS::get_instance().mount(device_name, mountpoint, fs_name);
 }
 
-int sys_umount(const char* mountpoint) {
+int sys_umount(const char __user* mountpoint) {
+  mountpoint = copy_from_user<const char*>(mountpoint);
   return VFS::get_instance().umount(mountpoint);
 }
 
-int sys_mknod(const char *pathname, mode_t mode, dev_t dev) {
+int sys_mknod(const char __user* pathname, mode_t mode, dev_t dev) {
+  pathname = copy_from_user<const char*>(pathname);
   return VFS::get_instance().mknod(pathname, mode, dev);
 }
 
-int sys_getcwd(char* buf) {
+int sys_getcwd(char __user* buf) {
   return 0;
 }
 

@@ -4,7 +4,6 @@
 
 int main(int argc, char **argv) {
   int ret;
-  init_printf(nullptr, __libc_putchar);
 
   if (argc < 2) {
     printf("mkdir: missing operand\n");

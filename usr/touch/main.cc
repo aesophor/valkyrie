@@ -8,8 +8,6 @@ int main(int argc, char **argv) {
   int fd;
   int ret;
 
-  init_printf(nullptr, __libc_putchar);
-
   if (argc < 2) {
     printf("%s: missing file operand\n", argv[0]);
     ret = 1;

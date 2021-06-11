@@ -3,8 +3,6 @@
 #include <cstring.h>
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
-
   char buf[8];
   mkdir("mnt");
   int fd = open("/mnt/a.txt", O_CREAT);

@@ -32,14 +32,6 @@ void fork_test() {
 
 
 int main(int argc, char **argv) {
-  init_printf(nullptr, __libc_putchar);
-
-  /*
-  long long int sp;
-  asm volatile("mov %0, sp" : "=r" (sp));
-  printf("main(): SP = 0x%x\n", sp);
-  */
-
   printf("argc = %d\n", argc);
   for (int i = 0; i < argc; i++) {
     printf("argv[%d] = %s\n", i, argv[i]);

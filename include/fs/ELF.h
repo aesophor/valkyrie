@@ -64,8 +64,10 @@ class ELF {
   ELF(Pair<const char*, size_t> addr_size);
 
   bool is_valid() const;
+
+  const char* get_raw_content() const;
   void load_at(void* dest) const;
-  void* get_entry_point(const void* elf_base) const;
+  void* get_entry_point() const;
 
   size_t get_size() const;
 

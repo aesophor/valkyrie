@@ -41,9 +41,7 @@ int umount(const char* mountpoint);
 int getcwd(char* buf);
 
 
-inline void __libc_putchar(void*, const char c) {
-  write(1, &c, 1);
-}
+void __libc_putchar(void*, const char c);
 
 }
 

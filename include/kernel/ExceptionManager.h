@@ -54,7 +54,8 @@ class ExceptionManager final {
   void downgrade_exception_level(const uint8_t level,
                                  void* ret_addr = nullptr,
                                  void* high_level_sp = nullptr,
-                                 void* low_level_sp = nullptr);
+                                 void* low_level_sp = nullptr,
+                                 void* page_table = nullptr);
 
   bool is_enabled() const;
 
