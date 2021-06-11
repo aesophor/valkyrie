@@ -170,9 +170,10 @@ void VMMap::dfs_copy_page(const page_table_t* pt_old,
       // Duplicate page frames.
       void* old_page_frame = reinterpret_cast<void*>(pt_old[i] & PAGE_MASK);
       void* new_page_frame = get_free_page();
-      memcpy(new_page_frame, old_page_frame, PAGE_MASK);
+      memcpy(new_page_frame, old_page_frame, PAGE_SIZE);
 
-      pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | PD_PAGE;
+      auto old_attr = pt_old[i] & ATTR_MASK;
+      pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | old_attr;
     }
     return;
   }
