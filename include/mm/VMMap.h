@@ -38,10 +38,19 @@ class VMMap final {
   // Unmaps a single page.
   void unmap(const size_t vaddr) const;
 
-  size_t* get_pgd() const;
+  // Deep copy the entire page table and the underlying page frames.
+  // Returns the new _pgd.
+  void copy_from(const VMMap& r) const;
+
+  [[nodiscard]] size_t* get_pgd() const;
 
  private:
+  // TODO: maybe refactor this with STL Function<>
   void dfs_kfree_page(page_table_t* pt, const size_t level) const;
+
+  void dfs_copy_page(const page_table_t* pt_old,
+                     page_table_t* pt_new,
+                     const size_t level) const;
 
   page_table_t* const _pgd;  // points to PGD's page frame
 };

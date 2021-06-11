@@ -151,6 +151,47 @@ void VMMap::unmap(const size_t vaddr) const {
   pt[pt_index] = 0;
 }
 
+void VMMap::copy_from(const VMMap& r) const {
+  printk("cloning vmmap...\n");
+  dfs_copy_page(r._pgd, _pgd, 0);
+}
+
+void VMMap::dfs_copy_page(const page_table_t* pt_old,
+                          page_table_t* pt_new,
+                          const size_t level) const {
+  // `level` begins from 0 (PGD), and goes all the way down to
+  // 1 (PUD), 2 (PMD), 3 (PTE). We'll stop at PTE and duplicate
+  // all the underlying page frames.
+  if (level == 3) {
+    for (size_t i = 0; i < NR_ENTRIES_PER_PT; i++) {
+      if (PD_INVALID(pt_old[i])) {
+        continue;
+      }
+      // Duplicate page frames.
+      void* old_page_frame = reinterpret_cast<void*>(pt_old[i] & PAGE_MASK);
+      void* new_page_frame = get_free_page();
+      memcpy(new_page_frame, old_page_frame, PAGE_MASK);
+
+      pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | PD_PAGE;
+    }
+    return;
+  }
+
+  // DFS
+  for (size_t i = 0; i < NR_ENTRIES_PER_PT; i++) {
+    if (PD_INVALID(pt_old[i])) {
+      continue;
+    }
+
+    // Duplicate the page frame used by this page table.
+    auto old_page_frame = reinterpret_cast<page_table_t*>(pt_old[i] & PAGE_MASK);
+    auto new_page_frame = reinterpret_cast<page_table_t*>(get_free_page());
+
+    pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | PD_TABLE;
+    dfs_copy_page(old_page_frame, new_page_frame, level + 1);
+  }
+}
+
 size_t* VMMap::get_pgd() const {
   return _pgd;
 }
