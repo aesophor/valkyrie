@@ -36,7 +36,8 @@
 - [x] Multitasking - sys_fork(), sys_exec(), sys_wait(), sys_exit()
 - [x] User tasks preemption
 - [ ] Kernel preemption - protect critical sections
-- [ ] POSIX signals and custom signal handlers - sys_kill(), sys_signal(), sys_rt_sigreturn()
+- [x] POSIX signals - sys_kill(), sys_signal()
+- [ ] POSIX custom signal handlers - sys_rt_sigreturn()
 - [ ] Wait Queues
 - [x] tmpfs
 - [x] Virtual filesystem (VFS)
@@ -54,7 +55,7 @@
 - [x] kernel virtual address space
 - [x] user virtual address space
 - [ ] mmap
-- [ ] ELF parser and loader
+- [x] ELF parser and loader (incomplete)
 - [ ] Page fault handler, Demand paging
 - [ ] Copy on Write
 - [ ] ...
