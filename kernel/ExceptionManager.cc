@@ -78,7 +78,13 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
       Kernel::panic("Instruction Abort taken without a change in Exception level\n");
 
     case 0b100100:
-      Kernel::panic("Data Abort from a lower Exception level\n");
+      switch_user_va_space(nullptr);
+      size_t fault_address;
+      asm volatile("mrs %0, far_el1" : "=r"(fault_address));
+      printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
+      Task::current()->do_exit(4);
+      switch_user_va_space(Task::current()->get_ttbr0_el1());
+      break;
 
     case 0b100101:
       Kernel::panic("Data Abort taken without a change in Exception level (invalid data access)\n");
