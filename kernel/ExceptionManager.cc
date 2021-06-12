@@ -118,61 +118,6 @@ uint8_t ExceptionManager::get_exception_level() const {
   return level >> 2;
 }
 
-void ExceptionManager::downgrade_exception_level(const uint8_t level,
-                                                 void* ret_addr,
-                                                 void* high_level_sp,
-                                                 void* low_level_sp,
-                                                 void* page_table) {
-  printk("page_table = 0x%x\n", page_table);
-  // If the user hasn't specified `ret_addr` (which means it is nullptr),
-  // then we will use the address out `out` as the new PC after `eret`
-  // so that the program will keep executing like a normal function.
-  void* return_address = (ret_addr) ? ret_addr : &&out;
-
-  // If the user hasn't specified `low_level_sp` (which means it is nullptr),
-  // then we will use the current SP as the new SP after `eret`.
-  if (!low_level_sp) {
-    asm volatile("mov %0, sp" : "=r"(low_level_sp));
-  }
-
-  switch (level) {
-    case 1:
-      asm volatile("msr SP_EL1, %0" :: "r"(low_level_sp));
-      uint64_t spsr;
-      spsr  = (1 << 0);       // use SP_ELx, not SP_EL0
-      spsr |= (1 << 2);       // exception was taken from EL1
-      spsr |= (0b1111 << 6);  // DAIF masked
-      asm volatile("msr SPSR_EL2, %0" :: "r"(spsr));
-      asm volatile("msr ELR_EL2, %0" :: "r"(return_address));
-      break;
-
-    case 0:
-      asm volatile("msr SP_EL0, %0" :: "r"(low_level_sp));
-      asm volatile("msr SPSR_EL1, %0" :: "r"(0));
-      asm volatile("msr ELR_EL1, %0" :: "r"(return_address));
-      break;
-
-    default:
-      goto out;
-  }
-
-  printk("switching ttbr0_el1 to 0x%x\n", page_table);
-  switch_user_va_space(page_table);
-
-  // Each user task will have a kernel stack and a user stack.
-  // The value of SP before `eret` will be the SP after the user task
-  // switches from EL0 to EL1.
-  if (high_level_sp) {
-    asm volatile("mov SP, %0" :: "r"(high_level_sp));
-  }
-
-  // Finally downgrade the exception level.
-  asm volatile("eret");
-
-out:
-  return;
-}
-
 bool ExceptionManager::is_enabled() const {
   return _is_enabled;
 }
