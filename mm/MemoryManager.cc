@@ -30,18 +30,17 @@ void* MemoryManager::kmalloc(size_t size) {
 
   if (size + SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
     ret = _zones[0].buddy_allocator.allocate(size);
+    _kasan.mark_allocated(ret);
   } else {
     ret = _zones[1].slob_allocator.allocate(size);
   }
 
-  _kasan.mark_allocated(ret);
   return ret;
 }
 
 void MemoryManager::kfree(void* p) {
-  _kasan.mark_free_chk(p);
-
   if (reinterpret_cast<size_t>(p) % PAGE_SIZE == 0) {
+    _kasan.mark_free_chk(p);
     _zones[0].buddy_allocator.deallocate(p);
   } else {
     _zones[1].slob_allocator.deallocate(p);
@@ -49,7 +48,7 @@ void MemoryManager::kfree(void* p) {
 }
 
 
-void MemoryManager::dump_page_frame_allocator_info() const {
+void MemoryManager::dump_buddy_allocator_info() const {
   _zones[0].buddy_allocator.dump_memory_map();
 }
 

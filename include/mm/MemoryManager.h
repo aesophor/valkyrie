@@ -21,7 +21,7 @@ class MemoryManager final {
   void* kmalloc(size_t size);
   void  kfree(void* p);
 
-  void dump_page_frame_allocator_info() const;
+  void dump_buddy_allocator_info() const;
   void dump_slob_allocator_info() const;
 
   size_t get_ram_size() const;

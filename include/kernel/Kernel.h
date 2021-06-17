@@ -73,7 +73,7 @@ template <typename... Args>
   printf("\n");
 
 
-  //MemoryManager::get_instance().dump_slob_allocator_info();
+  MemoryManager::get_instance().dump_buddy_allocator_info();
 
   printk("");
   console.set_color(Console::Color::RED, /*bold=*/true);

@@ -48,6 +48,7 @@ void VMMap::dfs_kfree_page(page_table_t* pt, const size_t level) const {
       continue;
     }
     dfs_kfree_page(reinterpret_cast<page_table_t*>(pt[i] & PAGE_MASK), level + 1);
+    kfree(reinterpret_cast<void*>(pt[i] & PAGE_MASK));
   }
 }
 

@@ -1,6 +1,56 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
+namespace {
+
+void run_shell() {
+  auto& console = valkyrie::kernel::Console::get_instance();
+  char _buf[64] = {};
+
+  while (true) {
+    memset(_buf, 0, sizeof(_buf));
+    printf("root# ");
+    
+    console.read(_buf, 63);
+
+    if (!strlen(_buf)) {
+      continue;
+    }
+
+    if (!strcmp(_buf, "help")) {
+      printf("usage:");
+      printf("help   - Print all available commands");
+      printf("hello  - Print Hello World!");
+      printf("reboot - Reboot machine");
+      printf("exc    - Trigger an exception via supervisor call (SVC)");
+      printf("irq    - Execute sys_irq() which enables ARM core timer");
+      printf("panic  - Trigger a kernel panic and halt the kernel");
+
+    } else if (!strcmp(_buf, "a")) {
+      printf("how many bytes: ");
+      console.read(_buf, 63);
+
+      void* p = kmalloc(atoi(_buf));
+      printf("got pointer 0x%x\n", p);
+
+    } else if (!strcmp(_buf, "f")) {
+      printf("which pointer to free (in hexadecimal without the 0x prefix): ");
+      console.read(_buf, 63);
+
+      void* ptr = reinterpret_cast<void*>(atoi(_buf, 16));
+      kfree(ptr);
+
+    } else if (!strcmp(_buf, "info")) {
+      valkyrie::kernel::MemoryManager::get_instance().dump_buddy_allocator_info();
+
+    } else {
+      printf("%s: command not found. Try <help>\n", _buf);
+    }
+  }
+}
+
+}  // namespace
+
 namespace valkyrie::kernel {
 
 Kernel& Kernel::get_instance() {
@@ -36,6 +86,8 @@ void Kernel::run() {
 
   printk("starting task scheduler\n");
   _task_scheduler.run();
+
+  run_shell();
 
   Kernel::panic("you shouldn't have reached here...\n");
 }

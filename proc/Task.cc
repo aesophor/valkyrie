@@ -326,6 +326,8 @@ int Task::do_wait(int* wstatus) {
   _parent->_active_children.remove(this);
   _parent->_terminated_children.push_back(sched.remove_task(*this));
 
+  MemoryManager::get_instance().dump_buddy_allocator_info();
+
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
 }

@@ -22,8 +22,6 @@ class BuddyAllocator {
   BuddyAllocator& operator =(const BuddyAllocator&) = delete;
   BuddyAllocator& operator =(BuddyAllocator&&) = delete;
 
-  static size_t get_block_header_size();
-
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
   void  dump_memory_map() const;
@@ -46,7 +44,7 @@ class BuddyAllocator {
   void free_list_add_head(BlockHeader* block);
   void free_list_del_entry(BlockHeader* block);
 
-  // Recursively split the given block
+  // Iteratively split the given block
   // until it is exactly the size of PAGE_SIZE * 2^`target_order`.
   BlockHeader* split_block(BlockHeader* block, const int target_order);
   BlockHeader* get_buddy(BlockHeader* block);
@@ -56,7 +54,6 @@ class BuddyAllocator {
   bool is_block_allocated(const BlockHeader* block) const;
   size_t normalize_size(size_t size) const;
   size_t get_zone_end() const;
-
 
 
   // The address of the beginning of this zone.
