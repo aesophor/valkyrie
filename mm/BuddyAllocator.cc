@@ -1,7 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/BuddyAllocator.h>
 
-#include <Utility.h>
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
 #include <libs/Math.h>
@@ -33,26 +32,28 @@ BuddyAllocator::BuddyAllocator(const size_t zone_begin)
 
 
 void* BuddyAllocator::allocate(size_t requested_size) {
-  if (!requested_size) [[unlikely]] {
-    return nullptr;
-  }
-
   // For each allocation request x, raise that value to
   // a power of 2 s.t. x >= the original requested_size.
   requested_size = normalize_size(requested_size);
+
   int order = size_to_order(requested_size);
+  void* ret = nullptr;
   BlockHeader* victim = nullptr;
+
+  if (!requested_size) [[unlikely]] {
+    goto failed;
+  }
 
   if (order >= MAX_ORDER) [[unlikely]] {
     printk("unable to allocate physical memory of %d bytes\n", requested_size);
-    return nullptr;
+    goto failed;
   }
 
   // If there's an exact-fit free block from the free list,
   // then remove it from the free list and return that free block.
   if ((victim = _free_lists[order])) [[likely]] {
     free_list_del_head(victim);
-    goto out;
+    goto hit;
   }
 
   // Search larger free blocks.
@@ -63,20 +64,22 @@ void* BuddyAllocator::allocate(size_t requested_size) {
     }
   }
 
-  if (order >= MAX_ORDER || !victim) [[unlikely]] {
+  if (order >= MAX_ORDER) [[unlikely]] {
     printk("unable to allocate physical memory of %d bytes\n", requested_size);
-    return nullptr;
+    goto failed;
   }
 
   // Iteratively divide the victim free block in half
   // until we've found an exact fit.
+  free_list_del_entry(victim);
   victim = split_block(victim, size_to_order(requested_size));
 
-out:
+hit:
   mark_block_as_allocated(victim);
+  ret = get_page_frame(victim->index);  // get page frame address
 
-  // Return the address of `victim->index`-th page frame.
-  return get_page_frame(victim->index);
+failed:
+  return ret;
 }
 
 void BuddyAllocator::deallocate(void* p) {
@@ -266,8 +269,6 @@ BuddyAllocator::BlockHeader* BuddyAllocator::split_block(BlockHeader* block,
   if (block->order < 0 || block->order >= MAX_ORDER) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: invalid block->order (%d)\n", block->order);
   }
-
-  free_list_del_entry(block);
 
   while (block->order > 0 && block->order > target_order) {
     block->order--;
