@@ -37,10 +37,10 @@ void AddressSanitizer::mark_allocated(void* p) {
   }
 }
 
-void AddressSanitizer::show(bool pages_only) const {
+void AddressSanitizer::show() const {
   printk("allocated ptrs: [");
   for (int i = 0; i < 1000; i++) {
-    if (auto p = _allocated_pointers[i]; p && (pages_only) ? reinterpret_cast<size_t>(p) % 4096 == 0 : p != nullptr) {
+    if (_allocated_pointers[i]) {
       printf("0x%x,", reinterpret_cast<size_t>(_allocated_pointers[i]));
     }
   }

@@ -11,7 +11,7 @@ class AddressSanitizer {
 
   bool mark_free_chk(void* p);
   void mark_allocated(void *p);
-  void show(bool pages_only = true) const;
+  void show() const;
 
  private:
   void* _allocated_pointers[1000];
