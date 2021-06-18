@@ -2,7 +2,6 @@
 #ifndef VALKYRIE_FUNCTIONAL_H_
 #define VALKYRIE_FUNCTIONAL_H_
 
-#include <Concepts.h>
 #include <Memory.h>
 
 namespace valkyrie::kernel {
