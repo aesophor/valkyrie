@@ -202,6 +202,7 @@ int Task::do_fork() {
   child->_vmmap.copy_from(_vmmap);
 
   // Remap user stack to the one we've just copied.
+  kfree(child->_vmmap.get_physical_address(reinterpret_cast<void*>(USER_STACK_PAGE)));
   child->_vmmap.unmap(USER_STACK_PAGE);
   child->_vmmap.map(USER_STACK_PAGE, child->_ustack_page.p_addr(), PAGE_RWX);
 
@@ -325,8 +326,6 @@ int Task::do_wait(int* wstatus) {
   auto& sched = TaskScheduler::get_instance();
   _parent->_active_children.remove(this);
   _parent->_terminated_children.push_back(sched.remove_task(*this));
-
-  MemoryManager::get_instance().dump_buddy_allocator_info();
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");

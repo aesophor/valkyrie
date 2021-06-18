@@ -23,6 +23,7 @@ class MemoryManager final {
 
   void dump_buddy_allocator_info() const;
   void dump_slob_allocator_info() const;
+  void dump_kasan_info() const;
 
   size_t get_ram_size() const;
 
