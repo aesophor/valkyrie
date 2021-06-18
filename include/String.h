@@ -41,7 +41,8 @@ class String {
   }
   
   // Move constructor
-  String(String&& r) noexcept : _s(move(r._s)) {}
+  String(String&& r) noexcept
+      : _s(move(r._s)) {}
  
   // Move assignment operator
   String& operator =(String&& r) noexcept {
@@ -50,8 +51,13 @@ class String {
   }
 
 
-  char& operator [](size_t i) { return _s[i]; }
-  const char& operator [](size_t i) const { return _s[i]; }
+  char& operator [](size_t i) {
+    return _s[i]; 
+  }
+
+  const char& operator [](size_t i) const {
+    return _s[i];
+  }
 
   bool operator ==(const String& r) const {
     return !strcmp(c_str(), r.c_str());
@@ -73,13 +79,28 @@ class String {
     return *this = move(*this + r);
   }
 
-  //operator bool() const { return !empty(); }
+  /*
+  operator bool() const {
+    return !empty();
+  }
+  */
 
 
-  Iterator begin() { return Iterator::begin(*this); }
-  Iterator end() { return Iterator::end(*this); }
-  ConstIterator begin() const { return ConstIterator::begin(*this); }
-  ConstIterator end() const { return ConstIterator::end(*this); }
+  Iterator begin() {
+    return Iterator::begin(*this);
+  }
+
+  Iterator end() {
+    return Iterator::end(*this);
+  }
+
+  ConstIterator begin() const {
+    return ConstIterator::begin(*this);
+  }
+
+  ConstIterator end() const {
+    return ConstIterator::end(*this);
+  }
 
 
   // Searches the string for the first character that matches any of
