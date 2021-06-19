@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_WEAK_PTR_H_
 #define VALKYRIE_WEAK_PTR_H_
 
+#include <Hash.h>
 #include <SharedPtr.h>
 
 namespace valkyrie::kernel {
@@ -14,6 +15,8 @@ class WeakPtr {
 
   template <typename U>
   friend class SharedPtr;
+
+  friend struct Hash<WeakPtr<T>>;
 
  public:
   // Default constructor
@@ -100,7 +103,7 @@ class WeakPtr {
   }
 
   void dec_use_count_weak() {
-    if (_ctrl) {
+    if (_ctrl && _ctrl->use_count_weak > 0) {
       _ctrl->use_count_weak--;
       maybe_delete_ctrl_block();
     }
@@ -108,6 +111,10 @@ class WeakPtr {
 
   void maybe_delete_ctrl_block() {
     if (_ctrl && _ctrl->use_count + _ctrl->use_count_weak == 0) {
+      // Set use_count_weak to -1 to prevent against double delete.
+      // FIXME: thread safety
+      _ctrl->use_count_weak = -1;
+
       delete _ctrl;
       _ctrl = nullptr;
     }
@@ -115,6 +122,20 @@ class WeakPtr {
 
 
   typename SharedPtr<T>::ControlBlock* _ctrl;
+};
+
+
+
+// Explicit (full) specialization of struct `Hash` for WeakPtr<T>
+template <typename T>
+struct Hash<WeakPtr<T>> {
+  size_t operator ()(const WeakPtr<T>& wp) const {
+    constexpr size_t prime = 31;
+    size_t ret = 7;
+
+    ret += prime * hash(wp._ctrl);
+    return ret;
+  }
 };
 
 }  // namespace valkyrie::kernel

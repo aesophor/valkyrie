@@ -2,13 +2,18 @@
 #ifndef VALKYRIE_SHARED_PTR_H_
 #define VALKYRIE_SHARED_PTR_H_
 
+#include <Hash.h>
 #include <UniquePtr.h>
+#include <TypeTraits.h>
 
 namespace valkyrie::kernel {
 
 // Forward declaration
 template <typename T>
 class WeakPtr;
+
+template <typename T>
+class EnableSharedFromThis;
 
 
 template <typename T>
@@ -19,6 +24,8 @@ class SharedPtr {
 
   template <typename U>
   friend class WeakPtr;
+
+  friend struct Hash<SharedPtr<T>>;
 
  public:
   // Default constructor
@@ -35,7 +42,9 @@ class SharedPtr {
   explicit
   SharedPtr(T* p)
       : _ctrl(new ControlBlock {p, 1, 0}),
-        _alias() {}
+        _alias() {
+    maybe_enable_shared_from_this();
+  }
 
   // Constructor (from an UniquePtr<T>)
   explicit
@@ -64,6 +73,7 @@ class SharedPtr {
 
   // Destructor
   ~SharedPtr() {
+    //printk("SharedPtr dtor (%d, %d)\n", _ctrl->use_count, _ctrl->use_count_weak);
     dec_use_count();
   }
 
@@ -183,8 +193,22 @@ class SharedPtr {
 
   void maybe_delete_ctrl_block() {
     if (_ctrl && _ctrl->use_count + _ctrl->use_count_weak == 0) {
+      // Set use_count_weak to -1 to prevent against double delete.
+      // FIXME: thread safety
+      _ctrl->use_count_weak = -1;
+
       delete _ctrl;
       _ctrl = nullptr;
+    }
+  }
+
+  void maybe_enable_shared_from_this() const {
+    // If class `EnableSharedFromThis<T>` is the base class of `T`,
+    // then compile the following statement which initialize
+    // `EnableSharedFromThis<T>::_weak_this`, so that
+    // the user may call shared_from_this() later.
+    if constexpr (IsBaseOf<EnableSharedFromThis<T>, T>::value) {
+      _ctrl->p->_weak_this = *this;
     }
   }
 
@@ -318,6 +342,61 @@ SharedPtr<T> reinterpret_pointer_cast(const SharedPtr<U>& r) noexcept {
   auto p = reinterpret_cast<T*>(r.get());
   return SharedPtr<T>(r, p);
 }
+
+
+
+template <typename T>
+class EnableSharedFromThis {
+  // Friend declaration
+  friend class SharedPtr<T>;
+
+ public:
+  SharedPtr<T> shared_from_this() {
+    return SharedPtr<T>(_weak_this);
+  }
+
+  SharedPtr<T> shared_from_this() const {
+    return SharedPtr<T>(_weak_this);
+  }
+
+  WeakPtr<T> weak_from_this() {
+    return _weak_this;
+  }
+
+  WeakPtr<T> weak_from_this() const {
+    return _weak_this;
+  }
+
+ protected:
+  // Constructor
+  constexpr EnableSharedFromThis() = default;
+
+  // Destructor
+  ~EnableSharedFromThis() = default;
+
+  // Copy assignment operator
+  EnableSharedFromThis& operator =(const EnableSharedFromThis& r) {
+    return *this;
+  }
+
+ private:
+  WeakPtr<T> _weak_this;
+};
+
+
+
+// Explicit (full) specialization of struct `Hash` for SharedPtr<T>
+template <typename T>
+struct Hash<SharedPtr<T>> {
+  size_t operator ()(const SharedPtr<T>& sp) const {
+    constexpr size_t prime = 23;
+    size_t ret = 17;
+
+    ret += prime * hash(sp._ctrl);
+    ret += prime * hash(sp._alias);
+    return ret;
+  }
+};
 
 }  // namespace valkyrie::kernel
 
