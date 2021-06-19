@@ -486,7 +486,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
           dentry = reinterpret_cast<FAT32::DirectoryEntry*>(cluster.get() + 32);
           dentry->attributes = ATTR_DIRECTORY;
           dentry->size = 0;
-          dentry->set_first_cluster_number((is_root_directory_inode()) ? 0 : _first_cluster_number);
+          dentry->set_first_cluster_number((is_root_vnode()) ? 0 : _first_cluster_number);
           memset(dentry->name, ' ', 11);
           memcpy(dentry->name, "..", 2);
 
@@ -509,28 +509,39 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
 }
 
 SharedPtr<Vnode> FAT32Inode::get_child(const String& name) {
+  if (is_root_vnode() && (name == "." || name == "..")) {
+    return _fs._root_inode;
+  }
+
   return find_child_if([&name](const auto& view) {
     return view.name == name;
   });
 }
 
 SharedPtr<Vnode> FAT32Inode::get_ith_child(size_t i) {
+  // In FAT32, the top-level directory doesn't have
+  // "." and "..". In order to comply with the interface of VFS
+  // which mandates that the top-level directory should
+  // also have "." and "..", we will fake this.
+  if (is_root_vnode() && (i == 0 || i == 1)) {
+    return _fs._root_inode;
+  }
+
+  if (is_root_vnode()) {
+    i -= NR_SPECIAL_ENTRIES;
+  }
+
   return find_child_if([&i](const auto& view) {
     return view.index == i;
   });
 }
 
-Vnode* FAT32Inode::get_parent() {
-  if (this == _fs._root_inode.get()) {
-    return nullptr;
-  }
-
-  auto parent = get_child("..").get();
-  return (parent) ? parent : _fs._root_inode.get();
-}
-
 size_t FAT32Inode::get_children_count() const {
   size_t ret = 0;
+
+  if (is_root_vnode()) {
+    ret += NR_SPECIAL_ENTRIES;
+  }
 
   iterate_children([&ret](const auto& v) {
     ret++;
@@ -538,6 +549,15 @@ size_t FAT32Inode::get_children_count() const {
   });
 
   return ret;
+}
+
+SharedPtr<Vnode> FAT32Inode::get_parent() {
+  auto parent = get_child("..");
+  return (parent) ? parent : static_pointer_cast<Vnode>(_fs._root_inode);
+}
+
+void FAT32Inode::set_parent(SharedPtr<Vnode> parent) {
+
 }
 
 String FAT32Inode::get_name() const {
@@ -602,10 +622,10 @@ size_t FAT32Inode::hash_code() const {
   return Hash<FAT32Inode>{}(*this);
 }
 
-
-bool FAT32Inode::is_root_directory_inode() const {
-  return this == _fs._root_inode.get();
+bool FAT32Inode::is_root_vnode() const {
+  return hash_code() == _fs._root_inode->hash_code();
 }
+
 
 uint32_t FAT32Inode::dir_first_cluster_number() const {
   // If this fat32 inode represents a directory,
@@ -726,7 +746,13 @@ void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView
         //printk("found dentry (%d, %d) [first=%d] [size=%d]: %s\n",
         //    n, ptr - cluster.get(), dentry.get_first_cluster_number(), dentry.size, sfn);
 
+        uint32_t cluster_number = dentry->get_first_cluster_number();
+        cluster_number = (cluster_number) ? cluster_number
+                                          : _fs._root_inode->_first_cluster_number;
+
         dentry_view.dentry = *dentry;
+        dentry_view.dentry.set_first_cluster_number(cluster_number);
+
         dentry_view.parent_cluster_number = n;
         dentry_view.parent_cluster_offset = ptr - cluster.get();
 

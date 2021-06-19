@@ -2,13 +2,16 @@
 #ifndef VALKYRIE_UNIQUE_PTR_H_
 #define VALKYRIE_UNIQUE_PTR_H_
 
-#include <Types.h>
+#include <Hash.h>
 #include <Utility.h>
 
 namespace valkyrie::kernel {
 
 template <typename T>
 class UniquePtr {
+  // Friend declaration
+  friend struct Hash<UniquePtr<T>>;
+
  public:
   // Default constructor
   UniquePtr() : _p() {}
@@ -173,6 +176,20 @@ typename _UniqueIf<T>::_UnknownBound make_unique(size_t n) {
 
 template <typename T, typename... Args>
 typename _UniqueIf<T>::_KnownBound make_unique(Args&&...) = delete;
+
+
+
+// Explicit (full) specialization of struct `Hash` for UniquePtr<T>
+template <typename T>
+struct Hash<UniquePtr<T>> {
+  size_t operator ()(const UniquePtr<T>& up) const {
+    constexpr size_t prime = 11;
+    size_t ret = 29;
+
+    ret += prime * hash(up._p);
+    return ret;
+  }
+};
 
 }  // namespace valkyrie::kernel
 

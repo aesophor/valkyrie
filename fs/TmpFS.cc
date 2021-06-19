@@ -2,25 +2,28 @@
 #include <fs/TmpFS.h>
 
 #include <dev/Console.h>
+#include <kernel/Kernel.h>
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
 #include <libs/CString.h>
+
+#define NR_SPECIAL_ENTRIES 2
 
 namespace valkyrie::kernel {
 
 TmpFS::TmpFS()
     : _next_inode_index(1),
-      _root_vnode(make_shared<TmpFSInode>(*this, nullptr, "/", nullptr, 0, S_IFDIR, 0, 0)) {}
+      _root_inode(make_shared<TmpFSInode>(*this, nullptr, "/", nullptr, 0, S_IFDIR, 0, 0)) {}
 
 
 SharedPtr<Vnode> TmpFS::get_root_vnode() {
-  return _root_vnode;
+  return _root_inode;
 }
 
 
 
 TmpFSInode::TmpFSInode(TmpFS& fs,
-                       TmpFSInode* parent,
+                       SharedPtr<TmpFSInode> parent,
                        const String& name,
                        const char* content,
                        off_t size,
@@ -47,8 +50,9 @@ SharedPtr<Vnode> TmpFSInode::create_child(const String& name,
                                           mode_t mode,
                                           uid_t uid,
                                           gid_t gid) {
-  _children.push_back(make_shared<TmpFSInode>(_fs, this, name, content, size, mode, uid, gid));
-  return _children.back();
+  auto inode = make_shared<TmpFSInode>(_fs, shared_from_this(), name, content, size, mode, uid, gid);
+  _children.push_back(inode);
+  return inode;
 }
 
 void TmpFSInode::add_child(SharedPtr<Vnode> child) {
@@ -71,6 +75,12 @@ SharedPtr<Vnode> TmpFSInode::remove_child(const String& name) {
 }
 
 SharedPtr<Vnode> TmpFSInode::get_child(const String& name) {
+  if (name == ".") {
+    return shared_from_this();
+  } else if (name == "..") {
+    return get_parent();
+  }
+
   auto it = _children.find_if([&name](auto& vnode) {
     return vnode->_name == name;
   });
@@ -79,20 +89,34 @@ SharedPtr<Vnode> TmpFSInode::get_child(const String& name) {
 }
 
 SharedPtr<Vnode> TmpFSInode::get_ith_child(size_t i) {
+  if (i == 0) {
+    return shared_from_this();
+  } else if (i == 1) {
+    return get_parent();
+  }
+
   for (auto it = _children.begin(); it != _children.end(); it++) {
-    if (it.index() == i) {
+    if (NR_SPECIAL_ENTRIES + it.index() == i) {
       return *it;
     }
   }
   return nullptr;
 }
 
-Vnode* TmpFSInode::get_parent() {
-  return _parent;
+size_t TmpFSInode::get_children_count() const {
+  return NR_SPECIAL_ENTRIES + _children.size();
 }
 
-size_t TmpFSInode::get_children_count() const {
-  return _children.size();
+SharedPtr<Vnode> TmpFSInode::get_parent() {
+  if (is_root_vnode()) {
+    return VFS::get_instance().get_host_vnode(_fs._root_inode)->get_parent();
+  }
+
+  return _parent.lock();
+}
+
+void TmpFSInode::set_parent(SharedPtr<Vnode> parent) {
+  _parent = parent;
 }
 
 
@@ -106,6 +130,10 @@ int TmpFSInode::chown(const uid_t uid, const gid_t gid) {
 
 size_t TmpFSInode::hash_code() const {
   return Hash<TmpFSInode>{}(*this);
+}
+
+bool TmpFSInode::is_root_vnode() const {
+  return this == _fs._root_inode.get();
 }
 
 }  // namespace valkyrie::kernel

@@ -2,7 +2,7 @@
 #ifndef VALKYRIE_UTILITY_H_
 #define VALKYRIE_UTILITY_H_
 
-#include <Types.h>
+#include <TypeTraits.h>
 
 namespace valkyrie::kernel {
 

@@ -26,18 +26,18 @@ class TmpFS final : public FileSystem {
 
  private:
   uint64_t _next_inode_index;
-  SharedPtr<TmpFSInode> _root_vnode;
+  SharedPtr<TmpFSInode> _root_inode;
 };
 
 
-class TmpFSInode final : public Vnode {
+class TmpFSInode final : public Vnode, public EnableSharedFromThis<TmpFSInode> {
   // Friend declaration
   friend class TmpFS;
   friend struct Hash<TmpFSInode>;
 
  public:
   TmpFSInode(TmpFS& fs,
-             TmpFSInode* parent,
+             SharedPtr<TmpFSInode> parent,
              const String& name,
              const char* content,
              off_t size,
@@ -58,8 +58,9 @@ class TmpFSInode final : public Vnode {
   virtual SharedPtr<Vnode> remove_child(const String& name) override;
   virtual SharedPtr<Vnode> get_child(const String& name) override;
   virtual SharedPtr<Vnode> get_ith_child(size_t i) override;
-  virtual Vnode* get_parent() override;
   virtual size_t get_children_count() const override;
+  virtual SharedPtr<Vnode> get_parent() override;
+  virtual void set_parent(SharedPtr<Vnode> parent) override;
 
   virtual int chmod(const mode_t mode) override;
   virtual int chown(const uid_t uid, const gid_t gid) override;
@@ -71,13 +72,14 @@ class TmpFSInode final : public Vnode {
     _size = new_size;
   }
   virtual size_t hash_code() const override;
+  virtual bool is_root_vnode() const override;
 
  private:
   TmpFS& _fs;
   String _name;
   UniquePtr<char[]> _content;
 
-  TmpFSInode* _parent;  // FIXME: use WeakPtr
+  WeakPtr<Vnode> _parent;
   List<SharedPtr<TmpFSInode>> _children;
 };
 

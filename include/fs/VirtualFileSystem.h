@@ -11,6 +11,8 @@
 #include <fs/File.h>
 #include <fs/FileSystem.h>
 
+#define NR_SPECIAL_ENTRIES 2  /* "." and ".." */
+
 namespace valkyrie::kernel {
 
 class VFS final {
@@ -63,6 +65,7 @@ class VFS final {
 
   [[nodiscard]] FileSystem& get_rootfs();
   [[nodiscard]] List<SharedPtr<File>>& get_opened_files();
+  [[nodiscard]] SharedPtr<Vnode> get_host_vnode(SharedPtr<Vnode> vnode);
 
  private:
   VFS();

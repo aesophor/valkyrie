@@ -239,14 +239,24 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
       file->pos = 0;
       len = 0;
     } else {
+      const char* name;
       DirectoryEntry e;
       SharedPtr<Vnode> child_vnode = file->vnode->get_ith_child(file->pos);
+
       if (!child_vnode) [[unlikely]] {
         Kernel::panic("VFS::read: child_vnode == nullptr. "
                       "get_ith_child() is probably buggy.\n");
       }
 
-      strncpy(e.name, child_vnode->get_name().c_str(), sizeof(e.name));
+      if (file->pos == 0) {
+        name = ".";
+      } else if (file->pos == 1) {
+        name = "..";
+      } else {
+        name = child_vnode->get_name().c_str();
+      }
+
+      strncpy(e.name, name, min(strlen(name), sizeof(e.name)));
       memcpy(buf, reinterpret_cast<char*>(&e), sizeof(e));
       file->pos++;
       len = sizeof(e);
@@ -345,12 +355,12 @@ int VFS::umount(const String& mountpoint) {
     printk("VFS::umount: %s has not been mounted yet\n", mountpoint.c_str());
     return -1;
   }
-  
 
   printk("VFS::umount: umounting %s\n", mountpoint.c_str());
   _mounts.remove_if([&vnode](const auto& mount) {
     return mount->guest_vnode == vnode;
   });
+
   // FIXME: free the corresponding fs
   return 0;
 }
@@ -480,6 +490,14 @@ FileSystem& VFS::get_rootfs() {
 
 List<SharedPtr<File>>& VFS::get_opened_files() {
   return _opened_files;
+}
+
+SharedPtr<Vnode> VFS::get_host_vnode(SharedPtr<Vnode> guest_vnode) {
+  auto it = _mounts.find_if([&guest_vnode](const auto& mount) {
+    return mount->guest_vnode == guest_vnode;
+  });
+
+  return (it != _mounts.end()) ? it->get()->host_vnode : nullptr;
 }
 
 

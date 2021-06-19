@@ -38,8 +38,9 @@ class Vnode {
   virtual SharedPtr<Vnode> remove_child(const String& name) = 0;
   virtual SharedPtr<Vnode> get_child(const String& name) = 0;
   virtual SharedPtr<Vnode> get_ith_child(size_t i) = 0;
-  virtual Vnode* get_parent() = 0;
   virtual size_t get_children_count() const = 0;
+  virtual SharedPtr<Vnode> get_parent() = 0;
+  virtual void set_parent(SharedPtr<Vnode> parent) = 0;
 
   virtual int chmod(const mode_t mode) = 0;
   virtual int chown(const uid_t uid, const gid_t gid) = 0;
@@ -48,7 +49,7 @@ class Vnode {
   virtual char* get_content() = 0;
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) = 0;
   virtual size_t hash_code() const = 0;
-
+  virtual bool is_root_vnode() const = 0;
 
   bool is_directory() const { return (_mode & S_IFMT) == S_IFDIR; }
   bool is_regular_file() const { return (_mode & S_IFMT) == S_IFREG; }
