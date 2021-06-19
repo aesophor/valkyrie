@@ -70,10 +70,10 @@
 - [x] SharedPtr + make_shared + \*_pointer_cast<>()
 - [x] WeakPtr
 - [x] EnableSharedFromThis
-- [x] List
-- [x] String
-- [ ] Vector (?)
-- [x] Deque (the performance is shit ...)
+- [x] List + iterator
+- [x] String + iterator
+- [x] Deque
+- [x] RingBuffer
 - [x] Utility (move and forward)
 - [ ] ...
 
