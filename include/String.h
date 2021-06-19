@@ -271,16 +271,41 @@ class String {
   }
 
 
-  void clear() { _s.reset(); }
-  bool empty() const { return size() == 0; }
-  size_t size() const { return (_s) ? strlen(_s.get()) : 0; }
-  const char& at(size_t i) const { return _s[i]; }
-  const char* c_str() const { return _s.get(); }
+  void clear() {
+    _s.reset();
+  }
 
-  char& front() { return _s[0]; }
-  char& back() { return _s[size() - 1]; }
-  const char& front() const { return _s[0]; }
-  const char& back() const { return _s[size() - 1]; }
+  bool empty() const {
+    return size() == 0;
+  }
+
+  size_t size() const {
+    return (_s) ? strlen(_s.get()) : 0;
+  }
+
+  const char& at(size_t i) const {
+    return _s[i];
+  }
+
+  const char* c_str() const {
+    return _s.get();
+  }
+
+  char& front() {
+    return _s[0];
+  }
+
+  char& back() {
+    return _s[size() - 1];
+  }
+
+  const char& front() const {
+    return _s[0];
+  }
+
+  const char& back() const {
+    return _s[size() - 1];
+  }
 
 
   // Until the end of the string.
