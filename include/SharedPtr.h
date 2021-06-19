@@ -2,16 +2,23 @@
 #ifndef VALKYRIE_SHARED_PTR_H_
 #define VALKYRIE_SHARED_PTR_H_
 
-#include <Types.h>
 #include <UniquePtr.h>
 
 namespace valkyrie::kernel {
 
+// Forward declaration
+template <typename T>
+class WeakPtr;
+
+
 template <typename T>
 class SharedPtr {
-  // Friend declaration (used by the aliasing constructor).
+  // Friend declaration
   template <typename U>
-  friend class SharedPtr;
+  friend class SharedPtr;  // used by the aliasing constructor
+
+  template <typename U>
+  friend class WeakPtr;
 
  public:
   // Default constructor
@@ -27,14 +34,22 @@ class SharedPtr {
   // Constructor (from a raw pointer of type T)
   explicit
   SharedPtr(T* p)
-      : _ctrl(new ControlBlock(p, 1)),
+      : _ctrl(new ControlBlock {p, 1, 0}),
         _alias() {}
 
   // Constructor (from an UniquePtr<T>)
   explicit
   SharedPtr(UniquePtr<T>&& r)
-      : _ctrl(new ControlBlock(r.release(), 1)),
+      : _ctrl(new ControlBlock {r.release(), 1, 0}),
         _alias() {}
+
+  // Constructor (from a WeakPtr<T>)
+  explicit
+  SharedPtr(const WeakPtr<T>& r)
+      : _ctrl(r._ctrl),
+        _alias() {
+    inc_use_count();
+  }
 
   // Aliasing Constructor
   // It allows us to construct a new SharedPtr instance
@@ -61,7 +76,7 @@ class SharedPtr {
 
   // Copy assignment operator
   SharedPtr& operator =(const SharedPtr& r) {
-    if (is_valid()) {
+    if (_ctrl && _ctrl->use_count > 0) {
       reset();
     }
 
@@ -81,7 +96,7 @@ class SharedPtr {
 
   // Move assignment operator
   SharedPtr& operator =(SharedPtr&& r) noexcept {
-    if (is_valid()) {
+    if (_ctrl && _ctrl->use_count > 0) {
       reset();
     }
 
@@ -92,15 +107,28 @@ class SharedPtr {
     return *this;
   }
 
-  // Conversion operator
+  // Conversion operator (dynamic_cast)
   template <typename U>
   operator SharedPtr<U>() const {
     return dynamic_pointer_cast<U>(*this);
   }
 
-  T* operator ->() const { return get(); }
-  T& operator *() const { return *get(); }
-  operator bool() const { return get(); }
+  operator WeakPtr<T>() const {
+    return WeakPtr<T>(*this);
+  }
+
+
+  T* operator ->() const {
+    return get();
+  }
+
+  T& operator *() const {
+    return *get();
+  }
+
+  operator bool() const {
+    return get();
+  }
 
   bool operator ==(SharedPtr r) const {
     return _ctrl == r._ctrl;
@@ -128,41 +156,43 @@ class SharedPtr {
   }
 
   int use_count() const {
-    return (is_valid()) ? _ctrl->use_count : 0;
+    return (_ctrl) ? _ctrl->use_count : 0;
   }
 
  protected:
-  bool is_valid() const {
-    return _ctrl && _ctrl->use_count > 0;
-  }
-
   void inc_use_count() {
-    if (is_valid()) {
-      ++(_ctrl->use_count);
+    if (_ctrl) {
+      _ctrl->use_count++;
     }
   }
 
   void dec_use_count() {
-    if (is_valid()) {
-      --(_ctrl->use_count);
+    if (_ctrl && _ctrl->use_count > 0) {
+      _ctrl->use_count--;
+      maybe_delete_p();
+      maybe_delete_ctrl_block();
+    }
+  }
 
-      if (use_count() == 0) {
-        delete _ctrl->p;
-        delete _ctrl;
+  void maybe_delete_p() {
+    if (_ctrl && _ctrl->use_count == 0) {
+      delete _ctrl->p;
+      _ctrl->p = nullptr;
+    }
+  }
 
-        _ctrl->p = nullptr;
-        _ctrl = nullptr;
-      }
+  void maybe_delete_ctrl_block() {
+    if (_ctrl && _ctrl->use_count + _ctrl->use_count_weak == 0) {
+      delete _ctrl;
+      _ctrl = nullptr;
     }
   }
 
 
   struct ControlBlock final {
-    ControlBlock(T* p = nullptr, int use_count = 0)
-        : p(p), use_count(use_count) {}
-
     T* p;
     int use_count;
+    int use_count_weak;
   }* _ctrl;
 
   // For SharedPtr's aliasing constructor.
@@ -184,9 +214,10 @@ class SharedPtr<T[]> : private SharedPtr<T> {
 
   // Move assignment operator
   SharedPtr& operator =(SharedPtr&& other) noexcept {
-    if (is_valid()) {
-      dec_use_count();
+    if (_ctrl && _ctrl->use_count > 0) {
+      reset();
     }
+
     _ctrl = other._ctrl;
     _alias = other._alias;
     other._ctrl = nullptr;
@@ -198,8 +229,13 @@ class SharedPtr<T[]> : private SharedPtr<T> {
     dec_use_count();
   }
 
-  T& operator [](size_t i) { return get()[i]; }
-  const T& operator [](size_t i) const { return get()[i]; }
+  T& operator [](size_t i) {
+    return get()[i];
+  }
+
+  const T& operator [](size_t i) const {
+    return get()[i];
+  }
 
   using SharedPtr<T>::operator ->;
   using SharedPtr<T>::operator *;
@@ -213,20 +249,14 @@ class SharedPtr<T[]> : private SharedPtr<T> {
   using SharedPtr<T>::use_count;
 
  private:
-  using SharedPtr<T>::is_valid;
   using SharedPtr<T>::inc_use_count;
+  using SharedPtr<T>::dec_use_count;
+  using SharedPtr<T>::maybe_delete_ctrl_block;
 
-  void dec_use_count() {
-    if (is_valid()) {
-      --(_ctrl->use_count);
-
-      if (use_count() == 0) {
-        delete[] _ctrl->p;
-        delete _ctrl;
-
-        _ctrl->p = nullptr;
-        _ctrl = nullptr;
-      }
+  void maybe_delete_p() {
+    if (_ctrl && _ctrl->use_count == 0) {
+      delete[] _ctrl->p;
+      _ctrl->p = nullptr;
     }
   }
 
