@@ -25,18 +25,48 @@ class ContiguousIterator {
     return *this;
   }
 
-  bool operator ==(const ContiguousIterator& r) const { return _index == r._index; }
-  bool operator !=(const ContiguousIterator& r) const { return _index != r._index; }
-  bool operator <(const ContiguousIterator& r) const { return _index < r._index; }
-  bool operator >(const ContiguousIterator& r) const { return _index > r._index; }
-  bool operator <=(const ContiguousIterator& r) const { return _index <= r._index; }
-  bool operator >=(const ContiguousIterator& r) const { return _index >= r._index; }
+  bool operator ==(const ContiguousIterator& r) const {
+    return _index == r._index;
+  }
 
-  const ValueType& operator*() const { return _container[_index]; }
-  const ValueType* operator->() const { return &_container[_index]; }
+  bool operator !=(const ContiguousIterator& r) const {
+    return _index != r._index;
+  }
 
-  ValueType& operator*() { return _container[_index]; }
-  ValueType* operator->() { return &_container[_index]; }
+  bool operator <(const ContiguousIterator& r) const {
+    return _index < r._index;
+  }
+
+  bool operator >(const ContiguousIterator& r) const {
+    return _index > r._index;
+  }
+
+  bool operator <=(const ContiguousIterator& r) const {
+    return _index <= r._index;
+  }
+
+  bool operator >=(const ContiguousIterator& r) const {
+    return _index >= r._index;
+  }
+
+
+  const ValueType& operator*() const {
+    return _container[_index];
+  }
+
+  const ValueType* operator->() const {
+    return &_container[_index];
+  }
+
+
+  ValueType& operator*() {
+    return _container[_index];
+  }
+
+  ValueType* operator->() {
+    return &_container[_index];
+  }
+
 
   // Prefix increment
   ContiguousIterator& operator ++() {
