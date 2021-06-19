@@ -4,5 +4,6 @@
 
 #include <UniquePtr.h>
 #include <SharedPtr.h>
+#include <WeakPtr.h>
 
 #endif  // VALKYRIE_MEMORY_H_
