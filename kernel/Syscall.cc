@@ -148,11 +148,18 @@ int sys_chdir(const char __user* pathname) {
 
   auto& vfs = VFS::get_instance();
 
-  if (vfs.access(pathname, 0) == -1) {
+  if (vfs.access(pathname, 0) == -1) [[unlikely]] {
     return -1;
   }
 
-  Task::current()->set_cwd_vnode(vfs.resolve_path(pathname)); 
+  SharedPtr<Vnode> vnode = vfs.resolve_path(pathname);
+
+  if (!vnode->is_directory()) [[unlikely]] {
+    // TODO: error code
+    return -1;
+  }
+
+  Task::current()->set_cwd_vnode(move(vnode)); 
   return 0;
 }
 
