@@ -72,12 +72,27 @@ class List {
   }
 
 
-  operator bool() const { return !empty(); }
+  operator bool() const {
+    return !empty();
+  }
 
-  Iterator begin() { return Iterator::begin(*this); }
-  Iterator end() { return Iterator::end(*this); }
-  //ConstIterator begin() const { return ConstIterator::begin(*this); }
-  //ConstIterator end() const { return ConstIterator::end(*this); }
+  Iterator begin() {
+    return Iterator::begin(*this);
+  }
+
+  Iterator end() {
+    return Iterator::end(*this);
+  }
+  
+  /*
+  ConstIterator begin() const {
+    return ConstIterator::begin(*this);
+  }
+  
+  ConstIterator end() const {
+    return ConstIterator::end(*this);
+  }
+  */
 
 
   template <typename U>
@@ -165,13 +180,29 @@ class List {
   }
 
 
-  size_t size() const { return _size; }
-  bool empty() const { return _head->next == _head.get(); }
+  size_t size() const {
+    return _size;
+  }
 
-  T& front() { return _head->next->data; }
-  T& back() { return _head->prev->data; }
-  const T& front() const { return _head->next->data; }
-  const T& back() const { return _head->prev->data; }
+  bool empty() const {
+    return _head->next == _head.get();
+  }
+
+  T& front() {
+    return _head->next->data;
+  }
+
+  T& back() {
+    return _head->prev->data;
+  }
+
+  const T& front() const {
+    return _head->next->data;
+  }
+
+  const T& back() const {
+    return _head->prev->data;
+  }
 
 
  protected:
@@ -268,14 +299,29 @@ class ListIterator {
     return *this;
   }
 
-  bool operator ==(const ListIterator& r) const { return _current == r._current; }
-  bool operator !=(const ListIterator& r) const { return _current != r._current; }
+  bool operator ==(const ListIterator& r) const {
+    return _current == r._current;
+  }
 
-  const ValueType& operator *() const { return _current->data; }
-  const ValueType* operator ->() const { return &(_current->data); }
+  bool operator !=(const ListIterator& r) const {
+    return _current != r._current;
+  }
 
-  ValueType& operator *() { return _current->data; }
-  ValueType* operator ->() { return &(_current->data); }
+  const ValueType& operator *() const {
+    return _current->data;
+  }
+
+  const ValueType* operator ->() const {
+    return &(_current->data);
+  }
+
+  ValueType& operator *() {
+    return _current->data;
+  }
+
+  ValueType* operator ->() {
+    return &(_current->data);
+  }
 
   // Prefix increment
   ListIterator& operator ++() {
