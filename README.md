@@ -69,6 +69,7 @@
 - [x] UniquePtr + make_unique
 - [x] SharedPtr + make_shared + \*_pointer_cast<>()
 - [x] WeakPtr
+- [x] EnableSharedFromThis
 - [x] List
 - [x] String
 - [ ] Vector (?)
