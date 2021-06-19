@@ -66,9 +66,9 @@
 - [ ] Concepts
 - [x] Functional
 - [x] Iterator
-- [x] UniquePtr + make_unique<>()
-- [x] SharedPtr + make_shared<>() + \*_pointer_cast<>()
-- [ ] WeakPtr
+- [x] UniquePtr + make_unique
+- [x] SharedPtr + make_shared + \*_pointer_cast<>()
+- [x] WeakPtr
 - [x] List
 - [x] String
 - [ ] Vector (?)
