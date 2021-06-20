@@ -5,6 +5,7 @@
 #include <List.h>
 #include <Memory.h>
 #include <Types.h>
+#include <TypeTraits.h>
 #include <fs/File.h>
 #include <fs/Vnode.h>
 #include <mm/Page.h>
@@ -27,6 +28,10 @@ class Task {
   // Friend declaration
   friend class TaskScheduler;
 
+  // To copy (duplicate) a task, use Task::do_fork().
+  MAKE_NONCOPYABLE(Task);
+  MAKE_NONMOVABLE(Task);
+
  public:
   enum class State {
     CREATED,
@@ -41,19 +46,6 @@ class Task {
 
   // Destructor
   ~Task();
-
-  // Copy constructor
-  Task(const Task& r) = delete;
-
-  // Copy assignment operator
-  Task& operator= (const Task& r) = delete;
-
-  // Move constructor
-  Task(Task&& r) noexcept = delete;
-
-  // Move assignment operator
-  Task& operator= (Task&& r) noexcept = delete;
-
 
   [[gnu::always_inline]] static Task* current() {
     Task* ret;
