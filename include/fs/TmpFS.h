@@ -14,6 +14,7 @@ namespace valkyrie::kernel {
 // Forward declaration
 class TmpFSInode;
 
+
 class TmpFS final : public FileSystem {
   // Friend declaration
   friend class TmpFSInode;
