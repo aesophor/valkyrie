@@ -51,8 +51,8 @@ using FalseType = _IntegralConstant<bool, false>;
 
 namespace internal {
 
-template <typename T>
-TrueType test_pre_ptr_convertible(const volatile T*);
+template <typename B>
+TrueType test_pre_ptr_convertible(const volatile B*);
 
 template <typename>
 FalseType test_pre_ptr_convertible(const volatile void*);
