@@ -20,6 +20,9 @@ class UniquePtr {
   explicit
   UniquePtr(T* p) : _p(p) {}
 
+  // Constructor (from a nullptr_t)
+  UniquePtr(nullptr_t) : _p() {}
+
   // Destructor
   ~UniquePtr() {
     reset();
