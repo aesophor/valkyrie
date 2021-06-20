@@ -65,12 +65,9 @@ class TmpFSInode final : public Vnode, public EnableSharedFromThis<TmpFSInode> {
   virtual int chmod(const mode_t mode) override;
   virtual int chown(const uid_t uid, const gid_t gid) override;
 
-  virtual String get_name() const override { return _name; }
-  virtual char* get_content() override { return _content.get(); }
-  virtual void set_content(UniquePtr<char[]> content, off_t new_size) override {
-    _content = move(content);
-    _size = new_size;
-  }
+  virtual String get_name() const override;
+  virtual char* get_content() override;
+  virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
   virtual size_t hash_code() const override;
   virtual bool is_root_vnode() const override;
 
