@@ -456,9 +456,9 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         }
 
         auto dentry = reinterpret_cast<FAT32::DirectoryEntry*>(ptr);
-        dentry->attributes = (mode & S_IFDIR) ? ATTR_DIRECTORY : 0;
+        dentry->attributes = (is_directory()) ? ATTR_DIRECTORY : 0;
         dentry->size = size;
-        dentry->set_first_cluster_number((mode & S_IFDIR) ? free_cluster_number : 0);
+        dentry->set_first_cluster_number((is_directory()) ? free_cluster_number : 0);
 
         memcpy(dentry->name, short_filename.c_str(), 11);
         _fs.cluster_write(n, cluster.get());
@@ -472,7 +472,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                              /*mode=*/mode,
                                              /*uid=*/0,
                                              /*gid=*/0);
-        if (mode & S_IFDIR) {
+        if (is_directory()) {
           _fs.cluster_read(free_cluster_number, cluster.get());
           memset(cluster.get(), 0, 512);
 
@@ -705,7 +705,7 @@ FAT32Inode::find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> pred
 
 void FAT32Inode::iterate_children(Function<bool (const FAT32::DirectoryEntryView&)> f) const {
   // Make sure this inode represents a directory.
-  if (!(_mode & S_IFDIR)) [[unlikely]] {
+  if (!is_directory()) [[unlikely]] {
     printk("fat32: iterate_children(): %s is not a directory\n", _name.c_str());
     return;
   }
