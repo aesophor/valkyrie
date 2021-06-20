@@ -456,9 +456,9 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
         }
 
         auto dentry = reinterpret_cast<FAT32::DirectoryEntry*>(ptr);
-        dentry->attributes = (is_directory()) ? ATTR_DIRECTORY : 0;
+        dentry->attributes = (is_directory(mode)) ? ATTR_DIRECTORY : 0;
         dentry->size = size;
-        dentry->set_first_cluster_number((is_directory()) ? free_cluster_number : 0);
+        dentry->set_first_cluster_number((is_directory(mode)) ? free_cluster_number : 0);
 
         memcpy(dentry->name, short_filename.c_str(), 11);
         _fs.cluster_write(n, cluster.get());
@@ -472,7 +472,7 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String& name,
                                              /*mode=*/mode,
                                              /*uid=*/0,
                                              /*gid=*/0);
-        if (is_directory()) {
+        if (is_directory(mode)) {
           _fs.cluster_read(free_cluster_number, cluster.get());
           memset(cluster.get(), 0, 512);
 
