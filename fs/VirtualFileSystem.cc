@@ -10,6 +10,7 @@
 #include <fs/DirectoryEntry.h>
 #include <fs/File.h>
 #include <fs/Stat.h>
+#include <fs/ProcFS.h>
 #include <fs/TmpFS.h>
 #include <fs/Vnode.h>
 #include <kernel/Kernel.h>
@@ -69,6 +70,16 @@ void VFS::mount_devtmpfs() {
   // Mount devtmpfs or panic.
   if (mount("devtmpfs", "/dev", "tmpfs") == -1) [[unlikely]] {
     Kernel::panic("VFS::mount_devtmpfs: unable to mount devtmpfs\n");
+  }
+}
+
+void VFS::mount_procfs() {
+  // Create `/dev` if it doesn't exist.
+  static_cast<void>(mkdir("/proc"));
+
+  // Mount procfs or panic.
+  if (mount("procfs", "/proc", "procfs") == -1) [[unlikely]] {
+    Kernel::panic("VFS::mount_procfs: unable to mount procfs\n");
   }
 }
 
@@ -227,9 +238,11 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
   }
 
   if (file->vnode->is_regular_file()) {
+    char* content = file->vnode->get_content();
     size_t readable_size = file->vnode->get_size() - file->pos;
+
     len = min(len, readable_size);
-    memcpy(buf, file->vnode->get_content() + file->pos, len);
+    memcpy(buf, content + file->pos, len);
     file->pos += len;
 
   } else if (file->vnode->is_directory()) {
@@ -329,9 +342,15 @@ int VFS::mount(const String& device_name,
   // `fs_name` is the filesystem’s name.
   // The VFS should find and call the filesystem’s method to set up the mount.
   if (fs_name == "tmpfs") {
-    printk("VFS::mount: mounting tmpfs on %s\n", mountpoint.c_str());
+    printk("VFS::mount: mounting TmpFS on %s\n", mountpoint.c_str());
     auto tmpfs = make_shared<TmpFS>();
     auto mount = make_unique<Mount>(tmpfs, tmpfs->get_root_vnode(), vnode);
+    _mounts.push_back(move(mount));
+
+  } else if (fs_name == "procfs") {
+    printk("VFS::mount: mounting ProcFS on %s\n", mountpoint.c_str());
+    auto procfs = make_shared<ProcFS>();
+    auto mount = make_unique<Mount>(procfs, procfs->get_root_vnode(), vnode);
     _mounts.push_back(move(mount));
   }
 

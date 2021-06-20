@@ -38,6 +38,7 @@ class VFS final {
 
   void mount_rootfs();
   void mount_devtmpfs();
+  void mount_procfs();
   void populate_devtmpfs();
 
 
