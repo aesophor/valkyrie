@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_MAILBOX_H_
 #define VALKYRIE_MAILBOX_H_
 
+#include <Singleton.h>
 #include <Types.h>
 #include <Utility.h>
 #include <driver/IO.h>
@@ -19,23 +20,17 @@
 
 namespace valkyrie::kernel {
 
-class Mailbox final {
+class Mailbox : public Singleton<Mailbox> {
  public:
-  static Mailbox& get_instance();
-
-  Mailbox(const Mailbox&) = delete;
-  Mailbox(Mailbox&&) = delete;
-  Mailbox& operator =(const Mailbox&) = delete;
-  Mailbox& operator =(Mailbox&&) = delete;
-
   uint32_t get_board_model();
   uint32_t get_board_revision();
   Pair<uint32_t, uint32_t> get_arm_memory();  // base address, size
   Pair<uint32_t, uint32_t> get_vc_memory();  // base address, size
 
- private:
+ protected:
   Mailbox();
 
+ private:
   void call();
 
   // Because only upper 28 bits of message address could be passed,

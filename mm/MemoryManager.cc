@@ -8,11 +8,6 @@
 
 namespace valkyrie::kernel {
 
-MemoryManager& MemoryManager::get_instance() {
-  static MemoryManager instance;
-  return instance;
-}
-
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::get_instance().get_arm_memory().second),
       _zones{Zone(0x10000000), Zone(0x10200000)},

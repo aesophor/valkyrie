@@ -84,11 +84,6 @@
 
 namespace valkyrie::kernel {
 
-MiniUART& MiniUART::get_instance() {
-  static MiniUART instance;
-  return instance;
-}
-
 MiniUART::MiniUART()
     : _is_debugging(),
       _is_read_buffer_enabled(),

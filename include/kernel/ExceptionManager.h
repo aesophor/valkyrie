@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_EXCEPTION_MANAGER_H_
 #define VALKYRIE_EXCEPTION_MANAGER_H_
 
+#include <Singleton.h>
 #include <driver/IO.h>
 #include <kernel/TaskletScheduler.h>
 #include <proc/TrapFrame.h>
@@ -27,16 +28,8 @@
 
 namespace valkyrie::kernel {
 
-class ExceptionManager final {
+class ExceptionManager : public Singleton<ExceptionManager> {
  public:
-  static ExceptionManager& get_instance();
-
-  ~ExceptionManager() = default;
-  ExceptionManager(const ExceptionManager&) = delete;
-  ExceptionManager(ExceptionManager&&) = delete;
-  ExceptionManager& operator =(const ExceptionManager&) = delete;
-  ExceptionManager& operator =(ExceptionManager&&) = delete;
-
   [[gnu::always_inline]] static void enable() {
     asm volatile("msr DAIFCLR, #0b1111");
     ExceptionManager::get_instance()._is_enabled = true;
@@ -53,9 +46,10 @@ class ExceptionManager final {
   uint8_t get_exception_level() const;
   bool is_enabled() const;
 
- private:
+ protected:
   ExceptionManager();
 
+ private:
   struct Exception final {
     uint8_t ec;    // exception class
     uint32_t iss;  // instruction specific syndrome

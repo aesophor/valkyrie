@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <Singleton.h>
 #include <Utility.h>
 #include <dev/Device.h>
 #include <dev/StorageDevice.h>
@@ -15,7 +16,7 @@
 
 namespace valkyrie::kernel {
 
-class VFS final {
+class VFS : public Singleton<VFS> {
  public:
   struct Mount final {
     Mount(SharedPtr<FileSystem> guest_fs,
@@ -26,15 +27,6 @@ class VFS final {
     SharedPtr<Vnode> guest_vnode;
     SharedPtr<Vnode> host_vnode;
   };
-
-  static VFS& get_instance();
-
-  ~VFS() = default;
-  VFS(const VFS&) = delete;
-  VFS(VFS&&) = delete;
-  VFS& operator =(const VFS&) = delete;
-  VFS& operator =(VFS&&) = delete;
-
 
   void mount_rootfs();
   void mount_devtmpfs();
@@ -68,9 +60,10 @@ class VFS final {
   [[nodiscard]] List<SharedPtr<File>>& get_opened_files();
   [[nodiscard]] SharedPtr<Vnode> get_host_vnode(SharedPtr<Vnode> vnode);
 
- private:
+ protected:
   VFS();
 
+ private:
   void mount_rootfs(SharedPtr<FileSystem> fs);
   void mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive);
 

@@ -20,12 +20,6 @@ namespace valkyrie::kernel {
 
 uint32_t VFS::_next_dev_major = 1;
 
-VFS& VFS::get_instance() {
-  static VFS instance;
-  return instance;
-}
-
-
 VFS::VFS()
     : _mounts(),
       _opened_files(),
@@ -239,7 +233,8 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
 
   if (file->vnode->is_regular_file()) {
     char* content = file->vnode->get_content();
-    size_t readable_size = file->vnode->get_size() - file->pos;
+    size_t size = file->vnode->get_size();
+    size_t readable_size = size - file->pos;
 
     len = min(len, readable_size);
     memcpy(buf, content + file->pos, len);

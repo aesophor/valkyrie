@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_TASK_SCHEDULER_H_
 #define VALKYRIE_TASK_SCHEDULER_H_
 
+#include <Singleton.h>
 #include <List.h>
 #include <Memory.h>
 #include <Mutex.h>
@@ -9,16 +10,8 @@
 
 namespace valkyrie::kernel {
 
-class TaskScheduler {
+class TaskScheduler : public Singleton<TaskScheduler> {
  public:
-  static TaskScheduler& get_instance();
-
-  ~TaskScheduler() = default;
-  TaskScheduler(const TaskScheduler&) = delete;
-  TaskScheduler(TaskScheduler&&) = delete;
-  TaskScheduler& operator =(const TaskScheduler&) = delete;
-  TaskScheduler& operator =(TaskScheduler&&) = delete;
-
   // Starts the task scheduler.
   void run();
 
@@ -29,9 +22,10 @@ class TaskScheduler {
   void maybe_reschedule();
   void tick();
 
- private:
+ protected:
   TaskScheduler();
 
+ private:
   bool _need_reschedule;
   List<UniquePtr<Task>> _runqueue;
   Mutex _m;

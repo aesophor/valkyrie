@@ -3,11 +3,6 @@
 
 namespace valkyrie::kernel {
 
-Kernel& Kernel::get_instance() {
-  static Kernel instance;
-  return instance;
-}
-
 Kernel::Kernel()
     : _mailbox(Mailbox::get_instance()),
       _mini_uart(MiniUART::get_instance()),

@@ -8,6 +8,7 @@
 #include <fs/File.h>
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
+#include <proc/Task.h>
 
 namespace valkyrie::kernel {
 
@@ -20,17 +21,12 @@ class ProcFS final : public FileSystem {
   friend class ProcFSInode;
 
  public:
-  enum class FileType {
-    DIR,
-    SWITCH,
-    HELLO,
-    SIZE
-  };
-
   ProcFS();
   virtual ~ProcFS() = default;
 
   virtual SharedPtr<Vnode> get_root_vnode() override;
+
+  void create_subtree_for_task(Task* task);
 
  private:
   uint64_t _next_inode_index;
@@ -38,17 +34,26 @@ class ProcFS final : public FileSystem {
 };
 
 
-class ProcFSInode final : public Vnode, public EnableSharedFromThis<ProcFSInode> {
+class ProcFSInode : public Vnode, public EnableSharedFromThis<ProcFSInode> {
   // Friend declaration
   friend class ProcFS;
   friend struct Hash<ProcFSInode>;
 
  public:
+  enum class Type {
+    DIR,
+    SWITCH,
+    HELLO,
+    TASK_DIR,
+    TASK_FILE_STATE,
+    SIZE
+  };
+
   ProcFSInode(ProcFS& fs,
               SharedPtr<ProcFSInode> parent,
               const String& name,
               mode_t mode,
-              ProcFS::FileType file_type);
+              ProcFSInode::Type type);
 
   virtual ~ProcFSInode() = default;
 
@@ -79,7 +84,7 @@ class ProcFSInode final : public Vnode, public EnableSharedFromThis<ProcFSInode>
   // Overloaded version of create_child() specialized for ProcFS.
   SharedPtr<ProcFSInode> create_child(const String& name,
                                       mode_t mode,
-                                      ProcFS::FileType file_type);
+                                      ProcFSInode::Type type);
  private:
   UniquePtr<char[]> get_content_for_switch();
   UniquePtr<char[]> get_content_for_hello();
@@ -91,10 +96,18 @@ class ProcFSInode final : public Vnode, public EnableSharedFromThis<ProcFSInode>
   ProcFS& _fs;
   String _name;
   UniquePtr<char[]> _content;
-  ProcFS::FileType _file_type;
+  ProcFSInode::Type _type;
 
   WeakPtr<Vnode> _parent;
   List<SharedPtr<ProcFSInode>> _children;
+};
+
+
+// There are multiple types of directories and files in ProcFS.
+// We will use polymorphism to specialize the open/read/write method
+// for different inodes in ProcFS, . Here we go...
+class SwitchFile : public ProcFSInode {
+ public:
 };
 
 
@@ -106,7 +119,7 @@ struct Hash<ProcFSInode> {
     size_t ret = 5;
 
     ret += prime * hash(inode._mode);
-    ret += prime * hash(static_cast<int>(inode._file_type));
+    ret += prime * hash(static_cast<int>(inode._type));
     ret += hash(inode._name);
     ret += prime * hash(inode._parent);
     return ret;

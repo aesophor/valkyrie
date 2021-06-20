@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_MINI_UART_H_
 #define VALKYRIE_MINI_UART_H_
 
+#include <Singleton.h>
 #include <Types.h>
 #include <dev/CharacterDevice.h>
 #include <driver/GPIO.h>
@@ -11,15 +12,10 @@
 
 namespace valkyrie::kernel {
 
-class MiniUART : public CharacterDevice::Driver {
+class MiniUART : public Singleton<MiniUART>,
+                 public CharacterDevice::Driver {
  public:
-  static MiniUART& get_instance();
-
-  ~MiniUART() = default;
-  MiniUART(const MiniUART&) = delete;
-  MiniUART(MiniUART&&) = delete;
-  MiniUART& operator =(const MiniUART&) = delete;
-  MiniUART& operator =(MiniUART&&) = delete;
+  virtual ~MiniUART() = default;
 
   virtual char read_char() override;
   virtual void write_char(const char c) override;
@@ -39,9 +35,10 @@ class MiniUART : public CharacterDevice::Driver {
   void set_read_buffer_enabled(bool enabled);
   void set_write_buffer_enabled(bool enabled);
 
- private:
+ protected:
   MiniUART();
 
+ private:
   // Synchronous I/O
   uint8_t recv();
   void send(const uint8_t byte);

@@ -58,11 +58,6 @@
 
 namespace valkyrie::kernel {
 
-SDCardDriver& SDCardDriver::get_instance() {
-  static SDCardDriver instance;
-  return instance;
-}
-
 SDCardDriver::SDCardDriver()
     : _is_high_capacity() {
   pin_setup();

@@ -11,11 +11,6 @@ extern "C" void* evt;
 
 namespace valkyrie::kernel {
 
-ExceptionManager& ExceptionManager::get_instance() {
-  static ExceptionManager instance;
-  return instance;
-}
-
 ExceptionManager::ExceptionManager()
     : _is_enabled(),
       _tasklet_scheduler() {}

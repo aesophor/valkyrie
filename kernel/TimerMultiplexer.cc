@@ -6,11 +6,6 @@
 
 namespace valkyrie::kernel {
 
-TimerMultiplexer& TimerMultiplexer::get_instance() {
-  static TimerMultiplexer instance;
-  return instance;
-}
-
 TimerMultiplexer::TimerMultiplexer()
     : _arm_core_timer(),
       _events() {}
@@ -40,9 +35,7 @@ void TimerMultiplexer::tick() {
 void TimerMultiplexer::add_timer(Event::Callback callback,
                                  const uint32_t timeout) {
   printk("event registered. it will be triggered after %d secs\n", timeout);
-
   _events.push_back(Event {move(callback), timeout});
-
   _arm_core_timer.enable();
 }
 

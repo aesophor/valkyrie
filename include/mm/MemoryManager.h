@@ -2,21 +2,14 @@
 #ifndef VALKYRIE_MEMORY_MANAGER_H_
 #define VALKYRIE_MEMORY_MANAGER_H_
 
+#include <Singleton.h>
 #include <mm/AddressSanitizer.h>
 #include <mm/Zone.h>
 
 namespace valkyrie::kernel {
 
-class MemoryManager final {
+class MemoryManager : public Singleton<MemoryManager> {
  public:
-  static MemoryManager& get_instance();
-
-  ~MemoryManager() = default;
-  MemoryManager(const MemoryManager&) = delete;
-  MemoryManager(MemoryManager&&) = delete;
-  MemoryManager& operator =(const MemoryManager&) = delete;
-  MemoryManager& operator =(MemoryManager&&) = delete;
-
   void* get_free_page();
   void* kmalloc(size_t size);
   void  kfree(void* p);
@@ -27,9 +20,10 @@ class MemoryManager final {
 
   size_t get_ram_size() const;
 
- private:
+ protected:
   MemoryManager();
 
+ private:
   const size_t _ram_size;
   Zone _zones[2];
   AddressSanitizer _kasan;

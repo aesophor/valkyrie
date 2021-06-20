@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
+#include <Singleton.h>
 #include <dev/Console.h>
 #include <driver/Mailbox.h>
 #include <driver/MiniUART.h>
@@ -16,24 +17,17 @@ static const char* kernel_panic_msg = "Kernel panic - not syncing: ";
 
 namespace valkyrie::kernel {
 
-class Kernel {
+class Kernel : public Singleton<Kernel> {
  public:
-  static Kernel& get_instance();
-
-  ~Kernel() = default;
-  Kernel(const Kernel&) = delete;
-  Kernel(Kernel&&) = delete;
-  Kernel& operator =(const Kernel&) = delete;
-  Kernel& operator =(Kernel&&) = delete;
-
   [[noreturn]] void run();
 
   template <typename... Args>
   [[noreturn]] static void panic(const char* fmt, Args&&... args);
 
- private:
+ protected:
   Kernel();
 
+ private:
   void print_banner();
   void print_hardware_info();
 

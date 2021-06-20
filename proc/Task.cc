@@ -72,9 +72,10 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
 
   // Reserve fd 0,1,2 for stdin, stdout, stderr
   // FIXME: refactor this BULLSHIT
-  _fd_table[0] = File::opened;
-  _fd_table[1] = File::opened;
-  _fd_table[2] = File::opened;
+  auto opened = make_shared<File>(VFS::get_instance().get_rootfs(), nullptr, 0);
+  _fd_table[0] = opened;
+  _fd_table[1] = opened;
+  _fd_table[2] = opened;
 
   /*
   printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",

@@ -4,6 +4,7 @@
 
 #include <Deque.h>
 #include <Functional.h>
+#include <Singleton.h>
 #include <kernel/Timer.h>
 
 namespace valkyrie::kernel {
@@ -12,16 +13,8 @@ namespace valkyrie::kernel {
 // and one-shot executed tasks such as sleeping and timeout.
 // However, the number of the hardware timer is limited.
 // Therefore, the kernel needs a software mechanism to multiplex the timer.
-class TimerMultiplexer {
+class TimerMultiplexer : public Singleton<TimerMultiplexer> {
  public:
-  static TimerMultiplexer& get_instance();
-
-  ~TimerMultiplexer() = default;
-  TimerMultiplexer(const TimerMultiplexer&) = delete;
-  TimerMultiplexer(TimerMultiplexer&&) = delete;
-  TimerMultiplexer& operator =(const TimerMultiplexer&) = delete;
-  TimerMultiplexer& operator =(TimerMultiplexer&&) = delete;
-
   struct Event {
     using Callback = Function<void ()>;
 
@@ -36,9 +29,10 @@ class TimerMultiplexer {
 
   ARMCoreTimer& get_arm_core_timer();
 
- private:
-  explicit TimerMultiplexer();
+ protected:
+  TimerMultiplexer();
 
+ private:
   ARMCoreTimer _arm_core_timer;
   Deque<Event> _events;
 };

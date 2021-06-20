@@ -10,11 +10,6 @@
 
 namespace valkyrie::kernel {
 
-TaskScheduler& TaskScheduler::get_instance() {
-  static TaskScheduler instance;
-  return instance;
-}
-
 TaskScheduler::TaskScheduler()
     : _need_reschedule(),
       _runqueue() {}

@@ -2,28 +2,25 @@
 #ifndef VALKYRIE_SDCARD_DRIVER
 #define VALKYRIE_SDCARD_DRIVER
 
+#include <Singleton.h>
 #include <dev/BlockDevice.h>
 #include <driver/IO.h>
 #include <driver/GPIO.h>
 
 namespace valkyrie::kernel {
 
-class SDCardDriver final : public BlockDevice::Driver {
+class SDCardDriver : public Singleton<SDCardDriver>,
+                     public BlockDevice::Driver {
  public:
-  static SDCardDriver& get_instance();
-
-  virtual ~SDCardDriver() override = default;
-  SDCardDriver(const SDCardDriver&) = delete;
-  SDCardDriver(SDCardDriver&&) = delete;
-  SDCardDriver& operator =(const SDCardDriver&) = delete;
-  SDCardDriver& operator =(SDCardDriver&&) = delete;
+  virtual ~SDCardDriver() = default;
 
   virtual void read_block(int block_idx, void* buf) override;
   virtual void write_block(int block_idx, const void* buf) override;
 
- private:
+ protected:
   SDCardDriver();
 
+ private:
   void pin_setup();  
   void sdhost_setup();
   int sdcard_setup();
