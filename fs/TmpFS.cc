@@ -7,8 +7,6 @@
 #include <fs/VirtualFileSystem.h>
 #include <libs/CString.h>
 
-#define NR_SPECIAL_ENTRIES 2
-
 namespace valkyrie::kernel {
 
 TmpFS::TmpFS()
@@ -68,7 +66,7 @@ SharedPtr<Vnode> TmpFSInode::remove_child(const String& name) {
   });
 
   if (!removed_child) [[unlikely]] {
-    printk("tmpfs: <warning> unable to remove %s from %s\n", name, _name);
+    printk("TmpFS: <warning> unable to remove %s from %s\n", name, _name);
   }
 
   return removed_child;
@@ -126,6 +124,19 @@ int TmpFSInode::chmod(const mode_t mode) {
 
 int TmpFSInode::chown(const uid_t uid, const gid_t gid) {
   return -1;
+}
+
+String TmpFSInode::get_name() const {
+  return _name;
+}
+
+char* TmpFSInode::get_content() {
+  return _content.get();
+}
+
+void TmpFSInode::set_content(UniquePtr<char[]> content, off_t new_size) {
+  _content = move(content);
+  _size = new_size;
 }
 
 size_t TmpFSInode::hash_code() const {
