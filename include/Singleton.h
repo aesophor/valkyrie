@@ -20,6 +20,9 @@ namespace valkyrie::kernel {
 
 template <typename T>
 class Singleton {
+  MAKE_NONCOPYABLE(Singleton);
+  MAKE_NONMOVABLE(Singleton);
+
  public:
   static T& get_instance() {
     // A wrapper struct inheriting from T
@@ -30,9 +33,6 @@ class Singleton {
 
     return instance;
   }
-
-  MAKE_NONCOPYABLE(Singleton);
-  MAKE_NONMOVABLE(Singleton);
 
  protected:
   Singleton() = default;
