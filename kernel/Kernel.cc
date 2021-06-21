@@ -3,6 +3,8 @@
 
 namespace valkyrie::kernel {
 
+// The early initialization of each subsystem
+// are performed here, in this order.
 Kernel::Kernel()
     : _mailbox(Mailbox::get_instance()),
       _mini_uart(MiniUART::get_instance()),
