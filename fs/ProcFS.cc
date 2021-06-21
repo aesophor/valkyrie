@@ -8,13 +8,19 @@
 #include <fs/VirtualFileSystem.h>
 #include <libs/CString.h>
 
+namespace valkyrie::kernel {
+
 namespace {
 
 bool is_switch_on = false;
 
+auto all_digits = [](const String& s) {
+  return !s.empty() &&
+    find_if(s.begin(), s.end(), [](char c) { return !is_digit(c); }) == s.end();
+};
+
 }  // namespace
 
-namespace valkyrie::kernel {
 
 ProcFS::ProcFS()
     : _next_inode_index(1),
@@ -31,6 +37,31 @@ SharedPtr<Vnode> ProcFS::get_root_vnode() {
   return _root_inode;
 }
 
+void ProcFS::repopulate_task_directories() {
+  // Remove the task directories for tasks that no longer exist.
+  _root_inode->_children.remove_if([](const auto& inode) {
+    Task* task = nullptr;
+    return all_digits(inode->get_name()) &&
+           !(task = Task::get_by_pid(atoi(inode->get_name().c_str())));
+  });
+
+  for (auto task : Task::get_active_tasks()) {
+    auto it = _root_inode->_children.find_if([&task](const auto& inode) {
+      pid_t pid;
+      return all_digits(inode->get_name()) &&
+             (pid = atoi(inode->get_name().c_str())) == task->get_pid();
+    });
+
+    char pid_str[32] = {};
+    sprintf(pid_str, "%d", task->get_pid());
+
+    if (it == _root_inode->_children.end()) {
+      auto task_dir = make_shared<ProcFSInode>(*this, _root_inode, pid_str, S_IFDIR);
+      task_dir->add_child(make_shared<TaskStatusInode>(*this, task_dir));
+      _root_inode->add_child(task_dir);
+    }
+  }
+}
 
 
 ProcFSInode::ProcFSInode(ProcFS& fs,
@@ -90,11 +121,6 @@ SharedPtr<Vnode> ProcFSInode::get_child(const String& name) {
   // If we are trying to get the child of the root inode,
   // and all the chars in `name` are digits, then
   // we have to check whether the task with pid = `name` exists.
-  auto all_digits = [](const String& s) {
-    return !s.empty() &&
-           find_if(s.begin(), s.end(), [](char c) { return !is_digit(c); }) == s.end();
-  };
-
   if (is_root_vnode() && all_digits(name)) {
     auto it = _children.find_if([&name](auto& vnode) {
       return vnode->_name == name;
@@ -149,6 +175,7 @@ SharedPtr<Vnode> ProcFSInode::get_ith_child(size_t i) {
 }
 
 size_t ProcFSInode::get_children_count() const {
+  _fs.repopulate_task_directories();
   return NR_SPECIAL_ENTRIES + _children.size();
 }
 
@@ -199,7 +226,7 @@ char* SwitchInode::get_content() {
   constexpr size_t len = 2;
   _content = make_unique<char[]>(len);
 
-  if (::is_switch_on) {
+  if (is_switch_on) {
     _content[0] = '1';
   } else {
     _content[0] = '0';
@@ -211,7 +238,7 @@ char* SwitchInode::get_content() {
 }
 
 void SwitchInode::set_content(UniquePtr<char[]> content, off_t new_size) {
- ::is_switch_on = static_cast<bool>(atoi(content.get()));
+ is_switch_on = static_cast<bool>(atoi(content.get()));
 }
 
 
@@ -219,7 +246,7 @@ char* HelloInode::get_content() {
   constexpr size_t len = 6;
   _content = make_unique<char[]>(len);
 
-  if (::is_switch_on) {
+  if (is_switch_on) {
     strncpy(_content.get(), "HELLO\n", len);
   } else {
     strncpy(_content.get(), "hello\n", len);

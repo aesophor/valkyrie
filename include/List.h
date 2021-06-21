@@ -134,11 +134,13 @@ class List {
     }
   }
 
-  void remove_if(Function<bool (T&)> predicate) {
+  void remove_if(Function<bool (T&)> predicate, bool check_all = false) {
     for (Node* node = _head->next; node != _head.get(); node = node->next) {
       if (predicate(node->data)) {
         list_del_entry(node);
-        return;
+        if (!check_all) {
+          return;
+        }
       }
     }
   }

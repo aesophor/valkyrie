@@ -57,6 +57,7 @@ class Task {
     switch_to(this, nullptr);
   }
 
+  static List<Task*> get_active_tasks();
   static Task* get_by_pid(const pid_t pid);
 
   int do_fork();

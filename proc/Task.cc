@@ -111,6 +111,34 @@ Task::~Task() {
 }
 
 
+List<Task*> Task::get_active_tasks() {
+  List<Task*> ret;
+  ret.push_back(Task::_init);
+  ret.push_back(Task::_kthreadd);
+
+  // Process tree BFS
+  List<Task*> q;
+  q.push_back(Task::_init);
+
+  while (!q.empty()) {
+    size_t size = q.size();
+
+    for (size_t i = 0; i < size; i++) {
+      Task* task = q.front();
+      q.pop_front();
+
+      ret.push_back(task);
+
+      // Push all children onto the queue.
+      for (const auto& child : task->_active_children) {
+        q.push_back(child);
+      }
+    }
+  }
+  
+  return ret;
+}
+
 Task* Task::get_by_pid(const pid_t pid) {
   if (pid == 1) {
     return Task::_init;
@@ -138,9 +166,9 @@ Task* Task::get_by_pid(const pid_t pid) {
       }
 
       // Push all children onto the queue.
-      task->_active_children.for_each([&q](auto t) {
-        q.push_back(t);
-      });
+      for (const auto& child : task->_active_children) {
+        q.push_back(child);
+      }
     }
   }
   
