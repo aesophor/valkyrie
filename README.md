@@ -3,7 +3,7 @@
 <h3>VALKYRIE</h3>
 <p>64-bit unix-like kernel for Raspberry Pi 3B+ (CPU: Arm Cortex A53)</p>
 
-<img src="/Documentation/cover.png" width=600>
+<img src="/Documentation/cover.png">
 </div>
 
 <br>
