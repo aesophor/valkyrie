@@ -230,10 +230,31 @@ char* HelloInode::get_content() {
 }
 
 char* TaskStatusInode::get_content() {
-  constexpr char msg[] = "process info here! ^_^\n";
-  constexpr size_t len = sizeof(msg);
+  pid_t pid = 0;
+  Task* task = nullptr;
+
+  if (auto parent = _parent.lock()) {
+    pid = atoi(parent->get_name().c_str());
+  } else {
+    printk("ProcFS: <warning> WeakPtr::lock() failed on _parent.\n");
+    return nullptr;
+  }
+
+  task = Task::get_by_pid(pid);
+
+  if (!task) [[unlikely]] {
+    printk("ProcFS: <warning> task dir exists but cannot get task object!?\n");
+    return nullptr;
+  }
+
+  constexpr size_t len = 128;
   _content = make_unique<char[]>(len);
-  strncpy(_content.get(), msg, len);
+
+  sprintf(_content.get(),
+          "Name: %s\n"
+          "State: %d\n"
+          "Pid: %d\n",
+          task->get_name(), task->get_state(), task->get_pid());
 
   _size = len;
   return _content.get();
