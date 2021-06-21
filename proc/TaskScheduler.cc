@@ -38,7 +38,7 @@ void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
       task->get_pid());
   */
 
-  task->set_state(Task::State::RUNNABLE);
+  task->set_state(Task::State::RUNNING);
   _runqueue.push_back(move(task));
 }
 
@@ -80,6 +80,10 @@ void TaskScheduler::schedule() {
                                                          next_task->_context.sp);
     */
   }
+
+  // Update task states.
+  Task::current()->set_state(Task::State::SLEEPING);
+  _runqueue.front()->set_state(Task::State::RUNNING);
 
   switch_to(Task::current(), _runqueue.front().get());
 }

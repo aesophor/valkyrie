@@ -35,8 +35,8 @@ class Task {
  public:
   enum class State {
     CREATED,
-    RUNNABLE,
-    WAITING,
+    RUNNING,
+    SLEEPING,
     TERMINATED,
     SIZE
   };
