@@ -122,7 +122,7 @@ void BuddyAllocator::deallocate(void* p) {
 
 String BuddyAllocator::get_memory_map() const {
   String ret = "buddyinfo\n"
-               "-----------\n";
+               "---------\n";
   char linebuf[64] = {};
 
   for (int i = 0; i < MAX_ORDER; i++) {

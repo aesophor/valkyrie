@@ -130,7 +130,7 @@ void SlobAllocator::deallocate(void* p) {
 
 String SlobAllocator::get_memory_map() const {
   String ret = "slobinfo\n"
-               "-----------\n";
+               "--------\n";
   char linebuf[64] = {};
 
   Slob* ptr = nullptr;
