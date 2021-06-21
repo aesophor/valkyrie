@@ -20,9 +20,6 @@ class ProcFSInode;
 class ProcFS final : public FileSystem {
   // Friend declaration
   friend class ProcFSInode;
-  friend class SwitchInode;
-  friend class HelloInode;
-  friend class TaskStatusInode;
 
  public:
   ProcFS();
@@ -92,7 +89,7 @@ class ProcFSInode : public Vnode, public EnableSharedFromThis<ProcFSInode> {
 class SwitchInode : public ProcFSInode {
  public:
   SwitchInode(ProcFS& fs)
-      : ProcFSInode(fs, fs._root_inode, "switch", S_IFREG) {}
+      : ProcFSInode(fs, static_pointer_cast<ProcFSInode>(fs.get_root_vnode()), "switch", S_IFREG) {}
 
   virtual ~SwitchInode() = default;
 
@@ -104,9 +101,31 @@ class SwitchInode : public ProcFSInode {
 class HelloInode : public ProcFSInode {
  public:
   HelloInode(ProcFS& fs)
-      : ProcFSInode(fs, fs._root_inode, "hello", S_IFREG) {}
+      : ProcFSInode(fs, static_pointer_cast<ProcFSInode>(fs.get_root_vnode()), "hello", S_IFREG) {}
 
   virtual ~HelloInode() = default;
+
+  virtual char* get_content() override;
+};
+
+
+class BuddyInfoInode : public ProcFSInode {
+ public:
+  BuddyInfoInode(ProcFS& fs)
+      : ProcFSInode(fs, static_pointer_cast<ProcFSInode>(fs.get_root_vnode()), "buddyinfo", S_IFREG) {}
+
+  virtual ~BuddyInfoInode() = default;
+
+  virtual char* get_content() override;
+};
+
+
+class SlobInfoInode : public ProcFSInode {
+ public:
+  SlobInfoInode(ProcFS& fs)
+      : ProcFSInode(fs, static_pointer_cast<ProcFSInode>(fs.get_root_vnode()), "slobinfo", S_IFREG) {}
+
+  virtual ~SlobInfoInode() = default;
 
   virtual char* get_content() override;
 };

@@ -30,6 +30,8 @@ ProcFS::ProcFS()
   // Users can access them by open, read, and write.
   _root_inode->add_child(make_shared<SwitchInode>(*this));
   _root_inode->add_child(make_shared<HelloInode>(*this));
+  _root_inode->add_child(make_shared<BuddyInfoInode>(*this));
+  _root_inode->add_child(make_shared<SlobInfoInode>(*this));
 }
 
 
@@ -241,7 +243,6 @@ void SwitchInode::set_content(UniquePtr<char[]> content, off_t new_size) {
  is_switch_on = static_cast<bool>(atoi(content.get()));
 }
 
-
 char* HelloInode::get_content() {
   constexpr size_t len = 6;
   _content = make_unique<char[]>(len);
@@ -254,6 +255,14 @@ char* HelloInode::get_content() {
 
   _size = len;
   return _content.get();
+}
+
+char* BuddyInfoInode::get_content() {
+  return nullptr;
+}
+
+char* SlobInfoInode::get_content() {
+  return nullptr;
 }
 
 char* TaskStatusInode::get_content() {

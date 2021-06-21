@@ -82,7 +82,6 @@ void VFS::populate_devtmpfs() {
   dev_t dev = register_device(Console::get_instance());
   mknod("/dev/console", S_IFCHR, Device::encode(Device::major(dev), 1));
 
-  /*
   // Create `/dev/sdX` for each attached storage device.
   for (auto it = _storage_devices.begin(); it != _storage_devices.end(); it++) {
     static constexpr char table[5] = "abcd";
@@ -92,7 +91,6 @@ void VFS::populate_devtmpfs() {
     dev_t dev = register_device(**it);
     mknod(pathname, S_IFBLK, Device::encode(Device::major(dev), 1));
   }
-  */
 }
 
 
