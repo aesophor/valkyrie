@@ -73,7 +73,6 @@ class SharedPtr {
 
   // Destructor
   ~SharedPtr() {
-    //printk("SharedPtr dtor (%d, %d)\n", _ctrl->use_count, _ctrl->use_count_weak);
     dec_use_count();
   }
 
@@ -202,7 +201,7 @@ class SharedPtr {
     }
   }
 
-  void maybe_enable_shared_from_this() const {
+  [[gnu::always_inline]] void maybe_enable_shared_from_this() const {
     // If class `EnableSharedFromThis<T>` is the base class of `T`,
     // then compile the following statement which initialize
     // `EnableSharedFromThis<T>::_weak_this`, so that
@@ -352,11 +351,11 @@ class EnableSharedFromThis {
 
  public:
   SharedPtr<T> shared_from_this() {
-    return SharedPtr<T>(_weak_this);
+    return _weak_this.lock();
   }
 
   SharedPtr<T> shared_from_this() const {
-    return SharedPtr<T>(_weak_this);
+    return _weak_this.lock();
   }
 
   WeakPtr<T> weak_from_this() {
