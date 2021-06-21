@@ -44,7 +44,7 @@
 - [x] System-wide opened file table, Per-process file descriptor tables
 - [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
 - [x] Multi-level VFS - sys_chdir(), sys_mkdir(), sys_mount(), sys_umount()
-- [ ] Procfs
+- [x] /proc Filesystem
 - [x] Parse MBR (Master Boot Record)
 - [x] FAT32 with LFN (Long File Name) support - open, read, write, close
 - [x] Character device, Block device
