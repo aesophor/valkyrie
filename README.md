@@ -18,12 +18,12 @@
 
 - [x] Lab1: Hello World
 - [x] Lab2: Booting ([bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader))
-- [x] Lab3: Allocator (pmm)
+- [x] Lab3: Allocator
 - [x] Lab4: Exception and Interrupt Handling
 - [x] Lab5: Multitasking
 - [x] Lab6: Virtual Filesystem
 - [x] Lab7: Filesystem Meets Hardware
-- [x] Lab8: Virtual Memory (vmm)
+- [x] Lab8: Virtual Memory
 
 ## Kernel Features
 - [x] I/O: MiniUART - supports sync/async I/O
