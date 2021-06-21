@@ -2,6 +2,6 @@
 #ifndef VALKYRIE_CONFIG_H_
 #define VALKYRIE_CONFIG_H_
 
-#define DEBUG
+//#define DEBUG
 
 #endif  // VALKYRIE_CONFIG_H_
