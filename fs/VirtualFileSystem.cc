@@ -337,13 +337,13 @@ int VFS::mount(const String& device_name,
   // `fs_name` is the filesystem’s name.
   // The VFS should find and call the filesystem’s method to set up the mount.
   if (fs_name == "tmpfs") {
-    printk("VFS::mount: mounting TmpFS on %s\n", mountpoint.c_str());
+    printk("VFS: mounting TmpFS on %s\n", mountpoint.c_str());
     auto tmpfs = make_shared<TmpFS>();
     auto mount = make_unique<Mount>(tmpfs, tmpfs->get_root_vnode(), vnode);
     _mounts.push_back(move(mount));
 
   } else if (fs_name == "procfs") {
-    printk("VFS::mount: mounting ProcFS on %s\n", mountpoint.c_str());
+    printk("VFS: mounting ProcFS on %s\n", mountpoint.c_str());
     auto procfs = make_shared<ProcFS>();
     auto mount = make_unique<Mount>(procfs, procfs->get_root_vnode(), vnode);
     _mounts.push_back(move(mount));
@@ -370,7 +370,7 @@ int VFS::umount(const String& mountpoint) {
     return -1;
   }
 
-  printk("VFS::umount: umounting %s\n", mountpoint.c_str());
+  printk("VFS: umounting %s\n", mountpoint.c_str());
   _mounts.remove_if([&vnode](const auto& mount) {
     return mount->guest_vnode == vnode;
   });
