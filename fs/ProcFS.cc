@@ -233,7 +233,7 @@ char* TaskStatusInode::get_content() {
   pid_t pid = 0;
   Task* task = nullptr;
 
-  if (auto parent = _parent.lock()) {
+  if (auto parent = _parent.lock()) [[likely]] {
     pid = atoi(parent->get_name().c_str());
   } else {
     printk("ProcFS: <warning> WeakPtr::lock() failed on _parent.\n");
