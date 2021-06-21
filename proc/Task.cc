@@ -77,7 +77,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
   _fd_table[1] = opened;
   _fd_table[2] = opened;
 
-  /*
+#ifdef DEBUG
   printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
       this,
       _name,
@@ -85,17 +85,17 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _entry_point,
       _kstack_page.begin(),
       _ustack_page.begin());
-  */
+#endif
 }
 
 
 Task::~Task() {
-  /*
+#ifdef DEBUG
   printk("destructing thread 0x%x [%s] (pid = %d)\n",
         this,
         _name,
         _pid);
-  */
+#endif
 
   // If the current task still has running children,
   // make the init task adopt these orphans.
@@ -299,11 +299,13 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   VFS::get_instance().close(move(file));
 
-  // Jump to the entry point.
-  //printk("executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table = 0x%x\n",
-  //       _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(), _vmmap.get_pgd());
+#ifdef DEBUG
+  printk("executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table = 0x%x\n",
+         _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(), _vmmap.get_pgd());
+#endif
 
-  // When the CPU generates an exception,
+  // Jump to the entry point.
+  // NOTE: When the CPU generates an exception,
   // TTBR0_EL1 still points to user's page table,
   // so the kernel sp must be the virtual address
   // instead of the physical address.
