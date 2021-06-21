@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_KERNEL_H_
 #define VALKYRIE_KERNEL_H_
 
+#include <Config.h>
 #include <Singleton.h>
 #include <dev/Console.h>
 #include <driver/Mailbox.h>
