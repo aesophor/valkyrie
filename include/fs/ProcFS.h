@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_PROC_FS_H_
 #define VALKYRIE_PROC_FS_H_
 
+#include <Functional.h>
 #include <List.h>
 #include <Memory.h>
 #include <String.h>
@@ -19,14 +20,15 @@ class ProcFSInode;
 class ProcFS final : public FileSystem {
   // Friend declaration
   friend class ProcFSInode;
+  friend class SwitchInode;
+  friend class HelloInode;
+  friend class TaskStatusInode;
 
  public:
   ProcFS();
   virtual ~ProcFS() = default;
 
   virtual SharedPtr<Vnode> get_root_vnode() override;
-
-  void create_subtree_for_task(Task* task);
 
  private:
   uint64_t _next_inode_index;
@@ -40,20 +42,10 @@ class ProcFSInode : public Vnode, public EnableSharedFromThis<ProcFSInode> {
   friend struct Hash<ProcFSInode>;
 
  public:
-  enum class Type {
-    DIR,
-    SWITCH,
-    HELLO,
-    TASK_DIR,
-    TASK_FILE_STATE,
-    SIZE
-  };
-
   ProcFSInode(ProcFS& fs,
               SharedPtr<ProcFSInode> parent,
               const String& name,
-              mode_t mode,
-              ProcFSInode::Type type);
+              mode_t mode);
 
   virtual ~ProcFSInode() = default;
 
@@ -81,33 +73,51 @@ class ProcFSInode : public Vnode, public EnableSharedFromThis<ProcFSInode> {
   virtual size_t hash_code() const override;
   virtual bool is_root_vnode() const override;
 
-  // Overloaded version of create_child() specialized for ProcFS.
-  SharedPtr<ProcFSInode> create_child(const String& name,
-                                      mode_t mode,
-                                      ProcFSInode::Type type);
- private:
-  UniquePtr<char[]> get_content_for_switch();
-  UniquePtr<char[]> get_content_for_hello();
-
-  void set_content_for_switch(UniquePtr<char[]> content);
-  void set_content_for_hello(UniquePtr<char[]> content);
-
-
+ protected:
   ProcFS& _fs;
   String _name;
   UniquePtr<char[]> _content;
-  ProcFSInode::Type _type;
 
   WeakPtr<Vnode> _parent;
   List<SharedPtr<ProcFSInode>> _children;
 };
 
 
+
 // There are multiple types of directories and files in ProcFS.
-// We will use polymorphism to specialize the open/read/write method
+// We will use polymorphism to specialize the open/read/write methods
 // for different inodes in ProcFS, . Here we go...
-class SwitchFile : public ProcFSInode {
+class SwitchInode : public ProcFSInode {
  public:
+  SwitchInode(ProcFS& fs)
+      : ProcFSInode(fs, fs._root_inode, "switch", S_IFREG) {}
+
+  virtual ~SwitchInode() = default;
+
+  virtual char* get_content() override;
+  virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
+};
+
+
+class HelloInode : public ProcFSInode {
+ public:
+  HelloInode(ProcFS& fs)
+      : ProcFSInode(fs, fs._root_inode, "hello", S_IFREG) {}
+
+  virtual ~HelloInode() = default;
+
+  virtual char* get_content() override;
+};
+
+
+class TaskStatusInode : public ProcFSInode {
+ public:
+  TaskStatusInode(ProcFS& fs, SharedPtr<ProcFSInode> parent)
+      : ProcFSInode(fs, parent, "status", S_IFREG) {}
+
+  virtual ~TaskStatusInode() = default;
+
+  virtual char* get_content() override;
 };
 
 
@@ -119,7 +129,6 @@ struct Hash<ProcFSInode> {
     size_t ret = 5;
 
     ret += prime * hash(inode._mode);
-    ret += prime * hash(static_cast<int>(inode._type));
     ret += hash(inode._name);
     ret += prime * hash(inode._parent);
     return ret;
