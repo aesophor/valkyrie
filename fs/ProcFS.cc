@@ -7,6 +7,7 @@
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
 #include <libs/CString.h>
+#include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {
 
@@ -258,11 +259,23 @@ char* HelloInode::get_content() {
 }
 
 char* BuddyInfoInode::get_content() {
-  return nullptr;
+  String s = MemoryManager::get_instance().get_buddy_info();
+  size_t len = s.size();
+  _content = make_unique<char[]>(len);
+
+  strncpy(_content.get(), s.c_str(), len);
+  _size = len;
+  return _content.get();
 }
 
 char* SlobInfoInode::get_content() {
-  return nullptr;
+  String s = MemoryManager::get_instance().get_slob_info();
+  size_t len = s.size();
+  _content = make_unique<char[]>(len);
+
+  strncpy(_content.get(), s.c_str(), len);
+  _size = len;
+  return _content.get();
 }
 
 char* TaskStatusInode::get_content() {

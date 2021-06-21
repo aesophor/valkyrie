@@ -127,6 +127,49 @@ void SlobAllocator::deallocate(void* p) {
   bin_add_head(chunk);
 }
 
+
+String SlobAllocator::get_memory_map() const {
+  String ret = "slobinfo\n"
+               "-----------\n";
+  char linebuf[64] = {};
+
+  Slob* ptr = nullptr;
+
+  for (int i = 0; i < NR_BINS; i++) {
+    sprintf(linebuf, "_bins[%d] (%d): ", i, CHUNK_SMALLEST_SIZE + CHUNK_SIZE_GAP * i);
+    ret += linebuf;
+
+    ptr = _bins[i];
+    while (ptr) {
+      sprintf(linebuf, "[%d 0x%x] -> ", ptr->get_chunk_size(), ptr);
+      ret += linebuf;
+      ptr = ptr->next;
+    }
+    sprintf(linebuf, "(null)\n");
+    ret += linebuf;
+  }
+
+  sprintf(linebuf, "_unsorted_bin: ");
+  ret += linebuf;
+
+  ptr = _unsorted_bin;
+  while (ptr) {
+    sprintf(linebuf, "[%d 0x%x] -> ", ptr->get_chunk_size(), ptr);
+    ret += linebuf;
+    ptr = ptr->next;
+  }
+  sprintf(linebuf, "(null)\n\n");
+  ret += linebuf;
+
+  sprintf(linebuf, "_page_frame_allocatable_begin = 0x%x\n", _page_frame_allocatable_begin);
+  ret += linebuf;
+  sprintf(linebuf, "_top_chunk                    = 0x%x\n", _top_chunk);
+  ret += linebuf;
+  sprintf(linebuf, "_page_frame_allocatable_end   = 0x%x\n", _page_frame_allocatable_end);
+  ret += linebuf;
+  return ret;
+}
+
 void SlobAllocator::dump_slob_info() const {
   printf("--- dumping slob bins ---\n");
 

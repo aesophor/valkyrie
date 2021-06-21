@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_SLOB_ALLOCATOR_H_
 #define VALKYRIE_SLOB_ALLOCATOR_H_
 
+#include <String.h>
 #include <Types.h>
 
 #define CHUNK_SMALLEST_SIZE static_cast<size_t>(0x10)
@@ -29,6 +30,8 @@ class SlobAllocator {
 
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
+
+  String get_memory_map() const;
   void  dump_slob_info() const;
 
   static size_t get_chunk_header_size();

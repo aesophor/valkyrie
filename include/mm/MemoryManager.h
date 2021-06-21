@@ -3,6 +3,7 @@
 #define VALKYRIE_MEMORY_MANAGER_H_
 
 #include <Singleton.h>
+#include <String.h>
 #include <mm/AddressSanitizer.h>
 #include <mm/Zone.h>
 
@@ -13,6 +14,9 @@ class MemoryManager : public Singleton<MemoryManager> {
   void* get_free_page();
   void* kmalloc(size_t size);
   void  kfree(void* p);
+
+  String get_buddy_info() const;
+  String get_slob_info() const;
 
   void dump_buddy_allocator_info() const;
   void dump_slob_allocator_info() const;

@@ -31,6 +31,10 @@ BuddyAllocator::BuddyAllocator(const size_t zone_begin)
 }
 
 
+void* BuddyAllocator::allocate_one_page_frame() {
+  return allocate(PAGE_SIZE);
+}
+
 void* BuddyAllocator::allocate(size_t requested_size) {
   // For each allocation request x, raise that value to
   // a power of 2 s.t. x >= the original requested_size.
@@ -115,6 +119,29 @@ void BuddyAllocator::deallocate(void* p) {
   mark_block_as_allocatable(block);
 }
 
+
+String BuddyAllocator::get_memory_map() const {
+  String ret = "buddyinfo\n"
+               "-----------\n";
+  char linebuf[64] = {};
+
+  for (int i = 0; i < MAX_ORDER; i++) {
+    sprintf(linebuf, "_free_lists[%d]: ", i);
+    ret += linebuf;
+
+    BlockHeader* ptr = _free_lists[i];
+    while (ptr) {
+      sprintf(linebuf, "[%d 0x%x] -> ", ptr->index, get_page_frame(ptr->index));
+      ret += linebuf;
+      ptr = ptr->next;
+    }
+    sprintf(linebuf, "(null)\n");
+    ret += linebuf;
+  }
+
+  return ret;
+}
+
 void BuddyAllocator::dump_memory_map() const {
   printf("--- dumping buddy ---\n");
 
@@ -143,10 +170,6 @@ void BuddyAllocator::dump_memory_map() const {
   }
 
   printf("--- end dumping buddy ---\n");
-}
-
-void* BuddyAllocator::allocate_one_page_frame() {
-  return allocate(PAGE_SIZE);
 }
 
 

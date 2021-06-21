@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_BUDDY_ALLOCATOR_H_
 #define VALKYRIE_BUDDY_ALLOCATOR_H_
 
+#include <String.h>
 #include <Types.h>
 
 #define MAX_ORDER          10
@@ -22,10 +23,12 @@ class BuddyAllocator {
   BuddyAllocator& operator =(const BuddyAllocator&) = delete;
   BuddyAllocator& operator =(BuddyAllocator&&) = delete;
 
+  void* allocate_one_page_frame();
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
+
+  String get_memory_map() const;
   void  dump_memory_map() const;
-  void* allocate_one_page_frame();
 
  private:
   struct BlockHeader {

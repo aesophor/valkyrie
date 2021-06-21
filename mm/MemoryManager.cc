@@ -44,6 +44,14 @@ void MemoryManager::kfree(void* p) {
 }
 
 
+String MemoryManager::get_buddy_info() const {
+  return _zones[0].buddy_allocator.get_memory_map();
+}
+
+String MemoryManager::get_slob_info() const {
+  return _zones[1].slob_allocator.get_memory_map();
+}
+
 void MemoryManager::dump_buddy_allocator_info() const {
   _zones[0].buddy_allocator.dump_memory_map();
 }
