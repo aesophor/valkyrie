@@ -66,9 +66,9 @@
 - [ ] Concepts
 - [x] Functional
 - [x] Iterator
-- [x] UniquePtr + make_unique
-- [x] SharedPtr + make_shared + \*_pointer_cast<>()
-- [x] WeakPtr
+- [x] Smart pointers (UniquePtr, SharedPtr, WeakPtr)
+- [ ] Smart pointers custom deleters
+- [x] make_unique, make_shared, \*_pointer_cast<>()
 - [x] EnableSharedFromThis
 - [x] List + iterator
 - [x] String + iterator
