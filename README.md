@@ -14,6 +14,13 @@
 | --- | ----------- | --- | --- |
 | `309551004` | `aesophor` | `王冠中` | aesophor.cs09g [at] nctu.edu.tw |
 
+<br>
+
+## Build and Deploy
+
+* [BUILD.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/BUILD.md)
+* [DEPLOY.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/DEPLOY.md)
+
 ## Progress Overview
 
 - [x] Lab1: Hello World
@@ -76,11 +83,6 @@
 - [x] RingBuffer
 - [x] Utility (move and forward)
 - [ ] ...
-
-## Build and Deploy
-
-* [BUILD.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/BUILD.md)
-* [DEPLOY.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/DEPLOY.md)
 
 ## Thanks
 
