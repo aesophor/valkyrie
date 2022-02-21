@@ -14,12 +14,31 @@
 | --- | ----------- | --- | --- |
 | `309551004` | `aesophor` | `王冠中` | aesophor.cs09g [at] nctu.edu.tw |
 
-<br>
+## Requirements
 
-## Build and Deploy
+* armv8 cross compiler toolchain (must be C++20 compilant)
+* qemu-system-aarch64
 
-* [BUILD.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/BUILD.md)
-* [DEPLOY.md](https://github.com/aesophor/valkyrie/blob/309551004/Documentation/DEPLOY.md)
+#### macOS
+
+```sh
+brew tap messense/macos-cross-toolchains
+brew install aarch64-unknown-linux-gnu qemu
+```
+
+#### Arch Linux
+
+```sh
+sudo pacman -S aarch64-linux-gnu-gcc aarch64-linux-gnu-gdb qemu-arch-extra
+```
+
+## Build and Run
+
+```
+git clone https://github.com/aesophor/valkyrie
+cd valkyrie
+make && make run
+```
 
 ## Progress Overview
 
