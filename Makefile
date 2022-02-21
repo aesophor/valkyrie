@@ -7,6 +7,7 @@ TOOLCHAIN_PREFIX = $(TOOLCHAIN_PREFIX_MACOS)
 CXX = $(TOOLCHAIN_PREFIX)c++
 CXXFLAGS = -std=c++20\
 	   -Iinclude\
+		 -Iinclude/stl\
 	   -ffreestanding\
 	   -nostdinc\
 	   -nostdlib\
