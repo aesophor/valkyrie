@@ -110,7 +110,7 @@ void SlobAllocator::deallocate(void* p) {
   mid_chunk->set_allocated(false);
 
   // Maybe merge this chunk with its previous one.
-  if (!prev_chunk->is_allocated() && !is_first_chunk_in_page_frame(mid_chunk)) {
+  if (!prev_chunk->is_allocated() && mid_chunk_addr % PAGE_SIZE) {
     bin_del_entry(prev_chunk);
     chunk_size += prev_chunk_size;
     prev_chunk->next = next_chunk;
@@ -232,13 +232,6 @@ bool SlobAllocator::request_new_page_frame() {
   _top_chunk = _page_frame_allocatable_begin;
   _page_frame_allocatable_end = reinterpret_cast<char*>(_top_chunk) + PAGE_SIZE;
   return true;
-}
-
-bool SlobAllocator::is_first_chunk_in_page_frame(const Slob* chunk) const {
-  size_t chunk_addr = reinterpret_cast<size_t>(chunk);
-  size_t page_frame_allocatable_begin_addr
-    = reinterpret_cast<size_t>(_page_frame_allocatable_begin);
-  return chunk_addr == page_frame_allocatable_begin_addr;
 }
 
 SlobAllocator::Slob* SlobAllocator::split_from_top_chunk(size_t requested_size) {

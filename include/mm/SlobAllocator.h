@@ -51,8 +51,6 @@ class SlobAllocator {
   };
 
   bool request_new_page_frame();
-  bool is_first_chunk_in_page_frame(const Slob* chunk) const;
-
   Slob* split_from_top_chunk(size_t requested_size);
   bool  is_top_chunk_used_up() const;
   bool  is_top_chunk_large_enough(const size_t requested_size) const;
