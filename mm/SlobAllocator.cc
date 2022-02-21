@@ -24,7 +24,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
     return nullptr;
   }
 
-  requested_size = normalize_size(requested_size + sizeof(Slob));
+  requested_size = normalize_size(get_chunk_header_size() + requested_size);
   int idx = get_bin_index(requested_size);
 
   Slob* victim = nullptr;
@@ -54,23 +54,34 @@ void* SlobAllocator::allocate(size_t requested_size) {
   }
 
   if (is_top_chunk_used_up()) {
-    request_new_page_frame();
+    if (!request_new_page_frame()) {
+      return nullptr;
+    }
   } else if (!is_top_chunk_large_enough(requested_size)) {
-    // The top chunk hasn't been used up yet, but
-    // it is not large enough, so we could put it into the corresponding bin,
-    // and finally request a new page frame.
-    bin_add_head(split_from_top_chunk(get_top_chunk_size()));
-    request_new_page_frame();
+    // The top chunk hasn't been used up yet, but it is not large enough
+    // to satisfy current request, so we could put the remainder into
+    // the corresponding bin (if possible), and finally request a new
+    // page frame which we can split from.
+    Slob* chunk = split_from_top_chunk(get_top_chunk_size());
+    if (chunk->get_chunk_size() >= get_chunk_header_size() + CHUNK_SMALLEST_SIZE) {
+      bin_add_head(chunk);
+    } else {
+      // XXX: Discard this chunk permanently :(
+      chunk->set_allocated(true);
+    }
+    if (!request_new_page_frame()) {
+      return nullptr;
+    }
   } 
 
   victim = split_from_top_chunk(requested_size);
 
+out:
   if (reinterpret_cast<size_t>(victim + 1) % PAGE_SIZE == 0) [[unlikely]] {
     Kernel::panic("fatal error: _top_chunk = 0x%x, _page_frame_allocatable_begin = 0x%x, req_size = 0x%x, victim = 0x%x\n",
         _top_chunk, _page_frame_allocatable_begin, requested_size, victim);
   }
 
-out:
   return victim + 1;  // skip the header
 }
 
@@ -109,22 +120,23 @@ void SlobAllocator::deallocate(void* p) {
   }
 
   // Maybe merge this chunk with its next one.
-  if (next_chunk == _top_chunk) {
-    // The next one is the top chunk.
+  if (next_chunk_addr % PAGE_SIZE == 0) {
+    // The next chunk belongs to another page frame, dont' merge!
+  } else if (next_chunk == _top_chunk) {
+    // The next one is the top chunk, merge `chunk` into the top chunk.
     _top_chunk = chunk;
     _top_chunk_prev_chunk_size = chunk->get_prev_chunk_size();
-    return;
-  } if (!next_chunk->is_allocated()) {
+  } else if (!next_chunk->is_allocated()) {
     // The next one is a regular freed chunk.
     bin_del_entry(next_chunk);
     chunk_size += next_chunk_size;
     chunk->next = reinterpret_cast<Slob*>(next_chunk_addr + next_chunk_size);
     chunk->index = get_bin_index(chunk_size);
     chunk->next->set_prev_chunk_size(chunk_size);
-  }
 
-  // Put the merged chunk to the bin.
-  bin_add_head(chunk);
+    // Put the merged chunk to the bin.
+    bin_add_head(chunk);
+  }
 }
 
 
@@ -209,10 +221,17 @@ size_t SlobAllocator::get_chunk_header_size() {
 }
 
 
-void SlobAllocator::request_new_page_frame() {
-  _page_frame_allocatable_begin = _buddy_allocator->allocate_one_page_frame();
+bool SlobAllocator::request_new_page_frame() {
+  void* page_frame = _buddy_allocator->allocate_one_page_frame();
+
+  if (!page_frame) [[unlikely]] {
+    return false;
+  }
+
+  _page_frame_allocatable_begin = page_frame;
   _top_chunk = _page_frame_allocatable_begin;
   _page_frame_allocatable_end = reinterpret_cast<char*>(_top_chunk) + PAGE_SIZE;
+  return true;
 }
 
 bool SlobAllocator::is_first_chunk_in_page_frame(const Slob* chunk) const {
@@ -252,8 +271,7 @@ size_t SlobAllocator::get_top_chunk_size() const {
          reinterpret_cast<size_t>(_top_chunk);
 }
 
-SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
-                                                const size_t target_size) {
+SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk, const size_t target_size) {
   if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted (chunk == nullptr)\n");
   }
@@ -270,29 +288,30 @@ SlobAllocator::Slob* SlobAllocator::split_chunk(Slob* chunk,
 
   bin_del_head(chunk);
 
-  // Update chunk headers
   size_t remainder_size = chunk->get_chunk_size() - target_size;
+  size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
+  Slob* remainder = reinterpret_cast<Slob*>(remainder_addr);
 
-  if (remainder_size > 0) [[likely]] {
-    size_t remainder_addr = reinterpret_cast<size_t>(chunk) + target_size;
-    Slob* remainder = reinterpret_cast<Slob*>(remainder_addr);
+  remainder->next = nullptr;
+  remainder->index = get_bin_index(remainder_size);
+  remainder->prev_chunk_size = target_size;
+  remainder->set_allocated(false);
 
-    remainder->next = nullptr;
-    remainder->index = get_bin_index(remainder_size);
-    remainder->prev_chunk_size = target_size;
-    remainder->set_allocated(false);
-
+  if (remainder_size >= get_chunk_header_size() + CHUNK_SMALLEST_SIZE) [[likely]] {
     // Put the remainder chunk to the corresponding bin.
     bin_add_head(remainder);
+  } else {
+    // XXX: Discard the remainder permanently :(
+    remainder->set_allocated(true);
+  }
 
-    // If the chunk after `chunk` isn't the top chunk,
-    // then we need to update that chunk's prev_size.
-    size_t next_chunk_addr = reinterpret_cast<size_t>(chunk) + chunk->get_chunk_size();
-    Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
+  // If the chunk after `chunk` isn't the top chunk,
+  // then we need to update that chunk's prev_size.
+  size_t next_chunk_addr = reinterpret_cast<size_t>(chunk) + chunk->get_chunk_size();
+  Slob* next_chunk = reinterpret_cast<Slob*>(next_chunk_addr);
 
-    if (next_chunk != _top_chunk) {
-      next_chunk->set_prev_chunk_size(remainder_size);
-    }
+  if (next_chunk != _top_chunk) {
+    next_chunk->set_prev_chunk_size(remainder_size);
   }
 
   chunk->next = nullptr;
@@ -333,8 +352,8 @@ void SlobAllocator::bin_add_head(Slob* chunk) {
   Slob** bin_first_chunk = (chunk->index >= NR_BINS) ? &_unsorted_bin
                                                      : &_bins[chunk->index];
 
-  if (*bin_first_chunk == chunk) {
-    return;
+  if (*bin_first_chunk == chunk) [[unlikely]] {
+    Kernel::panic("kernel heap corrupted: repeated bin_add_head()\n");
   }
 
   // If the bin is empty.
@@ -353,7 +372,7 @@ void SlobAllocator::bin_del_entry(Slob* chunk) {
   }
 
   // If `chunk->index` >= NUM_OF_BINS,
-  // then need to look for `chunk` from the unsorted bin.
+  // then we need to look for `chunk` from the unsorted bin.
   Slob** bin_first_chunk = (chunk->index >= NR_BINS) ? &_unsorted_bin
                                                      : &_bins[chunk->index];
 

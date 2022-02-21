@@ -1,10 +1,8 @@
-// Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// Copyright (c) 2021-2022 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 
-// The early initialization of each subsystem
-// are performed here, in this order.
 Kernel::Kernel()
     : _mailbox(Mailbox::get_instance()),
       _mini_uart(MiniUART::get_instance()),
@@ -23,7 +21,7 @@ void Kernel::run() {
   printk("enabling timer interrupts\n");
   _timer_multiplexer.get_arm_core_timer().enable();
   */
- 
+
   printk("VFS: initializing\n");
   _vfs.mount_rootfs();
   _vfs.mount_devtmpfs();

@@ -155,9 +155,8 @@ void BuddyAllocator::dump_memory_map() const {
       printf("<page frame #%d>: free page frame (0x%x)\n", i, get_page_frame(i));
     }
   }
-  */
-
   printf("\n");
+  */
 
   for (int i = 0; i < MAX_ORDER; i++) {
     printf("_free_lists[%d]: ", i);
@@ -183,8 +182,8 @@ BuddyAllocator::BlockHeader* BuddyAllocator::get_block_header(const void* p) {
 
   if (idx < 0 || idx >= MAX_ORDER_NR_PAGES) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: "
-                  "get_block_header(0x%x) idx out of bound: idx = %d\n",
-                  p, idx);
+                  "get_block_header(0x%x) idx out of bound: idx = %d for %x\n",
+                  p, idx, reinterpret_cast<size_t>(p));
   }
 
   return &_headers[idx];
