@@ -32,11 +32,11 @@ class ExceptionManager : public Singleton<ExceptionManager> {
  public:
   [[gnu::always_inline]] static void enable() {
     asm volatile("msr DAIFCLR, #0b1111");
-    ExceptionManager::get_instance()._is_enabled = true;
+    ExceptionManager::the()._is_enabled = true;
   }
 
   [[gnu::always_inline]] static void disable() {
-    ExceptionManager::get_instance()._is_enabled = false;
+    ExceptionManager::the()._is_enabled = false;
     asm volatile("msr DAIFSET, #0b1111");
   }
 

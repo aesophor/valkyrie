@@ -29,7 +29,7 @@ VFS::VFS()
 
 void VFS::mount_rootfs() {
   // TODO: currently it only supports SD card.
-  auto sdcard = make_unique<StorageDevice>("sda", SDCardDriver::get_instance());
+  auto sdcard = make_unique<StorageDevice>("sda", SDCardDriver::the());
   _storage_devices.push_back(move(sdcard));
 
   mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
@@ -79,7 +79,7 @@ void VFS::mount_procfs() {
 
 void VFS::populate_devtmpfs() {
   // Create `/dev/console` for a character device whose drvier is MiniUART.
-  dev_t dev = register_device(Console::get_instance());
+  dev_t dev = register_device(Console::the());
   mknod("/dev/console", S_IFCHR, Device::encode(Device::major(dev), 1));
 
   // Create `/dev/sdX` for each attached storage device.
@@ -206,7 +206,7 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
     auto cdev = static_cast<CharacterDevice*>(find_registered_device(file->vnode->get_dev()));
 
     if (cdev->get_name() == "console") {
-      Console::get_instance().write(reinterpret_cast<const char*>(buf), len);
+      Console::the().write(reinterpret_cast<const char*>(buf), len);
     } else {
       for (size_t i = 0; i < len; i++) {
         cdev->write_char(reinterpret_cast<const char*>(buf)[i]);
@@ -272,7 +272,7 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
     auto cdev = static_cast<CharacterDevice*>(find_registered_device(file->vnode->get_dev()));
 
     if (cdev->get_name() == "console") {
-      Console::get_instance().read(reinterpret_cast<char*>(buf), len);
+      Console::the().read(reinterpret_cast<char*>(buf), len);
     } else {
       for (size_t i = 0; i < len; i++) {
         reinterpret_cast<char*>(buf)[i] = cdev->read_char();

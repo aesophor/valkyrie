@@ -21,7 +21,7 @@ class Console : public CharacterDevice {
     WHITE
   };
 
-  static Console& get_instance();
+  static Console& the();
 
   virtual ~Console() = default;
   Console(const Console&) = delete;

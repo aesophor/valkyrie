@@ -20,7 +20,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   uint64_t spsr_el1;
   asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
 
-  const Exception ex = ExceptionManager::get_instance().get_current_exception();
+  const Exception ex = ExceptionManager::the().get_current_exception();
 
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
@@ -45,14 +45,14 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
     Task::current()->handle_pending_signals();
 
     // User preemption.
-    TaskScheduler::get_instance().maybe_reschedule();
+    TaskScheduler::the().maybe_reschedule();
 
     //printk("switched to user space\n");
     switch_user_va_space(Task::current()->get_ttbr0_el1());
     return;
   }
 
-  printk("Current exception lvl: %d\n", ExceptionManager::get_instance().get_exception_level());
+  printk("Current exception lvl: %d\n", ExceptionManager::the().get_exception_level());
   printk("Saved Program Status Register: 0x%x\n", spsr_el1);
   printk("Exception return address: 0x%x\n", ex.ret_addr);
   printk("Exception class (EC): 0x%x\n", ex.ec);
@@ -90,12 +90,12 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 }
 
 void ExceptionManager::handle_irq() {
-  if (MiniUART::get_instance().has_pending_irq()) {
-    MiniUART::get_instance().handle_irq();
+  if (MiniUART::the().has_pending_irq()) {
+    MiniUART::the().handle_irq();
   } else {
-    TimerMultiplexer::get_instance().tick();
+    TimerMultiplexer::the().tick();
 
-    auto& sched = TaskScheduler::get_instance();
+    auto& sched = TaskScheduler::the();
     sched.tick();
     sched.maybe_reschedule();
 

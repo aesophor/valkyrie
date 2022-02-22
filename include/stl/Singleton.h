@@ -3,7 +3,7 @@
 // Singleton.h - Abstract base class of all singleton class.
 //
 // The `Singleton` abstract base class saves us from
-// manually declaring the get_instance() static method
+// manually declaring the the() static method
 // for each singleton class.
 //
 // In order to define a singleton class, write:
@@ -24,7 +24,7 @@ class Singleton {
   MAKE_NONMOVABLE(Singleton);
 
  public:
-  static T& get_instance() {
+  static T& the() {
     // A wrapper struct inheriting from T
     // which grants access to T's protected constructor.
     static struct 🐱 : public T {

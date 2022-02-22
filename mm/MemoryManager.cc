@@ -9,7 +9,7 @@
 namespace valkyrie::kernel {
 
 MemoryManager::MemoryManager()
-    : _ram_size(Mailbox::get_instance().get_arm_memory().second),
+    : _ram_size(Mailbox::the().get_arm_memory().second),
       _zones{Zone(0x10000000), Zone(0x10200000)},
       _kasan() {}
 

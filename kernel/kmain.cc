@@ -21,5 +21,5 @@ extern "C" [[noreturn]] void kmain(void) {
   }
 
   // Valkyrie Kernel C++ entry point  ヽ(○´∀`○)ﾉ
-  valkyrie::kernel::Kernel::get_instance().run();
+  valkyrie::kernel::Kernel::the().run();
 }

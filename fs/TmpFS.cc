@@ -107,7 +107,7 @@ size_t TmpFSInode::get_children_count() const {
 
 SharedPtr<Vnode> TmpFSInode::get_parent() {
   if (is_root_vnode()) {
-    return VFS::get_instance().get_host_vnode(_fs._root_inode)->get_parent();
+    return VFS::the().get_host_vnode(_fs._root_inode)->get_parent();
   }
 
   return _parent.lock();

@@ -49,7 +49,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
       _pending_signals(),
       _custom_signal_handlers(),
       _fd_table(),
-      _cwd_vnode(VFS::get_instance().get_rootfs().get_root_vnode()) {
+      _cwd_vnode(VFS::the().get_rootfs().get_root_vnode()) {
 
   if (_pid == 1) [[unlikely]] {
     Task::_init = this;
@@ -72,7 +72,7 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
 
   // Reserve fd 0,1,2 for stdin, stdout, stderr
   // FIXME: refactor this BULLSHIT
-  auto opened = make_shared<File>(VFS::get_instance().get_rootfs(), nullptr, 0);
+  auto opened = make_shared<File>(VFS::the().get_rootfs(), nullptr, 0);
   _fd_table[0] = opened;
   _fd_table[1] = opened;
   _fd_table[2] = opened;
@@ -211,7 +211,7 @@ int Task::do_fork() {
   }
 
   // Enqueue the child task.
-  TaskScheduler::get_instance().enqueue_task(move(task));
+  TaskScheduler::the().enqueue_task(move(task));
 
   // Copy kernel/user stack content
   child->_kstack_page.copy_from(_kstack_page);
@@ -271,7 +271,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   _context.sp = user_sp;
 
   // Load the specified file from the filesystem.
-  SharedPtr<File> file = VFS::get_instance().open(name, 0);
+  SharedPtr<File> file = VFS::the().open(name, 0);
   
   if (!file) {
     printk("exec failed: pid = %d [%s]. No such file or directory\n", _pid, _name);
@@ -297,7 +297,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   //printk("loading ELF\n");
   elf.load(_vmmap);
 
-  VFS::get_instance().close(move(file));
+  VFS::the().close(move(file));
 
 #ifdef DEBUG
   printk("executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table = 0x%x\n",
@@ -327,7 +327,7 @@ int Task::do_wait(int* wstatus) {
   // Suspends execution of the calling thread until
   // one of its children terminates.
   while (_terminated_children.empty()) {
-    TaskScheduler::get_instance().schedule();
+    TaskScheduler::the().schedule();
   }
 
   auto& child = _terminated_children.front();
@@ -354,7 +354,7 @@ int Task::do_wait(int* wstatus) {
     }
   }
 
-  auto& sched = TaskScheduler::get_instance();
+  auto& sched = TaskScheduler::the();
   _parent->_active_children.remove(this);
   _parent->_terminated_children.push_back(sched.remove_task(*this));
 

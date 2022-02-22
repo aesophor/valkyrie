@@ -10,7 +10,7 @@ namespace valkyrie::kernel {
 [[noreturn]] void idle() {
   while (true) {
     ExceptionManager::enable();
-    TaskScheduler::get_instance().schedule();
+    TaskScheduler::the().schedule();
   }
 }
 

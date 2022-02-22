@@ -46,7 +46,7 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char* fmt, Args&&... args) {
-  auto& console = Console::get_instance();
+  auto& console = Console::the();
 
   uint64_t stack_pointer;
   asm volatile("mov %0, sp" : "=r" (stack_pointer));
@@ -68,7 +68,7 @@ template <typename... Args>
   printf("\n");
 
 
-  MemoryManager::get_instance().dump_buddy_allocator_info();
+  MemoryManager::the().dump_buddy_allocator_info();
 
   printk("");
   console.set_color(Console::Color::RED, /*bold=*/true);
@@ -78,7 +78,7 @@ template <typename... Args>
   printf(fmt, forward<Args>(args)...);
   console.clear_color();
 
-  ExceptionManager::get_instance().disable();
+  ExceptionManager::the().disable();
   _halt();
 }
 

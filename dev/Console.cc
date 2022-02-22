@@ -5,8 +5,8 @@
 
 namespace valkyrie::kernel {
 
-Console& Console::get_instance() {
-  static Console instance(MiniUART::get_instance());
+Console& Console::the() {
+  static Console instance(MiniUART::the());
   return instance;
 }
 
@@ -70,6 +70,6 @@ void Console::clear_color() {
 using valkyrie::kernel::Console;
 
 extern "C" {
-char getchar() { return Console::get_instance().read_char(); }
-void putchar(const char c) { Console::get_instance().write_char(c); }
+char getchar() { return Console::the().read_char(); }
+void putchar(const char c) { Console::the().write_char(c); }
 }

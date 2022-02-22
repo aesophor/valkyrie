@@ -9,7 +9,7 @@ namespace valkyrie::kernel {
   while (true) {
     // Wait for any kthread to terminate.
     Task::current()->do_wait(nullptr);
-    TaskScheduler::get_instance().schedule();
+    TaskScheduler::the().schedule();
   }
 }
 

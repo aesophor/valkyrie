@@ -43,7 +43,7 @@ int sys_read(int fd, void __user* buf, size_t count) {
 
   // TODO: define stdin...
   if (fd == 0) {
-    return Console::get_instance().read(reinterpret_cast<char*>(buf), count);
+    return Console::the().read(reinterpret_cast<char*>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -53,7 +53,7 @@ int sys_read(int fd, void __user* buf, size_t count) {
     return -1;
   }
 
-  return VFS::get_instance().read(file, buf, count);
+  return VFS::the().read(file, buf, count);
 }
 
 int sys_write(int fd, const void __user* buf, size_t count) {
@@ -61,7 +61,7 @@ int sys_write(int fd, const void __user* buf, size_t count) {
 
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
-    return Console::get_instance().write(reinterpret_cast<const char*>(buf), count);
+    return Console::the().write(reinterpret_cast<const char*>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -71,13 +71,13 @@ int sys_write(int fd, const void __user* buf, size_t count) {
     return -1;
   }
 
-  return VFS::get_instance().write(file, buf, count);
+  return VFS::the().write(file, buf, count);
 }
 
 int sys_open(const char __user* pathname, int options) {
   pathname = copy_from_user<const char*>(pathname);
 
-  SharedPtr<File> file = VFS::get_instance().open(pathname, options);
+  SharedPtr<File> file = VFS::the().open(pathname, options);
 
   if (!file) {
     if (options & O_CREAT) {
@@ -99,7 +99,7 @@ int sys_close(int fd) {
     return -1;
   }
 
-  return VFS::get_instance().close(file);
+  return VFS::the().close(file);
 }
 
 int sys_fork() {
@@ -126,7 +126,7 @@ int sys_getpid() {
 }
 
 int sys_sched_yield() {
-  TaskScheduler::get_instance().schedule();
+  TaskScheduler::the().schedule();
   return 0;  // always succeeds.
 }
 
@@ -140,13 +140,13 @@ int sys_signal(int signal, void (__user* handler)()) {
 
 int sys_access(const char __user* pathname, int options) {
   pathname = copy_from_user<const char*>(pathname);
-  return VFS::get_instance().access(pathname, options);
+  return VFS::the().access(pathname, options);
 }
 
 int sys_chdir(const char __user* pathname) {
   pathname = copy_from_user<const char*>(pathname);
 
-  auto& vfs = VFS::get_instance();
+  auto& vfs = VFS::the();
 
   if (vfs.access(pathname, 0) == -1) [[unlikely]] {
     return -1;
@@ -165,17 +165,17 @@ int sys_chdir(const char __user* pathname) {
 
 int sys_mkdir(const char __user* pathname) {
   pathname = copy_from_user<const char*>(pathname);
-  return VFS::get_instance().mkdir(pathname);
+  return VFS::the().mkdir(pathname);
 }
 
 int sys_rmdir(const char __user* pathname) {
   pathname = copy_from_user<const char*>(pathname);
-  return VFS::get_instance().rmdir(pathname);
+  return VFS::the().rmdir(pathname);
 }
 
 int sys_unlink(const char __user* pathname) {
   pathname = copy_from_user<const char*>(pathname);
-  return VFS::get_instance().unlink(pathname);
+  return VFS::the().unlink(pathname);
 }
 
 int sys_mount(const char __user* device_name,
@@ -185,17 +185,17 @@ int sys_mount(const char __user* device_name,
   mountpoint = copy_from_user<const char*>(mountpoint);
   fs_name = copy_from_user<const char*>(fs_name);
 
-  return VFS::get_instance().mount(device_name, mountpoint, fs_name);
+  return VFS::the().mount(device_name, mountpoint, fs_name);
 }
 
 int sys_umount(const char __user* mountpoint) {
   mountpoint = copy_from_user<const char*>(mountpoint);
-  return VFS::get_instance().umount(mountpoint);
+  return VFS::the().umount(mountpoint);
 }
 
 int sys_mknod(const char __user* pathname, mode_t mode, dev_t dev) {
   pathname = copy_from_user<const char*>(pathname);
-  return VFS::get_instance().mknod(pathname, mode, dev);
+  return VFS::the().mknod(pathname, mode, dev);
 }
 
 int sys_getcwd(char __user* buf) {

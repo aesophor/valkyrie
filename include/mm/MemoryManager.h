@@ -39,15 +39,15 @@ class MemoryManager : public Singleton<MemoryManager> {
 extern "C" void* switch_user_va_space(void* ttbr0_el1);
 
 extern "C" inline void* get_free_page() {
-  return valkyrie::kernel::MemoryManager::get_instance().get_free_page();
+  return valkyrie::kernel::MemoryManager::the().get_free_page();
 }
 
 extern "C" inline void* kmalloc(const size_t requested_size) {
-  return valkyrie::kernel::MemoryManager::get_instance().kmalloc(requested_size);
+  return valkyrie::kernel::MemoryManager::the().kmalloc(requested_size);
 }
 
 extern "C" inline void kfree(void* p) {
-  valkyrie::kernel::MemoryManager::get_instance().kfree(p);
+  valkyrie::kernel::MemoryManager::the().kfree(p);
 }
 
 void* operator new(size_t size);

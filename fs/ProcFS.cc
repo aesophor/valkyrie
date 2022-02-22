@@ -184,7 +184,7 @@ size_t ProcFSInode::get_children_count() const {
 
 SharedPtr<Vnode> ProcFSInode::get_parent() {
   if (is_root_vnode()) {
-    return VFS::get_instance().get_host_vnode(_fs._root_inode)->get_parent();
+    return VFS::the().get_host_vnode(_fs._root_inode)->get_parent();
   }
 
   return _parent.lock();
@@ -259,7 +259,7 @@ char* HelloInode::get_content() {
 }
 
 char* BuddyInfoInode::get_content() {
-  String s = MemoryManager::get_instance().get_buddy_info();
+  String s = MemoryManager::the().get_buddy_info();
   size_t len = s.size();
   _content = make_unique<char[]>(len);
 
@@ -269,7 +269,7 @@ char* BuddyInfoInode::get_content() {
 }
 
 char* SlobInfoInode::get_content() {
-  String s = MemoryManager::get_instance().get_slob_info();
+  String s = MemoryManager::the().get_slob_info();
   size_t len = s.size();
   _content = make_unique<char[]>(len);
 

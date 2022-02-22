@@ -4,13 +4,13 @@
 namespace valkyrie::kernel {
 
 Kernel::Kernel()
-    : _mailbox(Mailbox::get_instance()),
-      _mini_uart(MiniUART::get_instance()),
-      _memory_manager(MemoryManager::get_instance()),
-      _exception_manager(ExceptionManager::get_instance()),
-      _timer_multiplexer(TimerMultiplexer::get_instance()),
-      _task_scheduler(TaskScheduler::get_instance()),
-      _vfs(VFS::get_instance()) {}
+    : _mailbox(Mailbox::the()),
+      _mini_uart(MiniUART::the()),
+      _memory_manager(MemoryManager::the()),
+      _exception_manager(ExceptionManager::the()),
+      _timer_multiplexer(TimerMultiplexer::the()),
+      _task_scheduler(TaskScheduler::the()),
+      _vfs(VFS::the()) {}
 
 
 void Kernel::run() {
@@ -36,7 +36,7 @@ void Kernel::run() {
 
 
 void Kernel::print_banner() {
-  auto& console = Console::get_instance();
+  auto& console = Console::the();
 
   console.set_color(Console::Color::GREEN, /*bold=*/true);
   printf("--- Valkyrie OS (Virtual Memory Edition) ---\n");
