@@ -76,27 +76,18 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
 
 #ifdef DEBUG
   printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
-      this,
-      _name,
-      _pid,
-      _entry_point,
-      _kstack_page.begin(),
-      _ustack_page.begin());
+         this, _name, _pid, _entry_point, _kstack_page.begin(), _ustack_page.begin());
 #endif
 }
 
 
 Task::~Task() {
 #ifdef DEBUG
-  printk("destructing thread 0x%x [%s] (pid = %d)\n",
-        this,
-        _name,
-        _pid);
+  printk("destructing thread 0x%x [%s] (pid = %d)\n", this, _name, _pid);
 #endif
 
-  // If the current task still has running children,
-  // make the init task adopt these orphans.
-  // Note: terminated children will be automatically released.
+  // If the current task still has running children, make the init task adopt
+  // these orphans and reap them.
   while (!_active_children.empty()) {
     auto child = _active_children.front();
     Task::_init->_active_children.push_back(child);
@@ -174,7 +165,6 @@ Task* Task::get_by_pid(const pid_t pid) {
 
 
 int Task::do_fork() {
-  // Duplicate task
   save_context();
 
   size_t ret = 0;
@@ -185,7 +175,7 @@ int Task::do_fork() {
   size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
 
 
-  // Duplicate task.
+  // Clone task.
   auto task = make_unique<Task>(/*parent=*/this, _entry_point, _name);
   Task* child = task.get();
 
@@ -210,7 +200,7 @@ int Task::do_fork() {
   // Enqueue the child task.
   TaskScheduler::the().enqueue_task(move(task));
 
-  // Copy kernel/user stack content
+  // Clone kernel/user stack content
   child->_kstack_page.copy_from(_kstack_page);
   child->_ustack_page.copy_from(_ustack_page);
  
@@ -219,12 +209,12 @@ int Task::do_fork() {
   // Set parent's fork() return value to child's pid.
   ret = child->_pid;
 
-  // Copy child's CPU context.
+  // Clone child's CPU context.
   child->_context = _context;
   child->_context.lr = reinterpret_cast<uint64_t>(&&out);
   child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
-  // Deep copy vmmap (page table)
+  // Deep clone vmmap (page table)
   child->_vmmap.copy_from(_vmmap);
 
   // Remap user stack to the one we've just copied.
@@ -238,10 +228,10 @@ int Task::do_fork() {
   // and used as the user mode SP.
   child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
 
-  // Duplicate current working directory vnode.
+  // Clone current working directory vnode.
   child->_cwd_vnode = _cwd_vnode;
 
-  // TODO: duplicate fd table
+  // TODO: Clone fd table
 
 out:
   return ret;
@@ -284,14 +274,11 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
 
   // Release the vmmap, freeing the old _ustack_page.
-  //printk("clearing user address space\n");
   _vmmap.reset();
 
-  //printk("mapping stack\n");
   _ustack_page.set_v_addr(reinterpret_cast<void*>(USER_STACK_PAGE));
   _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), PAGE_RWX);
 
-  //printk("loading ELF\n");
   elf.load(_vmmap);
 
   VFS::the().close(move(file));
@@ -302,9 +289,8 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 #endif
 
   // Jump to the entry point.
-  // NOTE: When the CPU generates an exception,
-  // TTBR0_EL1 still points to user's page table,
-  // so the kernel sp must be the virtual address
+  // NOTE: When the CPU generates an exception, TTBR0_EL1 still points to
+  // the user's page table, so the kernel sp must be the virtual address
   // instead of the physical address.
   switch_to_user_mode(elf.get_entry_point(),
                       user_sp,
@@ -321,8 +307,7 @@ int Task::do_wait(int* wstatus) {
     return -1;
   }
 
-  // Suspends execution of the calling thread until
-  // one of its children terminates.
+  // Suspends execution of the calling thread until one of its children terminates.
   while (_terminated_children.empty()) {
     TaskScheduler::the().schedule();
   }
@@ -406,8 +391,8 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
     strings[i] = copy_from_user<const char*>(argv[i]);
   }
 
-  // Actually copy all C strings to user stack,
-  // at the meanwhile save the new C strings' addrs in `copied_str_addrs`.
+  // Actually copy all C strings to user stack, at the meanwhile save the new
+  // addresses of C strings in `copied_str_addrs`.
   for (int i = argc - 1; i >= 0; i--) {
     size_t len = round_up_to_multiple_of_n(strings[i].size() + sizeof('\0'), 16);
     user_sp -= len;
@@ -420,8 +405,8 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
   // Subtract user SP and make it align to a 16-byte boundary.
   user_sp -= round_up_to_multiple_of_n(sizeof(char*) * (argc + 2), 16);
 
-  // Now we will write the addrs in `copied_str_addrs`
-  // towards high address starting from user SP.
+  // Now we will write the addrs in `copied_str_addrs` towards high address
+  // starting from user SP.
   copied_argv = reinterpret_cast<char**>(user_sp);
 
   for (int i = 0; i < argc; i++) {
@@ -486,11 +471,11 @@ int Task::allocate_fd_for_file(SharedPtr<File> file) {
 }
 
 SharedPtr<File> Task::release_fd_and_get_file(const int fd) {
-  return (is_fd_valid(fd)) ? move(_fd_table[fd]) : nullptr;
+  return is_fd_valid(fd) ? move(_fd_table[fd]) : nullptr;
 }
 
 SharedPtr<File> Task::get_file_by_fd(const int fd) const {
-  return (is_fd_valid(fd)) ? _fd_table[fd] : nullptr;
+  return is_fd_valid(fd) ? _fd_table[fd] : nullptr;
 }
 
 bool Task::is_fd_valid(const int fd) const {
