@@ -14,8 +14,6 @@
 #include <proc/Task.h>
 #include <proc/TaskScheduler.h>
 
-static const char* kernel_panic_msg = "Kernel panic - not syncing: ";
-
 namespace valkyrie::kernel {
 
 class Kernel : public Singleton<Kernel> {
@@ -24,6 +22,8 @@ class Kernel : public Singleton<Kernel> {
 
   template <typename... Args>
   [[noreturn]] static void panic(const char* fmt, Args&&... args);
+
+  static constexpr const char* panic_msg = "Kernel panic - not syncing: ";
 
  protected:
   Kernel();
@@ -55,7 +55,7 @@ template <typename... Args>
   console.clear_color();
   printk("");
   console.set_color(Console::Color::RED, /*bold=*/true);
-  printf(kernel_panic_msg);
+  printf(Kernel::panic_msg);
   console.set_color(Console::Color::YELLOW);
   printf(fmt, forward<Args>(args)...);
   console.clear_color();
@@ -74,7 +74,7 @@ template <typename... Args>
   printk("");
   console.set_color(Console::Color::RED, /*bold=*/true);
   printf("---[ end ");
-  printf(kernel_panic_msg);
+  printf(Kernel::panic_msg);
   console.set_color(Console::Color::YELLOW);
   printf(fmt, forward<Args>(args)...);
   console.clear_color();
