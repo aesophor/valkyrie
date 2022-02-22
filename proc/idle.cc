@@ -9,7 +9,7 @@ namespace valkyrie::kernel {
 
 [[noreturn]] void idle() {
   while (true) {
-    ExceptionManager::enable();
+    ExceptionManager::enableIRQs();
     TaskScheduler::the().schedule();
   }
 }

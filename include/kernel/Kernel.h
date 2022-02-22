@@ -47,6 +47,8 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char* fmt, Args&&... args) {
+  ExceptionManager::the().disableIRQs();
+
   auto& console = Console::the();
 
   uint64_t stack_pointer;
@@ -79,7 +81,6 @@ template <typename... Args>
   printf(fmt, forward<Args>(args)...);
   console.clear_color();
 
-  ExceptionManager::the().disable();
   _halt();
 }
 

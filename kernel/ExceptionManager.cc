@@ -92,23 +92,25 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 void ExceptionManager::handle_irq() {
   if (MiniUART::the().has_pending_irq()) {
     MiniUART::the().handle_irq();
-  } else {
-    TimerMultiplexer::the().tick();
-
-    auto& sched = TaskScheduler::the();
-    sched.tick();
-    sched.maybe_reschedule();
-
-    /*
-    auto task = []() { printf("ok\n"); };
-    _tasklet_scheduler.add_tasklet(task);
-
-    // Do all the unfinished deferred tasks
-    // with interrupts enabled.
-    enable();
-    _tasklet_scheduler.finish_all();
-    */
+    return;
   }
+
+  TimerMultiplexer::the().tick();
+  printk("timer: 0x%x\n", TimerMultiplexer::the().get_arm_core_timer().get_jiffies());
+
+  auto& sched = TaskScheduler::the();
+  sched.tick();
+  sched.maybe_reschedule();
+
+  /*
+  auto task = []() { printf("ok\n"); };
+  _tasklet_scheduler.add_tasklet(task);
+
+  // Do all the unfinished deferred tasks
+  // with interrupts enabled.
+  enableIRQs();
+  _tasklet_scheduler.finish_all();
+  */
 }
 
 

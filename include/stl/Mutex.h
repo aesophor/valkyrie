@@ -16,7 +16,7 @@ class Mutex {
 
   // Locks the mutex, blocks if the mutex is not available
   [[gnu::always_inline]] void lock() {
-    ExceptionManager::disable();
+    ExceptionManager::disableIRQs();
     _is_locked = true;
   }
 
@@ -29,7 +29,7 @@ class Mutex {
   // Unlocks the mutex.
   [[gnu::always_inline]] void unlock() {
     _is_locked = false;
-    ExceptionManager::enable();
+    ExceptionManager::enableIRQs();
   }
 
  private:

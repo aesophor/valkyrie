@@ -18,16 +18,15 @@ void Kernel::run() {
   print_banner();
   print_hardware_info();
 
-  /*
-  printk("enabling timer interrupts\n");
-  _timer_multiplexer.get_arm_core_timer().enable();
-  */
-
   printk("VFS: initializing\n");
   _vfs.mount_rootfs();
   _vfs.mount_devtmpfs();
   _vfs.mount_procfs();
   _vfs.populate_devtmpfs();
+
+  //printk("enabling timer interrupts\n");
+  //_exception_manager.enableIRQs();
+  //_timer_multiplexer.get_arm_core_timer().enable();
 
   printk("starting task scheduler\n");
   _task_scheduler.run();
