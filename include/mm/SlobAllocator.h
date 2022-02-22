@@ -2,16 +2,10 @@
 #ifndef VALKYRIE_SLOB_ALLOCATOR_H_
 #define VALKYRIE_SLOB_ALLOCATOR_H_
 
+#include <Algorithm.h>
 #include <String.h>
-#include <Types.h>
-
-#define CHUNK_SMALLEST_SIZE static_cast<size_t>(0x10)
-#define CHUNK_LARGEST_SIZE  static_cast<size_t>(0x80)
-#define CHUNK_SIZE_GAP      0x10
-
-#define NR_BINS                                                        \
-  static_cast<int>(                                                    \
-      (CHUNK_LARGEST_SIZE - CHUNK_SMALLEST_SIZE) / CHUNK_SIZE_GAP + 1)
+#include <TypeTraits.h>
+#include <libs/Math.h>
 
 namespace valkyrie::kernel {
 
@@ -19,53 +13,123 @@ namespace valkyrie::kernel {
 class BuddyAllocator;
 
 class SlobAllocator {
+  MAKE_NONCOPYABLE(SlobAllocator);
+  MAKE_NONMOVABLE(SlobAllocator);
+
  public:
   explicit SlobAllocator(BuddyAllocator* page_frame_allocator);
-
   ~SlobAllocator() = default;
-  SlobAllocator(const SlobAllocator&) = delete;
-  SlobAllocator(SlobAllocator&&) = delete;
-  SlobAllocator& operator =(const SlobAllocator&) = delete;
-  SlobAllocator& operator =(SlobAllocator&&) = delete;
 
   void* allocate(size_t requested_size);
-  void  deallocate(void* p);
+  void deallocate(void* p);
 
   String to_string() const;
   void dump() const;
 
   static constexpr size_t get_chunk_header_size() {
-    return sizeof(Slob);
+    return sizeof(ChunkHeader);
   }
 
  private:
-  struct Slob final {
-    Slob* next;  // only reliable if current chunk is free!
-    int32_t index;
-    int32_t prev_chunk_size;
+  static constexpr const size_t smallest_chunk_size = 0x20;
+  static constexpr const size_t largest_chunk_size = 0x80;
+  static constexpr const size_t chunk_size_gap = 0x10;
 
-    size_t get_chunk_size() const;
-    int32_t get_prev_chunk_size() const;
-    void set_prev_chunk_size(const int32_t size);
+  static constexpr const int nr_bins
+    = (largest_chunk_size - smallest_chunk_size) / chunk_size_gap + 1;
 
-    bool is_allocated() const;
-    void set_allocated(bool allocated);
+  struct ChunkHeader final {
+    ChunkHeader* next;        // only reliable if current chunk is free!
+    int32_t index;            // contains header size
+    int32_t prev_chunk_size;  // contains header size
+
+    template <typename T>
+    static ChunkHeader* from_addr(T addr) {
+      return reinterpret_cast<ChunkHeader*>(addr);
+    }
+
+    size_t addr() const {
+      return reinterpret_cast<size_t>(this);
+    }
+
+    size_t get_size() const {
+      return smallest_chunk_size + index * chunk_size_gap;
+    }
+
+    ChunkHeader* get_prev_chunk() const {
+      return from_addr(addr() - get_prev_chunk_size());
+    }
+
+    ChunkHeader* get_next_chunk() const {
+      return from_addr(addr() + get_size());
+    }
+
+    int32_t get_prev_chunk_size() const {
+      return prev_chunk_size & ~1;
+    }
+
+    void set_prev_chunk_size(const int32_t size) {
+      bool flag = is_allocated();
+      prev_chunk_size = size;
+      set_allocated(flag);
+    }
+
+    bool is_allocated() const {
+      return prev_chunk_size & 1;
+    }
+
+    void set_allocated(bool allocated) {
+      allocated ? prev_chunk_size |= 1 : prev_chunk_size &= ~1;
+    }
   };
 
+  bool is_chunk_size_usable(size_t chunk_size) const {
+    return chunk_size >= smallest_chunk_size;
+  }
+
+  bool is_top_chunk_used_up() const {
+    return get_top_chunk_size() == 0;
+  }
+
+  bool is_top_chunk_large_enough(const size_t requested_size) const {
+    return get_top_chunk_size() >= requested_size;
+  }
+
+  size_t get_top_chunk_size() const {
+    return reinterpret_cast<size_t>(_page_frame_allocatable_end) -
+           reinterpret_cast<size_t>(_top_chunk);
+  }
+
+
+  ChunkHeader* split_from_top_chunk(size_t requested_size);
+  ChunkHeader* split_from_chunk(ChunkHeader* chunk, const size_t requested_size);
+
   bool request_new_page_frame();
-  Slob* split_from_top_chunk(size_t requested_size);
-  bool  is_top_chunk_used_up() const;
-  bool  is_top_chunk_large_enough(const size_t requested_size) const;
-  size_t get_top_chunk_size() const;
 
-  Slob* split_chunk(Slob* chunk, const size_t target_size);
+  void bin_del_head(ChunkHeader* chunk);
+  void bin_add_head(ChunkHeader* chunk);
+  void bin_del_entry(ChunkHeader* chunk);
 
-  void bin_del_head(Slob* chunk);
-  void bin_add_head(Slob* chunk);
-  void bin_del_entry(Slob* chunk);
+  ChunkHeader** bin_get_head(ChunkHeader* chunk) {
+    // If `chunk->index` >= nr_bins, then we need to look for `chunk`
+    // from the unsorted bin instead of regular bins.
+    return chunk->index >= nr_bins ? &_unsorted_bin : &_bins[chunk->index];
+  }
 
-  int get_bin_index(size_t size);
-  size_t normalize_size(size_t size);
+  // XXX: Maybe this can be optimized later.
+  void discard(ChunkHeader* chunk) {
+    // Discard the chunk parmanently by setting it to allocated,
+    // preventing it from being merged with adjacent free chunks.
+    chunk->set_allocated(true);
+  }
+
+  int get_bin_index(size_t size) {
+    return (size - smallest_chunk_size) / chunk_size_gap;
+  }
+
+  size_t normalize_size(size_t size) {
+    return round_up_to_multiple_of_n(max(size, smallest_chunk_size), 16);
+  }
 
 
   BuddyAllocator* _buddy_allocator;
@@ -74,8 +138,12 @@ class SlobAllocator {
   void* _page_frame_allocatable_end;
   int32_t _top_chunk_prev_chunk_size;
 
-  Slob* _bins[NR_BINS];
-  Slob* _unsorted_bin;
+  // Each bin in `_bins` stores chunks of the same size.
+  ChunkHeader* _bins[nr_bins];
+
+  // The unsorted bin stores chunks of different sizes that are
+  // too large to fit within `_bins`.
+  ChunkHeader* _unsorted_bin;
 };
 
 }  // namespace valkyrie::kernel

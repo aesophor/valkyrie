@@ -25,7 +25,7 @@ class BuddyAllocator {
 
   void* allocate_one_page_frame();
   void* allocate(size_t requested_size);
-  void  deallocate(void* p);
+  void deallocate(void* p);
 
   String to_string() const;
   void dump() const;
