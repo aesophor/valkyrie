@@ -36,6 +36,9 @@ void Kernel::run() {
   _task_scheduler.enqueue_task(make_task(nullptr, start_init, "init"));
   _task_scheduler.enqueue_task(make_task(nullptr, start_kthreadd, "kthreadd"));
 
+  printk("Activating exception manager\n");
+  _exception_manager.activate();
+
   printk("Starting task scheduler\n");
   _task_scheduler.run();
 

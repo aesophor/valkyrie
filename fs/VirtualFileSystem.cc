@@ -25,7 +25,8 @@ VFS::VFS()
     : _mounts(),
       _opened_files(),
       _storage_devices(),
-      _registered_devices() {}
+      _registered_devices(),
+      _mutex() {}
 
 
 void VFS::mount_rootfs() {
@@ -105,6 +106,8 @@ SharedPtr<Vnode> VFS::create(const String& pathname,
     return nullptr;
   }
 
+  const LockGuard<Mutex> lock(_mutex);
+
   // Check if the parent directory entry exists.
   String basename;
   SharedPtr<Vnode> parent;
@@ -127,6 +130,8 @@ SharedPtr<Vnode> VFS::create(const String& pathname,
 }
 
 SharedPtr<File> VFS::open(const String& pathname, int options) {
+  const LockGuard<Mutex> lock(_mutex);
+
   // Lookup pathname from the root vnode.
   SharedPtr<Vnode> target = resolve_path(pathname);
 
@@ -164,6 +169,8 @@ int VFS::close(SharedPtr<File> file) {
     return -1;
   }
 
+  const LockGuard<Mutex> lock(_mutex);
+
   auto it = _opened_files.find_if([file](const auto& f) {
     return f->vnode == file->vnode;
   });
@@ -198,6 +205,8 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
     return -1;
   }
 
+  const LockGuard<Mutex> lock(_mutex);
+
   if (file->vnode->is_regular_file()) {
     auto new_content = make_unique<char[]>(len);
     memcpy(new_content.get(), buf, len);
@@ -229,6 +238,8 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
   if (!file) [[unlikely]] {
     return -1;
   }
+
+  const LockGuard<Mutex> lock(_mutex);
 
   if (file->vnode->is_regular_file()) {
     char* content = file->vnode->get_content();
@@ -289,6 +300,8 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
 }
 
 int VFS::access(const String& pathname, int options) {
+  const LockGuard<Mutex> lock(_mutex);
+
   // Check user's permission for a file.
   // FIXME: currently it simply checks if the file exists...
   SharedPtr<Vnode> target = resolve_path(pathname);
@@ -318,6 +331,8 @@ int VFS::unlink(const String& pathname) {
 int VFS::mount(const String& device_name,
                const String& mountpoint,
                const String& fs_name) {
+  const LockGuard<Mutex> lock(_mutex);
+
   // Check if `mountpoint` exists.
   SharedPtr<Vnode> vnode = resolve_path(mountpoint);
 
@@ -352,6 +367,8 @@ int VFS::mount(const String& device_name,
 }
 
 int VFS::umount(const String& mountpoint) {
+  const LockGuard<Mutex> lock(_mutex);
+
   // Check if `mountpoint` is valid.
   SharedPtr<Vnode> vnode = resolve_path(mountpoint);
 
@@ -379,6 +396,8 @@ int VFS::umount(const String& mountpoint) {
 }
 
 int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
+  const LockGuard<Mutex> lock(_mutex);
+
   // This special filesystem node must be either:
   // 1. a character device
   // 2. a block device

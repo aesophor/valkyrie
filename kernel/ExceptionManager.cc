@@ -27,6 +27,8 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 
     Task::current()->set_trap_frame(trap_frame);
 
+    enableIRQs();
+
     // A process may return from `do_syscall()`,
     // e.g., a child task created by sys_fork(),
     // so we should call `Task::get_current()` again
@@ -38,6 +40,9 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                        trap_frame->x3,
                                                        trap_frame->x4,
                                                        trap_frame->x5);
+
+    disableIRQs();
+
     // Handle pending POSIX signals.
     Task::current()->handle_pending_signals();
 
