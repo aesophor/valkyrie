@@ -6,6 +6,7 @@ namespace valkyrie::kernel {
 Kernel::Kernel()
     : _mailbox(Mailbox::the()),
       _mini_uart(MiniUART::the()),
+      _console(Console::the()),
       _memory_manager(MemoryManager::the()),
       _exception_manager(ExceptionManager::the()),
       _timer_multiplexer(TimerMultiplexer::the()),
@@ -37,7 +38,6 @@ void Kernel::run() {
 
 void Kernel::print_banner() {
   auto& console = Console::the();
-
   console.set_color(Console::Color::GREEN, /*bold=*/true);
   printf("--- Valkyrie OS (Virtual Memory Edition) ---\n");
   console.set_color(Console::Color::YELLOW, /*bold=*/true);
