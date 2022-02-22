@@ -10,7 +10,7 @@
 #include <fs/File.h>
 #include <fs/Vnode.h>
 #include <mm/Page.h>
-#include <mm/VMMap.h>
+#include <mm/VirtualMemoryMap.h>
 #include <proc/Signal.h>
 
 #define TASK_TIME_SLICE    3

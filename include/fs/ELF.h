@@ -12,7 +12,7 @@
 
 #include <Types.h>
 #include <Utility.h>
-#include <mm/VMMap.h>
+#include <mm/VirtualMemoryMap.h>
 
 // Default base address where an ELF will be loaded.
 #define ELF_DEFAULT_BASE 0x400000

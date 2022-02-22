@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <mm/VMMap.h>
+#include <mm/VirtualMemoryMap.h>
 
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
@@ -247,10 +247,6 @@ void VMMap::dfs_copy_page(const page_table_t* pt_old,
     pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | PD_TABLE;
     dfs_copy_page(old_page_frame, new_page_frame, level + 1);
   }
-}
-
-size_t* VMMap::get_pgd() const {
-  return _pgd;
 }
 
 }  // namespace valkyrie::kernel

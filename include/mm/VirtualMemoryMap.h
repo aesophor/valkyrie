@@ -1,9 +1,9 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 //
-// VMMap - userspace process virtual memory map
+// VirtualMemoryMap (VMMap) - userspace process virtual memory map
 
-#ifndef VALKYRIE_VM_MAP_H_
-#define VALKYRIE_VM_MAP_H_
+#ifndef VALKYRIE_VIRTUAL_MEMORY_MAP_H_
+#define VALKYRIE_VIRTUAL_MEMORY_MAP_H_
 
 #include <List.h>
 #include <mm/mmu.h>
@@ -49,7 +49,10 @@ class VMMap final {
   // Returns the new _pgd.
   void copy_from(const VMMap& r) const;
 
-  [[nodiscard]] size_t* get_pgd() const;
+  [[nodiscard]]
+  size_t* get_pgd() const {
+    return _pgd;
+  }
 
  private:
   // TODO: maybe refactor this with STL Function<>
@@ -64,4 +67,4 @@ class VMMap final {
 
 }  // namespace valkyrie::kernel
 
-#endif  // VALKYRIE_VM_MAP_H_
+#endif  // VALKYRIE_VIRTUAL_MEMORY_MAP_H_
