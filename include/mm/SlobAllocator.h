@@ -31,10 +31,12 @@ class SlobAllocator {
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
 
-  String get_memory_map() const;
-  void  dump_slob_info() const;
+  String to_string() const;
+  void dump() const;
 
-  static size_t get_chunk_header_size();
+  static constexpr size_t get_chunk_header_size() {
+    return sizeof(Slob);
+  }
 
  private:
   struct Slob final {

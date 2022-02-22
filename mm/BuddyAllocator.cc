@@ -120,7 +120,7 @@ void BuddyAllocator::deallocate(void* p) {
 }
 
 
-String BuddyAllocator::get_memory_map() const {
+String BuddyAllocator::to_string() const {
   String ret = "buddyinfo\n"
                "---------\n";
   char linebuf[64] = {};
@@ -142,32 +142,9 @@ String BuddyAllocator::get_memory_map() const {
   return ret;
 }
 
-void BuddyAllocator::dump_memory_map() const {
+void BuddyAllocator::dump() const {
   printf("--- dumping buddy ---\n");
-
-  /*
-  for (size_t i = 0; i < MAX_ORDER_NR_PAGES; i++) {
-    if (_frame_array[i] == DONT_ALLOCATE) {
-      // Do nothing.
-    } else if (_frame_array[i] == ALLOCATED) {
-      printf("<page frame #%d >: allocated page frame (0x%x)\n", i, get_page_frame(i));
-    } else {
-      printf("<page frame #%d>: free page frame (0x%x)\n", i, get_page_frame(i));
-    }
-  }
-  printf("\n");
-  */
-
-  for (int i = 0; i < MAX_ORDER; i++) {
-    printf("_free_lists[%d]: ", i);
-    BlockHeader* ptr = _free_lists[i];
-    while (ptr) {
-      printf("[%d 0x%x] -> ", ptr->index, get_page_frame(ptr->index));
-      ptr = ptr->next;
-    }
-    printf("(null)\n");
-  }
-
+  printf("%s", to_string().c_str());
   printf("--- end dumping buddy ---\n");
 }
 

@@ -140,7 +140,7 @@ void SlobAllocator::deallocate(void* p) {
 }
 
 
-String SlobAllocator::get_memory_map() const {
+String SlobAllocator::to_string() const {
   String ret = "slobinfo\n"
                "--------\n";
   char linebuf[64] = {};
@@ -182,42 +182,10 @@ String SlobAllocator::get_memory_map() const {
   return ret;
 }
 
-void SlobAllocator::dump_slob_info() const {
+void SlobAllocator::dump() const {
   printf("--- dumping slob bins ---\n");
-
-  Slob* ptr = nullptr;
-
-  for (int i = 0; i < NR_BINS; i++) {
-    printf("_bins[%d] (%d): ", i, CHUNK_SMALLEST_SIZE + CHUNK_SIZE_GAP * i);
-    ptr = _bins[i];
-    while (ptr) {
-      printf("[%d 0x%x] -> ", ptr->get_chunk_size(), ptr);
-      ptr = ptr->next;
-    }
-    printf("(null)\n");
-  }
-
-  printf("_unsorted_bin: ");
-  ptr = _unsorted_bin;
-  while (ptr) {
-    printf("[%d 0x%x] -> ", ptr->get_chunk_size(), ptr);
-    ptr = ptr->next;
-  }
-  printf("(null)\n");
+  printf("%s", to_string().c_str());
   printf("--- end dumping slob bins ---\n");
-
-  printf("_page_frame_allocatable_begin = 0x%x\n", _page_frame_allocatable_begin);
-  printf("_top_chunk                    = 0x%x\n", _top_chunk);
-  printf("_page_frame_allocatable_end   = 0x%x\n", _page_frame_allocatable_end);
-
-  if (_top_chunk > _page_frame_allocatable_end) [[unlikely]] {
-    Kernel::panic("kernel heap corrupted "
-                  "(_top_chunk > _page_frame_allocatable_end)\n");
-  }
-}
-
-size_t SlobAllocator::get_chunk_header_size() {
-  return sizeof(SlobAllocator::Slob);
 }
 
 
@@ -419,11 +387,7 @@ bool SlobAllocator::Slob::is_allocated() const {
 }
 
 void SlobAllocator::Slob::set_allocated(bool allocated) {
-  if (allocated) {
-    prev_chunk_size |= 1;
-  } else {
-    prev_chunk_size &= ~1;
-  }
+  allocated ? prev_chunk_size |= 1 : prev_chunk_size &= ~1;
 }
 
 }  // namespace valkyrie::kernel

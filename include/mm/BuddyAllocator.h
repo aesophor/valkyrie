@@ -27,8 +27,8 @@ class BuddyAllocator {
   void* allocate(size_t requested_size);
   void  deallocate(void* p);
 
-  String get_memory_map() const;
-  void  dump_memory_map() const;
+  String to_string() const;
+  void dump() const;
 
  private:
   struct BlockHeader {
