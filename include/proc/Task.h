@@ -7,6 +7,7 @@
 #include <Types.h>
 #include <TypeTraits.h>
 #include <Utility.h>
+
 #include <fs/File.h>
 #include <fs/Vnode.h>
 #include <mm/Page.h>

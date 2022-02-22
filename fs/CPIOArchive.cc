@@ -1,10 +1,11 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <fs/CPIOArchive.h>
 
+#include <CString.h>
+
 #include <dev/Console.h>
 #include <fs/VirtualFileSystem.h>
 #include <kernel/Kernel.h>
-#include <libs/CString.h>
 
 #define CPIO_MAGIC     "070701"
 #define CPIO_TRAILER   "TRAILER!!!"

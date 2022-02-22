@@ -2,6 +2,7 @@
 #include <dev/StorageDevice.h>
 
 #include <Memory.h>
+
 #include <dev/MasterBootRecord.h>
 
 namespace valkyrie::kernel {

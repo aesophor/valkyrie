@@ -2,8 +2,9 @@
 #include <fs/ELF.h>
 
 #include <Algorithm.h>
+#include <CString.h>
+
 #include <dev/Console.h>
-#include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
 #define ELF_MAGIC     "\x7f" "ELF"

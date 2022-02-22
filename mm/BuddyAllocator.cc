@@ -1,9 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/BuddyAllocator.h>
 
+#include <Math.h>
+
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
-#include <libs/Math.h>
 #include <mm/Page.h>
 
 namespace valkyrie::kernel {

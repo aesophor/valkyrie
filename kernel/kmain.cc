@@ -1,7 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
-#include <libs/CString.h>
+#include <CString.h>
 
 extern uint8_t* _bss_start;
 extern uint8_t* _bss_end;

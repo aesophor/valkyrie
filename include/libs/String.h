@@ -2,11 +2,11 @@
 #ifndef VALKYRIE_STRING_H_
 #define VALKYRIE_STRING_H_
 
+#include <CString.h>
 #include <Iterator.h>
 #include <Hash.h>
 #include <List.h>
 #include <Memory.h>
-#include <libs/CString.h>
 
 namespace valkyrie::kernel {
 

@@ -6,6 +6,7 @@
 #include <List.h>
 #include <Memory.h>
 #include <Mutex.h>
+
 #include <proc/Task.h>
 
 namespace valkyrie::kernel {

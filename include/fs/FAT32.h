@@ -2,14 +2,15 @@
 #ifndef VALKYRIE_FAT32_H_
 #define VALKYRIE_FAT32_H_
 
+#include <Encoding.h>
 #include <Functional.h>
 #include <List.h>
 #include <Memory.h>
 #include <Types.h>
+
 #include <dev/DiskPartition.h>
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
-#include <libs/Encoding.h>
 
 namespace valkyrie::kernel {
 

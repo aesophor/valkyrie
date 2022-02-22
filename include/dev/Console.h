@@ -2,9 +2,10 @@
 #ifndef VALKYRIE_CONSOLE_H_
 #define VALKYRIE_CONSOLE_H_
 
+#include <printf.h>
 #include <Types.h>
+
 #include <dev/CharacterDevice.h>
-#include <libs/printf.h>
 
 namespace valkyrie::kernel {
 

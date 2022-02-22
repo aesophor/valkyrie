@@ -3,6 +3,7 @@
 #define VALKYRIE_SDCARD_DRIVER
 
 #include <Singleton.h>
+
 #include <dev/BlockDevice.h>
 #include <driver/IO.h>
 #include <driver/GPIO.h>

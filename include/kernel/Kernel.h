@@ -4,6 +4,7 @@
 
 #include <Config.h>
 #include <Singleton.h>
+
 #include <dev/Console.h>
 #include <driver/Mailbox.h>
 #include <driver/MiniUART.h>

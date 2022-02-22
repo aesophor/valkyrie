@@ -6,6 +6,7 @@
 #define VALKYRIE_FILE_SYSTEM_H_
 
 #include <String.h>
+
 #include <fs/File.h>
 
 namespace valkyrie::kernel {

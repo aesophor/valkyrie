@@ -2,8 +2,9 @@
 #include <fs/FAT32.h>
 
 #include <List.h>
+#include <Math.h>
 #include <Memory.h>
-#include <libs/Math.h>
+
 #include <kernel/Kernel.h>
 
 #define FAT32_EOC_MIN   0x0ffffff8

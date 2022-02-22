@@ -6,6 +6,7 @@
 #define VALKYRIE_VIRTUAL_MEMORY_MAP_H_
 
 #include <List.h>
+
 #include <mm/mmu.h>
 #include <mm/Page.h>
 

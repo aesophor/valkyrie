@@ -1,5 +1,5 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <libs/CString.h>
+#include <CString.h>
 
 extern "C" {
 

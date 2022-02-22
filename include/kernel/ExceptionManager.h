@@ -3,6 +3,7 @@
 #define VALKYRIE_EXCEPTION_MANAGER_H_
 
 #include <Singleton.h>
+
 #include <driver/IO.h>
 #include <kernel/TaskletScheduler.h>
 #include <proc/TrapFrame.h>
@@ -30,22 +31,41 @@ namespace valkyrie::kernel {
 
 class ExceptionManager : public Singleton<ExceptionManager> {
  public:
-  [[gnu::always_inline]] static void enableIRQs() {
-    asm volatile("msr DAIFCLR, #0b1111");
+  [[gnu::always_inline]]
+  inline static void enableIRQs() {
+    if (_is_activated) {
+      asm volatile("msr DAIFCLR, #0b1111");
+    }
   }
 
-  [[gnu::always_inline]] static void disableIRQs() {
+  [[gnu::always_inline]]
+  inline static void disableIRQs() {
     asm volatile("msr DAIFSET, #0b1111");
   }
 
   static void handle_exception(TrapFrame* trap_frame);
   static void handle_irq();
 
-  uint8_t get_exception_level() const;
-  bool is_enabled() const;
+  [[gnu::always_inline]]
+  inline uint8_t get_exception_level() const {
+    // Note: CurrentEL is only accessible from EL1 or higher.
+    uint8_t level;
+    asm volatile("mrs %0, CurrentEL" : "=r" (level));
+    return level >> 2;
+  }
+
+  [[gnu::always_inline]]
+  inline static void activate() {
+    _is_activated = true;
+  }
+
+  [[gnu::always_inline]]
+  inline static bool is_activated() {
+    return _is_activated;
+  }
 
  protected:
-  ExceptionManager();
+  ExceptionManager() : _tasklet_scheduler() {}
 
  private:
   struct Exception final {
@@ -56,7 +76,7 @@ class ExceptionManager : public Singleton<ExceptionManager> {
 
   Exception get_current_exception();
 
-  bool _is_enabled;
+  static bool _is_activated;
   TaskletScheduler _tasklet_scheduler;
 };
 

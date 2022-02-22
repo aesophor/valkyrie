@@ -5,6 +5,7 @@
 #include <Singleton.h>
 #include <Types.h>
 #include <Utility.h>
+
 #include <driver/IO.h>
 
 #define MAILBOX_BASE   (MMIO_BASE + 0xb880)

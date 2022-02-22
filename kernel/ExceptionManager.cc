@@ -11,10 +11,7 @@ extern "C" void* evt;
 
 namespace valkyrie::kernel {
 
-ExceptionManager::ExceptionManager()
-    : _is_enabled(),
-      _tasklet_scheduler() {}
-
+bool ExceptionManager::_is_activated = false;
 
 void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   uint64_t spsr_el1;
@@ -115,18 +112,6 @@ void ExceptionManager::handle_irq() {
   enableIRQs();
   _tasklet_scheduler.finish_all();
   */
-}
-
-
-uint8_t ExceptionManager::get_exception_level() const {
-  // Note: CurrentEL is Only accessible from EL1 or higher.
-  uint8_t level;
-  asm volatile("mrs %0, CurrentEL" : "=r" (level));
-  return level >> 2;
-}
-
-bool ExceptionManager::is_enabled() const {
-  return _is_enabled;
 }
 
 

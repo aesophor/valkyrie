@@ -1,11 +1,12 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <fs/TmpFS.h>
 
+#include <CString.h>
+
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
-#include <libs/CString.h>
 
 namespace valkyrie::kernel {
 

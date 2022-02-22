@@ -3,9 +3,9 @@
 #define VALKYRIE_SLOB_ALLOCATOR_H_
 
 #include <Algorithm.h>
+#include <Math.h>
 #include <String.h>
 #include <TypeTraits.h>
-#include <libs/Math.h>
 
 namespace valkyrie::kernel {
 

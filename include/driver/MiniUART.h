@@ -4,6 +4,7 @@
 
 #include <Singleton.h>
 #include <Types.h>
+
 #include <dev/CharacterDevice.h>
 #include <driver/GPIO.h>
 

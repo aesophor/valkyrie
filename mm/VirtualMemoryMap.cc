@@ -1,9 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <mm/VirtualMemoryMap.h>
 
+#include <CString.h>
+
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
-#include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
 #define PAGE_TABLE_DEPTH  4

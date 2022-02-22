@@ -5,6 +5,7 @@
 #include <Deque.h>
 #include <Functional.h>
 #include <Singleton.h>
+
 #include <kernel/Timer.h>
 
 namespace valkyrie::kernel {

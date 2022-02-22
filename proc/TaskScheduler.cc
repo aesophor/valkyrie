@@ -2,6 +2,7 @@
 #include <proc/TaskScheduler.h>
 
 #include <Mutex.h>
+
 #include <dev/Console.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>

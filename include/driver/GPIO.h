@@ -5,7 +5,6 @@
 #include <driver/IO.h>
 
 // Defined according to BCM2837-ARM-Peripherals.pdf (pg. 90 ~ 91)
-// 刻到手軟 Zzzzz
 #define GPFSEL0   (MMIO_BASE + 0x200000)
 #define GPFSEL1   (MMIO_BASE + 0x200004)
 #define GPFSEL2   (MMIO_BASE + 0x200008)

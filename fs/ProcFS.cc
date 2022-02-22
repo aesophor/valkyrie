@@ -2,11 +2,12 @@
 #include <fs/ProcFS.h>
 
 #include <Algorithm.h>
+#include <CString.h>
+
 #include <dev/Console.h>
 #include <kernel/Kernel.h>
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
-#include <libs/CString.h>
 #include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {

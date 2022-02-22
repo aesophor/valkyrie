@@ -13,6 +13,7 @@
 
 #include <Memory.h>
 #include <RingBuffer.h>
+
 #include <dev/Console.h>
 #include <kernel/Tasklet.h>
 

@@ -47,10 +47,11 @@
 // [2] https://s-matyukevich.github.io/raspberry-pi-os/docs/lesson01/rpi-os.html
 #include <driver/MiniUART.h>
 
+#include <CString.h>
+
 #include <dev/Console.h>
 #include <driver/IO.h>
 #include <kernel/ExceptionManager.h>
-#include <libs/CString.h>
 
 // Quoting from BCM2837-ARM-Peripherals.pdf (pg. 6)
 // ------------------------------------------------

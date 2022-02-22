@@ -2,8 +2,9 @@
 #ifndef VALKYRIE_PAGE_H_
 #define VALKYRIE_PAGE_H_
 
+#include <CString.h>
 #include <Types.h>
-#include <libs/CString.h>
+
 #include <mm/BuddyAllocator.h>
 
 #define PAGE_SIZE 4096
