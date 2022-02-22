@@ -6,6 +6,7 @@
 #include <Memory.h>
 #include <Types.h>
 #include <TypeTraits.h>
+#include <Utility.h>
 #include <fs/File.h>
 #include <fs/Vnode.h>
 #include <mm/Page.h>
@@ -46,6 +47,7 @@ class Task {
 
   // Destructor
   ~Task();
+
 
   [[gnu::always_inline]] static Task* current() {
     Task* ret;
@@ -163,6 +165,12 @@ class Task {
   // Current working directory
   SharedPtr<Vnode> _cwd_vnode;
 };
+
+
+template <typename... Args>
+static UniquePtr<Task> make_task(Args&&... args) {
+  return make_unique<Task>(forward<Args>(args)...);
+}
 
 }  // namespace valkyrie::kernel
 

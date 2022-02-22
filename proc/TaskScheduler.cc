@@ -17,9 +17,9 @@ TaskScheduler::TaskScheduler()
 
 void TaskScheduler::run() {
   // Enqueue initial tasks.
-  enqueue_task(make_unique<Task>(/*parent=*/nullptr, idle, "idle"));
-  enqueue_task(make_unique<Task>(/*parent=*/nullptr, start_init, "init"));
-  enqueue_task(make_unique<Task>(/*parent=*/nullptr, start_kthreadd, "kthreadd"));
+  enqueue_task(make_task(/*parent=*/nullptr, idle, "idle"));
+  enqueue_task(make_task(/*parent=*/nullptr, start_init, "init"));
+  enqueue_task(make_task(/*parent=*/nullptr, start_kthreadd, "kthreadd"));
 
   // Switch to the first task.
   switch_to(/*prev=*/nullptr, /*next=*/_runqueue.front().get());
