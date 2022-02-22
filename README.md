@@ -1,38 +1,42 @@
 <div align="center">
 
 <h3>VALKYRIE</h3>
-<p>64-bit unix-like kernel for Raspberry Pi 3B+ (CPU: Arm Cortex A53)</p>
+<p>A unix-like hobby kernel built from scratch in C++20</p>
 
 <img src="/Documentation/cover.png">
 </div>
 
-<br>
+## Kernel Features
 
-## [NYCU, Operating System Capstone, Spring 2021](https://grasslab.github.io/NYCU_Operating_System_Capstone/index.html)
+* Aarch64 (64-bit) kernel with (user & kernel) preemptive multi-threading
+* Virtual memory support
+* Virtual filesystem (VFS)
+* FAT32 filesystem (supports long filenames)
+* /dev, /proc, /tmp filesystem
+* [Self-made C++ standard library](https://github.com/aesophor/valkyrie/tree/master/include/libs)
 
-| 學號 | GitHub 帳號 | 姓名 | Email |
-| --- | ----------- | --- | --- |
-| `309551004` | `aesophor` | `王冠中` | aesophor.cs09g [at] nctu.edu.tw |
+## Build and Run
 
-## Requirements
+#### Build requirements
 
-* armv8 cross compiler toolchain (must be C++20 compilant)
+Platform: macOS or (preferably Arch) Linux
+
+* GNU make
+* aarch64 cross compiler toolchain
 * qemu-system-aarch64
 
-#### macOS
+#### Installing ARMv8 cross compiler toolchain and QEMU
 
 ```sh
+# macOS
 brew tap messense/macos-cross-toolchains
 brew install aarch64-unknown-linux-gnu qemu
-```
 
-#### Arch Linux
-
-```sh
+# Arch Linux
 sudo pacman -S aarch64-linux-gnu-gcc aarch64-linux-gnu-gdb qemu-arch-extra
 ```
 
-## Build and Run
+#### Building and running valkyrie
 
 ```
 git clone https://github.com/aesophor/valkyrie
@@ -40,74 +44,57 @@ cd valkyrie
 make && make run
 ```
 
-## Progress Overview
+## Syscalls
 
-- [x] Lab1: Hello World
-- [x] Lab2: Booting ([bootloader](https://github.com/aesophor/valkyrie/tree/lab2-bootloader))
-- [x] Lab3: Allocator
-- [x] Lab4: Exception and Interrupt Handling
-- [x] Lab5: Multitasking
-- [x] Lab6: Virtual Filesystem
-- [x] Lab7: Filesystem Meets Hardware
-- [x] Lab8: Virtual Memory
+```cpp
+int sys_read(int fd, void __user* buf, size_t count);
+int sys_write(int fd, const void __user* buf, size_t count);
+int sys_open(const char __user* pathname, int options);
+int sys_close(int fd);
+int sys_fork();
+int sys_exec(const char __user* name, const char __user* argv[]);
+[[noreturn]] void sys_exit(int error_code);
+int sys_getpid();
+int sys_wait(int __user* wstatus);
+int sys_sched_yield();
+long sys_kill(pid_t pid, int signal);
+int sys_signal(int signal, void (__user* handler)());
+int sys_access(const char __user* pathname, int options);
+int sys_chdir(const char __user* pathname);
+int sys_mkdir(const char __user* pathname);
+int sys_rmdir(const char __user* pathname);
+int sys_unlink(const char __user* pathname);
+int sys_mount(const char __user* device_name,
+              const char __user* mountpoint,
+              const char __user* fs_name);
+int sys_umount(const char __user* mountpoint);
+int sys_mknod(const char __user* pathname, mode_t mode, dev_t dev);
+int sys_getcwd(char __user* buf);
+```
 
-## Kernel Features
-- [x] I/O: MiniUART - supports sync/async I/O
-- [x] ARM Mailbox API
-- [x] Exception & interrupt handling - top/bottom halves, tasklets
-- [x] Buddy allocator
-- [x] Dynamic allocator - my own optimized SLOB allocator (a simplified `ptmalloc`)
-- [ ] Boot memory allocator
-- [x] User / Kernel threads
-- [x] Multitasking - sys_fork(), sys_exec(), sys_wait(), sys_exit()
-- [x] User tasks preemption
-- [ ] Kernel preemption - protect critical sections
-- [x] POSIX signals - sys_kill(), sys_signal()
-- [ ] POSIX custom signal handlers - sys_rt_sigreturn()
-- [ ] Wait Queues
-- [x] tmpfs
-- [x] Virtual filesystem (VFS)
-- [x] System-wide opened file table, Per-process file descriptor tables
-- [x] POSIX file I/O - sys_read(), sys_write(), sys_open(), sys_close()
-- [x] Multi-level VFS - sys_chdir(), sys_mkdir(), sys_mount(), sys_umount()
-- [x] /proc Filesystem
-- [x] Parse MBR (Master Boot Record)
-- [x] FAT32 with LFN (Long File Name) support - open, read, write, close
-- [x] Character device, Block device
-- [x] Device file, mknod, device files
-- [ ] Component name cache mechanism for faster pathname lookup
-- [ ] Page cache mechanism for faster file r/w
-- [ ] sync() - write back cache data
-- [x] kernel virtual address space
-- [x] user virtual address space
-- [ ] mmap
-- [x] ELF parser and loader (incomplete)
-- [ ] Page fault handler, Demand paging
-- [ ] Copy on Write
-- [ ] ...
+## User Programs
 
-## Kernel C++20 STL Progress
+* init
+* login
+* sh
+* ls
+* cat
+* mkdir
+* touch
+* fork_test
+* page_fault_test
+* procfs_test
+* vfs_test_dev
+* vfs_test_mnt
+* vfs_test_orw 
 
-- [ ] Algorithm
-- [ ] Concepts
-- [x] Functional
-- [x] Iterator
-- [x] Smart pointers (UniquePtr, SharedPtr, WeakPtr)
-- [ ] Smart pointers custom deleters
-- [x] make_unique, make_shared, \*_pointer_cast<>()
-- [x] EnableSharedFromThis
-- [x] List + iterator
-- [x] String + iterator
-- [x] Deque
-- [x] RingBuffer
-- [x] Utility (move and forward)
-- [ ] ...
+## References
 
-## Thanks
-
+* [國立陽明交通大學 資訊科學與工程研究所, Operating System Capstone, Spring 2021](https://grasslab.github.io/NYCU_Operating_System_Capstone/)
 * [Linux](https://github.com/torvalds/linux)
 * [SerenityOS](https://github.com/SerenityOS/serenity)
 * [OS67](https://github.com/SilverRainZ/OS67)
 
 ## License
-Available under the [MIT License](https://github.com/aesophor/valkyrie/blob/309551004/LICENSE)
+
+[GNU General Public License v3](https://github.com/aesophor/valkyrie/blob/309551004/LICENSE)

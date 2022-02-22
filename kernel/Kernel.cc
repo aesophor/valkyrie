@@ -39,7 +39,7 @@ void Kernel::run() {
   printk("Activating exception manager\n");
   _exception_manager.activate();
 
-  printk("Starting task scheduler\n");
+  printk("Starting task scheduler\n\n");
   _task_scheduler.run();
 
   Kernel::panic("You shouldn't have reached here...\n");
