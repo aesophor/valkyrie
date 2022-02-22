@@ -35,9 +35,9 @@ class Kernel : public Singleton<Kernel> {
   Mailbox& _mailbox;
   MiniUART& _mini_uart;
   Console& _console;
-  MemoryManager& _memory_manager;
   ExceptionManager& _exception_manager;
   TimerMultiplexer& _timer_multiplexer;
+  MemoryManager& _memory_manager;
   TaskScheduler& _task_scheduler;
   VFS& _vfs;
 };

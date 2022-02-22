@@ -46,4 +46,5 @@ __restore:
   msr TPIDR_EL1, x1
 
 __out:
+  msr DAIFCLR, #0b1111
   ret

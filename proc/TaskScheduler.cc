@@ -1,12 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <proc/TaskScheduler.h>
 
+#include <Mutex.h>
 #include <dev/Console.h>
 #include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
-#include <proc/idle.h>
-#include <proc/start_init.h>
-#include <proc/start_kthreadd.h>
 
 namespace valkyrie::kernel {
 
@@ -16,10 +14,9 @@ TaskScheduler::TaskScheduler()
 
 
 void TaskScheduler::run() {
-  // Enqueue initial tasks.
-  enqueue_task(make_task(/*parent=*/nullptr, idle, "idle"));
-  enqueue_task(make_task(/*parent=*/nullptr, start_init, "init"));
-  enqueue_task(make_task(/*parent=*/nullptr, start_kthreadd, "kthreadd"));
+  if (_runqueue.empty()) [[unlikely]] {
+    Kernel::panic("No tasks in runqueue!\n");
+  }
 
   // Switch to the first task.
   switch_to(/*prev=*/nullptr, /*next=*/_runqueue.front().get());
@@ -27,6 +24,8 @@ void TaskScheduler::run() {
 
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
+  const LockGuard<Mutex> lock(_mutex);
+
   if (!task) [[unlikely]] {
     Kernel::panic("sched: task is empty\n");
   }
@@ -43,6 +42,8 @@ void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
+  const LockGuard<Mutex> lock(_mutex);
+
 #ifdef DEBUG
   printk("sched: removing thread from the runqueue 0x%x [%s] (pid = %d)\n",
       &task,
@@ -66,6 +67,8 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
 
 
 void TaskScheduler::schedule() {
+  _mutex.lock();
+
   // Maybe move the first task in the runqueue to the end.
   if (_runqueue.size() > 1) [[likely]] {
     auto task = move(_runqueue.front());
@@ -85,6 +88,7 @@ void TaskScheduler::schedule() {
   Task::current()->set_state(Task::State::SLEEPING);
   _runqueue.front()->set_state(Task::State::RUNNING);
 
+  _mutex.unlock();
   switch_to(Task::current(), _runqueue.front().get());
 }
 

@@ -11,16 +11,20 @@ namespace valkyrie::kernel {
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::the().get_arm_memory().second),
       _zones{Zone(0x10000000), Zone(0x10200000)},
-      _kasan() {}
+      _kasan(),
+      _mutex() {}
 
 
 void* MemoryManager::get_free_page() {
+  const LockGuard<Mutex> lock(_mutex);
+
   void* ret = _zones[0].buddy_allocator.allocate_one_page_frame();
   _kasan.mark_allocated(ret);
   return ret;
 }
 
 void* MemoryManager::kmalloc(size_t size) {
+  const LockGuard<Mutex> lock(_mutex);
   void* ret;
 
   if (size + SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
@@ -34,6 +38,7 @@ void* MemoryManager::kmalloc(size_t size) {
 }
 
 void MemoryManager::kfree(void* p) {
+  const LockGuard<Mutex> lock(_mutex);
   _kasan.mark_free_chk(p);
 
   if (reinterpret_cast<size_t>(p) % PAGE_SIZE == 0) {
@@ -45,18 +50,22 @@ void MemoryManager::kfree(void* p) {
 
 
 String MemoryManager::get_buddy_info() const {
+  const LockGuard<Mutex> lock(_mutex);
   return _zones[0].buddy_allocator.to_string();
 }
 
 String MemoryManager::get_slob_info() const {
+  const LockGuard<Mutex> lock(_mutex);
   return _zones[1].slob_allocator.to_string();
 }
 
 void MemoryManager::dump_buddy_allocator_info() const {
+  const LockGuard<Mutex> lock(_mutex);
   _zones[0].buddy_allocator.dump();
 }
 
 void MemoryManager::dump_slob_allocator_info() const {
+  const LockGuard<Mutex> lock(_mutex);
   _zones[1].slob_allocator.dump();
 }
 

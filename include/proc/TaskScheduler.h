@@ -28,7 +28,7 @@ class TaskScheduler : public Singleton<TaskScheduler> {
  private:
   bool _need_reschedule;
   List<UniquePtr<Task>> _runqueue;
-  Mutex _m;
+  Mutex _mutex;
 };
 
 }  // namespace valkyrie::kernel

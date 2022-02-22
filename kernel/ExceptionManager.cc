@@ -90,17 +90,21 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 }
 
 void ExceptionManager::handle_irq() {
+  /*
   if (MiniUART::the().has_pending_irq()) {
     MiniUART::the().handle_irq();
     return;
   }
+  */
 
   TimerMultiplexer::the().tick();
-  printk("timer: 0x%x\n", TimerMultiplexer::the().get_arm_core_timer().get_jiffies());
+  //printk("timer: 0x%x\n", TimerMultiplexer::the().get_arm_core_timer().get_jiffies());
 
+  /*
   auto& sched = TaskScheduler::the();
   sched.tick();
   sched.maybe_reschedule();
+  */
 
   /*
   auto task = []() { printf("ok\n"); };

@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_MEMORY_MANAGER_H_
 #define VALKYRIE_MEMORY_MANAGER_H_
 
+#include <Mutex.h>
 #include <Singleton.h>
 #include <String.h>
 #include <mm/AddressSanitizer.h>
@@ -31,6 +32,7 @@ class MemoryManager : public Singleton<MemoryManager> {
   const size_t _ram_size;
   Zone _zones[2];
   AddressSanitizer _kasan;
+  mutable Mutex _mutex;
 };
 
 }  // namespace valkyrie::kernel

@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <Mutex.h>
 #include <Singleton.h>
 #include <Utility.h>
 #include <dev/Device.h>
@@ -86,6 +87,7 @@ class VFS : public Singleton<VFS> {
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
   List<UniquePtr<StorageDevice>> _storage_devices;
   List<Pair<dev_t, Device*>> _registered_devices;
+  Mutex _mutex;
 };
 
 }  // namespace valkyrie::kernel

@@ -1,15 +1,19 @@
 // Copyright (c) 2021-2022 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
+#include <proc/idle.h>
+#include <proc/start_init.h>
+#include <proc/start_kthreadd.h>
+
 namespace valkyrie::kernel {
 
 Kernel::Kernel()
     : _mailbox(Mailbox::the()),
       _mini_uart(MiniUART::the()),
       _console(Console::the()),
-      _memory_manager(MemoryManager::the()),
       _exception_manager(ExceptionManager::the()),
       _timer_multiplexer(TimerMultiplexer::the()),
+      _memory_manager(MemoryManager::the()),
       _task_scheduler(TaskScheduler::the()),
       _vfs(VFS::the()) {}
 
@@ -24,14 +28,18 @@ void Kernel::run() {
   _vfs.mount_procfs();
   _vfs.populate_devtmpfs();
 
-  //printk("enabling timer interrupts\n");
-  //_exception_manager.enableIRQs();
-  //_timer_multiplexer.get_arm_core_timer().enable();
+  printk("Enabling timer interrupts\n");
+  _timer_multiplexer.get_arm_core_timer().enable();
 
-  printk("starting task scheduler\n");
+  printk("Creating initial tasks\n");
+  _task_scheduler.enqueue_task(make_task(nullptr, idle, "idle"));
+  _task_scheduler.enqueue_task(make_task(nullptr, start_init, "init"));
+  _task_scheduler.enqueue_task(make_task(nullptr, start_kthreadd, "kthreadd"));
+
+  printk("Starting task scheduler\n");
   _task_scheduler.run();
 
-  Kernel::panic("you shouldn't have reached here...\n");
+  Kernel::panic("You shouldn't have reached here...\n");
 }
 
 
