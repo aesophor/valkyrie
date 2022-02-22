@@ -14,9 +14,6 @@
 #define USER_STACK_PAGE  0x00007ffffffff000
 #define KERNEL_PAGE      0xffff000000000000
 
-// FIXME: refactor this shit
-#define PHYS_TO_VIRT(x, type) reinterpret_cast<type>(USER_STACK_PAGE + (reinterpret_cast<size_t>(x) & 0xfff))
-
 extern "C" void switch_to_user_mode(void* entry_point,
                                     size_t user_sp,
                                     size_t kernel_sp,
@@ -426,11 +423,16 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
   // Now we will write the addrs in `copied_str_addrs`
   // towards high address starting from user SP.
   copied_argv = reinterpret_cast<char**>(user_sp);
+
   for (int i = 0; i < argc; i++) {
-    copied_argv[i] = PHYS_TO_VIRT(copied_str_addrs[i], char*);
+    copied_argv[i] = reinterpret_cast<char*>(
+        USER_STACK_PAGE + (reinterpret_cast<size_t>(copied_str_addrs[i]) & 0xfff));
   }
+
   copied_argv[argc] = nullptr;
-  copied_argv_ptr = PHYS_TO_VIRT(&copied_argv[0], char**);
+
+  copied_argv_ptr = reinterpret_cast<char**>(
+      USER_STACK_PAGE + (reinterpret_cast<size_t>(&copied_argv[0]) & 0xfff));
 
 out:
   user_sp -= 8;
