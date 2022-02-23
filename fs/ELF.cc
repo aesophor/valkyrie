@@ -69,7 +69,7 @@ void ELF::load(const VMMap& vmmap) const {
       void* src_p = reinterpret_cast<void*>(src);
       size_t len = PAGE_SIZE;
 
-      void* page = get_free_page();
+      void* page = get_free_page(true);
       size_t dest = reinterpret_cast<size_t>(page);
 
       if (is_copying_first_page) {

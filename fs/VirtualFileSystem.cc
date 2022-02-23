@@ -25,8 +25,7 @@ VFS::VFS()
     : _mounts(),
       _opened_files(),
       _storage_devices(),
-      _registered_devices(),
-      _mutex() {}
+      _registered_devices() {}
 
 
 void VFS::mount_rootfs() {
@@ -102,11 +101,11 @@ SharedPtr<Vnode> VFS::create(const String& pathname,
                              mode_t mode,
                              uid_t uid,
                              gid_t gid) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (pathname == "." || pathname == "..") {
     return nullptr;
   }
-
-  const LockGuard<Mutex> lock(_mutex);
 
   // Check if the parent directory entry exists.
   String basename;
@@ -130,7 +129,7 @@ SharedPtr<Vnode> VFS::create(const String& pathname,
 }
 
 SharedPtr<File> VFS::open(const String& pathname, int options) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Lookup pathname from the root vnode.
   SharedPtr<Vnode> target = resolve_path(pathname);
@@ -165,11 +164,11 @@ SharedPtr<File> VFS::open(const String& pathname, int options) {
 }
 
 int VFS::close(SharedPtr<File> file) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (!file) [[unlikely]] {
     return -1;
   }
-
-  const LockGuard<Mutex> lock(_mutex);
 
   auto it = _opened_files.find_if([file](const auto& f) {
     return f->vnode == file->vnode;
@@ -199,13 +198,13 @@ int VFS::close(SharedPtr<File> file) {
 }
 
 int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   // 1. write len byte from buf to the opened file.
   // 2. return written size or error code if an error occurs.
   if (!file) [[unlikely]] {
     return -1;
   }
-
-  const LockGuard<Mutex> lock(_mutex);
 
   if (file->vnode->is_regular_file()) {
     auto new_content = make_unique<char[]>(len);
@@ -233,13 +232,13 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
 }
 
 int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   // 1. read min(len, readable file data size) byte to buf from the opened file.
   // 2. return read size or error code if an error occurs.
   if (!file) [[unlikely]] {
     return -1;
   }
-
-  const LockGuard<Mutex> lock(_mutex);
 
   if (file->vnode->is_regular_file()) {
     char* content = file->vnode->get_content();
@@ -300,7 +299,7 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
 }
 
 int VFS::access(const String& pathname, int options) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Check user's permission for a file.
   // FIXME: currently it simply checks if the file exists...
@@ -314,6 +313,8 @@ int VFS::access(const String& pathname, int options) {
 }
 
 int VFS::mkdir(const String& pathname) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (create(pathname, nullptr, 0, S_IFDIR, 0, 0)) {
     return 0;
   }
@@ -321,17 +322,19 @@ int VFS::mkdir(const String& pathname) {
 }
 
 int VFS::rmdir(const String& pathname) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
   return -1;
 }
 
 int VFS::unlink(const String& pathname) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
   return -1;
 }
 
 int VFS::mount(const String& device_name,
                const String& mountpoint,
                const String& fs_name) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Check if `mountpoint` exists.
   SharedPtr<Vnode> vnode = resolve_path(mountpoint);
@@ -367,7 +370,7 @@ int VFS::mount(const String& device_name,
 }
 
 int VFS::umount(const String& mountpoint) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Check if `mountpoint` is valid.
   SharedPtr<Vnode> vnode = resolve_path(mountpoint);
@@ -396,7 +399,7 @@ int VFS::umount(const String& mountpoint) {
 }
 
 int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // This special filesystem node must be either:
   // 1. a character device
@@ -422,6 +425,8 @@ int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
 
 
 SharedPtr<Vnode> VFS::get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (!vnode) {
     return nullptr;
   }
@@ -437,6 +442,8 @@ SharedPtr<Vnode> VFS::get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode) {
 SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
                                    SharedPtr<Vnode>* out_parent,
                                    String* out_basename) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (pathname == ".") {
     // FIXME: what about out_parent and out_basename?
     return Task::current()->get_cwd_vnode();
@@ -525,6 +532,8 @@ List<SharedPtr<File>>& VFS::get_opened_files() {
 }
 
 SharedPtr<Vnode> VFS::get_host_vnode(SharedPtr<Vnode> guest_vnode) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   auto it = _mounts.find_if([&guest_vnode](const auto& mount) {
     return mount->guest_vnode == guest_vnode;
   });

@@ -44,7 +44,7 @@ class ExceptionManager : public Singleton<ExceptionManager> {
   }
 
   static void handle_exception(TrapFrame* trap_frame);
-  static void handle_irq();
+  static void handle_irq(TrapFrame* trap_frame);
 
   [[gnu::always_inline]]
   inline uint8_t get_exception_level() const {
@@ -73,6 +73,8 @@ class ExceptionManager : public Singleton<ExceptionManager> {
     uint32_t iss;  // instruction specific syndrome
     size_t ret_addr;
   };
+
+  static void dump_registers(TrapFrame* trap_frame);
 
   Exception get_current_exception();
 

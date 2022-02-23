@@ -4,6 +4,7 @@
 
 #include <List.h>
 #include <Memory.h>
+#include <Mutex.h>
 #include <Types.h>
 #include <TypeTraits.h>
 #include <Utility.h>
@@ -14,7 +15,7 @@
 #include <mm/VirtualMemoryMap.h>
 #include <proc/Signal.h>
 
-#define TASK_TIME_SLICE    3
+#define TASK_TIME_SLICE   64
 #define TASK_NAME_MAX_LEN 16
 #define NR_TASK_FD_LIMITS 16
 
@@ -44,19 +45,24 @@ class Task {
   };
 
   // Constructor
-  Task(Task* parent, void (*entry_point)(), const char* name);
+  Task(bool is_user_task,
+       Task* parent,
+       void (*entry_point)(),
+       const char* name);
 
   // Destructor
   ~Task();
 
 
-  [[gnu::always_inline]] static Task* current() {
+  [[gnu::always_inline]]
+  inline static Task* current() {
     Task* ret;
     asm volatile("mrs %0, TPIDR_EL1" : "=r" (ret));
     return ret;
   }
 
-  [[gnu::always_inline]] void save_context() {
+  [[gnu::always_inline]]
+  inline void save_context() {
     switch_to(this, nullptr);
   }
 
@@ -78,7 +84,7 @@ class Task {
   bool is_fd_valid(const int fd) const;
 
 
-  // FIXME: move all these definition to .cc
+  bool is_user_task() const { return _is_user_task; }
   Task::State get_state() const { return _state; }
   pid_t get_pid() const { return _pid; }
   TrapFrame* get_trap_frame() const { return _trap_frame; }
@@ -90,7 +96,11 @@ class Task {
   int get_time_slice() const { return _time_slice; }
   void set_time_slice(int time_slice) { _time_slice = time_slice; }
 
-  void tick() { if (_time_slice > 0) _time_slice--; }
+  void tick() {
+    if (_time_slice > 0) {
+      _time_slice--;
+    }
+  }
 
 
   size_t get_children_count() const {
@@ -124,7 +134,8 @@ class Task {
   static Task* _kthreadd;
   static pid_t _next_pid;
 
-
+  // For now we keep this as the first member of Task, so that
+  // proc/ctx_switch.S can access process context directly.
   struct Context {
     uint64_t x19;
     uint64_t x20;
@@ -139,9 +150,9 @@ class Task {
     uint64_t fp;
     uint64_t lr;
     uint64_t sp;
-    uint64_t ttbr0_el1;
   } _context;
 
+  bool _is_user_task;
   Task* _parent;
   List<Task*> _active_children;
   List<UniquePtr<Task>> _terminated_children;
@@ -169,8 +180,13 @@ class Task {
 
 
 template <typename... Args>
-static UniquePtr<Task> make_task(Args&&... args) {
-  return make_unique<Task>(forward<Args>(args)...);
+static UniquePtr<Task> make_kernel_task(Args&&... args) {
+  return make_unique<Task>(false, forward<Args>(args)...);
+}
+
+template <typename... Args>
+static UniquePtr<Task> make_user_task(Args&&... args) {
+  return make_unique<Task>(true, forward<Args>(args)...);
 }
 
 }  // namespace valkyrie::kernel

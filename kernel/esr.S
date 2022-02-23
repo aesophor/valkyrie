@@ -73,6 +73,7 @@ handle_exception:
 .global handle_irq
 handle_irq:
   save_cpu_context
-  bl _ZN8valkyrie6kernel16ExceptionManager10handle_irqEv
+  set_x0_to_trapframe_addr
+  bl _ZN8valkyrie6kernel16ExceptionManager10handle_irqEPNS0_9TrapFrameE
   restore_cpu_context
   eret

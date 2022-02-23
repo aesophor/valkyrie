@@ -22,7 +22,6 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (ex.ec == 0b10101 && ex.iss == 0) [[likely]] {
-    //printk("switching to kernel space\n");
     switch_user_va_space(nullptr);
 
     Task::current()->set_trap_frame(trap_frame);
@@ -44,21 +43,25 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
     disableIRQs();
 
     // Handle pending POSIX signals.
-    Task::current()->handle_pending_signals();
+    //Task::current()->handle_pending_signals();
 
     // User preemption.
     TaskScheduler::the().maybe_reschedule();
 
-    //printk("switched to user space\n");
-    switch_user_va_space(Task::current()->get_ttbr0_el1());
+    if (Task::current()->is_user_task()) {
+      switch_user_va_space(Task::current()->get_ttbr0_el1());
+    }
+
     return;
   }
 
   printk("Current exception lvl: %d\n", ExceptionManager::the().get_exception_level());
-  printk("Saved Program Status Register: 0x%x\n", spsr_el1);
-  printk("Exception return address: 0x%x\n", ex.ret_addr);
+  printk("Saved Program Status Register: 0x%p\n", spsr_el1);
+  printk("Exception return address: 0x%p\n", ex.ret_addr);
   printk("Exception class (EC): 0x%x\n", ex.ec);
   printk("Instruction specific syndrome (ISS): 0x%x\n", ex.iss);
+
+  dump_registers(trap_frame);
 
   // For ec and iss, see ARMv8 manual p.1877
   switch (ex.ec) {
@@ -91,7 +94,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
   }
 }
 
-void ExceptionManager::handle_irq() {
+void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
   /*
   if (MiniUART::the().has_pending_irq()) {
     MiniUART::the().handle_irq();
@@ -99,14 +102,21 @@ void ExceptionManager::handle_irq() {
   }
   */
 
-  TimerMultiplexer::the().tick();
-  //printk("timer: 0x%x\n", TimerMultiplexer::the().get_arm_core_timer().get_jiffies());
+  // The timer interrupt can be triggered either when the CPU
+  // is running in kernel mode or user mode, so we should just
+  // back up the old pgd and restore it to ttbr0_el1 at the end.
+  void* old_pgd;
+  asm volatile("mrs %0, TTBR0_EL1" : "=r" (old_pgd));
 
-  /*
-  auto& sched = TaskScheduler::the();
-  sched.tick();
-  sched.maybe_reschedule();
-  */
+  switch_user_va_space(nullptr);
+
+  TimerMultiplexer::the().tick();
+
+  // Kernel preemption.
+  TaskScheduler::the().tick();
+  TaskScheduler::the().maybe_reschedule();
+
+  switch_user_va_space(old_pgd);
 
   /*
   auto task = []() { printf("ok\n"); };
@@ -135,6 +145,18 @@ ExceptionManager::Exception ExceptionManager::get_current_exception() {
   ex.iss = esr_el1 & 0x1ffffff;
 
   return ex;
+}
+
+void ExceptionManager::dump_registers(TrapFrame* trap_frame) {
+  printk("--- Dumping CPU Registers ---\n");
+  printk("x0: 0x%p\n", trap_frame->x0);
+  printk("x1: 0x%p\n", trap_frame->x1);
+  printk("x2: 0x%p\n", trap_frame->x2);
+  printk("x3: 0x%p\n", trap_frame->x3);
+  printk("x4: 0x%p\n", trap_frame->x4);
+  printk("x30: 0x%p\n", trap_frame->x30);
+  printk("SP_EL0: 0x%p\n", trap_frame->sp_el0);
+  printk("ELR_EL1: 0x%p\n", trap_frame->elr_el1);
 }
 
 }  // namespace valkyrie::kernel

@@ -13,7 +13,7 @@
 namespace valkyrie::kernel {
 
 VMMap::VMMap()
-    : _pgd(reinterpret_cast<page_table_t*>(get_free_page())) {
+    : _pgd(reinterpret_cast<page_table_t*>(get_free_page(true))) {
 
   if (!_pgd) [[unlikely]] {
     printk("error: unable to allocate pgd\n");
@@ -82,7 +82,7 @@ void VMMap::map(const size_t v_addr,
     // is not present yet. Hence, we should allocate
     // the next-level page table now.
     if (PD_INVALID(pd)) {
-      void* page_frame = get_free_page();
+      void* page_frame = get_free_page(true);
       memset(page_frame, 0, PAGE_SIZE);
       next_level_pt_addr = reinterpret_cast<size_t>(page_frame);
       pt[pt_index] = next_level_pt_addr | PD_TABLE;
@@ -225,7 +225,7 @@ void VMMap::dfs_copy_page(const page_table_t* pt_old,
       }
       // Duplicate page frames.
       void* old_page_frame = reinterpret_cast<void*>(pt_old[i] & PAGE_MASK);
-      void* new_page_frame = get_free_page();
+      void* new_page_frame = get_free_page(true);
       memcpy(new_page_frame, old_page_frame, PAGE_SIZE);
 
       auto old_attr = pt_old[i] & ATTR_MASK;
@@ -242,7 +242,7 @@ void VMMap::dfs_copy_page(const page_table_t* pt_old,
 
     // Duplicate the page frame used by this page table.
     auto old_page_frame = reinterpret_cast<page_table_t*>(pt_old[i] & PAGE_MASK);
-    auto new_page_frame = reinterpret_cast<page_table_t*>(get_free_page());
+    auto new_page_frame = reinterpret_cast<page_table_t*>(get_free_page(true));
     memset(new_page_frame, 0, PAGE_SIZE);
 
     pt_new[i] = reinterpret_cast<size_t>(new_page_frame) | PD_TABLE;

@@ -7,6 +7,8 @@
 
 namespace valkyrie::kernel {
 
+RecursiveMutex Kernel::mutex;
+
 Kernel::Kernel()
     : _mailbox(Mailbox::the()),
       _mini_uart(MiniUART::the()),
@@ -28,13 +30,13 @@ void Kernel::run() {
   _vfs.mount_procfs();
   _vfs.populate_devtmpfs();
 
+  printk("Creating initial tasks\n");
+  _task_scheduler.enqueue_task(make_kernel_task(nullptr, idle, "idle"));
+  _task_scheduler.enqueue_task(make_user_task(nullptr, start_init, "start_init"));
+  _task_scheduler.enqueue_task(make_kernel_task(nullptr, start_kthreadd, "start_kthreadd"));
+
   printk("Enabling timer interrupts\n");
   _timer_multiplexer.get_arm_core_timer().enable();
-
-  printk("Creating initial tasks\n");
-  _task_scheduler.enqueue_task(make_task(nullptr, idle, "idle"));
-  _task_scheduler.enqueue_task(make_task(nullptr, start_init, "init"));
-  _task_scheduler.enqueue_task(make_task(nullptr, start_kthreadd, "kthreadd"));
 
   printk("Activating exception manager\n");
   _exception_manager.activate();
@@ -47,12 +49,11 @@ void Kernel::run() {
 
 
 void Kernel::print_banner() {
-  auto& console = Console::the();
-  console.set_color(Console::Color::GREEN, /*bold=*/true);
+  _console.set_color(Console::Color::GREEN, /*bold=*/true);
   printf("--- Valkyrie OS (Virtual Memory Edition) ---\n");
-  console.set_color(Console::Color::YELLOW, /*bold=*/true);
+  _console.set_color(Console::Color::YELLOW, /*bold=*/true);
   printf("Developed by: Marco Wang <aesophor.cs09g@nctu.edu.tw>\n\n");
-  console.clear_color();
+  _console.clear_color();
 }
 
 void Kernel::print_hardware_info() {

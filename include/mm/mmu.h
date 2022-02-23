@@ -28,4 +28,6 @@
 #define PAGE_MASK 0x00007ffffffff000  // [47:12] physical address
 #define ATTR_MASK 0x0000000000000fff  // [11: 2] attributes
 
+#define KERNEL_BASE 0xffff000000000000
+
 #endif  // VALKYRIE_MMU_H_

@@ -2,6 +2,7 @@
 #include <proc/Task.h>
 
 #include <Math.h>
+#include <Mutex.h>
 #include <String.h>
 
 #include <fs/ELF.h>
@@ -13,7 +14,6 @@
 
 #define USER_BINARY_PAGE 0x400000
 #define USER_STACK_PAGE  0x00007ffffffff000
-#define KERNEL_PAGE      0xffff000000000000
 
 extern "C" void switch_to_user_mode(void* entry_point,
                                     size_t user_sp,
@@ -30,8 +30,12 @@ Task* Task::_kthreadd = nullptr;
 uint32_t Task::_next_pid = 0;
 
 
-Task::Task(Task* parent, void (*entry_point)(), const char* name)
+Task::Task(bool is_user_task,
+           Task* parent,
+           void (*entry_point)(),
+           const char* name)
     : _context(),
+      _is_user_task(is_user_task),
       _parent(parent),
       _active_children(),
       _terminated_children(),
@@ -61,10 +65,6 @@ Task::Task(Task* parent, void (*entry_point)(), const char* name)
 
   _context.lr = reinterpret_cast<size_t>(entry_point);
   _context.sp = _kstack_page.end() - 0x10;
-
-  if (parent) {
-    _context.ttbr0_el1 = reinterpret_cast<size_t>(_vmmap.get_pgd());
-  }
 
   strcpy(_name, name);
 
@@ -166,6 +166,8 @@ Task* Task::get_by_pid(const pid_t pid) {
 
 
 int Task::do_fork() {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   save_context();
 
   size_t ret = 0;
@@ -176,8 +178,12 @@ int Task::do_fork() {
   size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
 
 
+#ifdef DEBUG
+  printk("do_fork()...\n");
+#endif
+
   // Clone task.
-  auto task = make_unique<Task>(/*parent=*/this, _entry_point, _name);
+  auto task = make_unique<Task>(_is_user_task, /*parent=*/this, _entry_point, _name);
   Task* child = task.get();
 
   if (!task) {
@@ -240,6 +246,8 @@ out:
 
 
 int Task::do_exec(const char* name, const char* const _argv[]) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   // Acquire a new page and use it as the user stack page.
   _ustack_page = get_free_page();
 
@@ -290,13 +298,8 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 #endif
 
   // Jump to the entry point.
-  // NOTE: When the CPU generates an exception, TTBR0_EL1 still points to
-  // the user's page table, so the kernel sp must be the virtual address
-  // instead of the physical address.
-  switch_to_user_mode(elf.get_entry_point(),
-                      user_sp,
-                      KERNEL_PAGE + kernel_sp,
-                      _vmmap.get_pgd());
+  switch_to_user_mode(elf.get_entry_point(), user_sp, kernel_sp, _vmmap.get_pgd());
+
 failed:
   printk("exec failed: pid = %d [%s]\n", _pid, _name);
   return -1;
@@ -304,6 +307,8 @@ failed:
 
 
 int Task::do_wait(int* wstatus) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (!get_children_count()) {
     return -1;
   }
@@ -326,6 +331,8 @@ int Task::do_wait(int* wstatus) {
 
 
 [[noreturn]] void Task::do_exit(int error_code) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   // Terminate the current task.
   _state = Task::State::TERMINATED;
   _error_code = error_code;
@@ -347,6 +354,8 @@ int Task::do_wait(int* wstatus) {
 
 
 long Task::do_kill(pid_t pid, Signal signal) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   // Send a signal to `pid`.
   if (auto task = Task::get_by_pid(pid)) {
     task->_pending_signals.push_back(signal);
@@ -359,6 +368,8 @@ long Task::do_kill(pid_t pid, Signal signal) {
 
 
 int Task::do_signal(int signal, void (*handler)()) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
   if (!is_signal_valid(signal)) [[unlikely]] {
     printk("do_signal: failed (signal=0x%x is invalid)\n", signal);
     return -1;

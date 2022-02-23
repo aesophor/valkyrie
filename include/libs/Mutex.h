@@ -40,6 +40,39 @@ class Mutex {
 };
 
 
+class RecursiveMutex {
+ public:
+  RecursiveMutex() : _is_locked(), _depth() {}
+  ~RecursiveMutex() = default;
+
+  // Locks the mutex, blocks if the mutex is not available
+  [[gnu::always_inline]]
+  inline void lock() {
+    ExceptionManager::disableIRQs();
+    _is_locked = true;
+    _depth++;
+  }
+
+  // Unlocks the mutex.
+  [[gnu::always_inline]]
+  inline void unlock() {
+    _depth--;
+    if (_depth == 0) {
+      _is_locked = false;
+      ExceptionManager::enableIRQs();
+    }
+    // XXX: This must not happen...
+    if (_depth < 0) {
+      while (1);
+    }
+  }
+
+ private:
+  bool _is_locked;
+  int _depth;
+};
+
+
 template <typename T>
 class LockGuard {
  public:

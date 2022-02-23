@@ -25,7 +25,7 @@ void TaskScheduler::run() {
 
 
 void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (!task) [[unlikely]] {
     Kernel::panic("sched: task is empty\n");
@@ -33,9 +33,7 @@ void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
 
 #ifdef DEBUG
   printk("sched: adding thread to the runqueue 0x%x [%s] (pid = %d)\n",
-      task.get(),
-      task->get_name(),
-      task->get_pid());
+         task.get(), task->get_name(), task->get_pid());
 #endif
 
   task->set_state(Task::State::RUNNING);
@@ -43,16 +41,14 @@ void TaskScheduler::enqueue_task(UniquePtr<Task> task) {
 }
 
 UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
-  const LockGuard<Mutex> lock(_mutex);
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
+  UniquePtr<Task> removed_task;
 
 #ifdef DEBUG
   printk("sched: removing thread from the runqueue 0x%x [%s] (pid = %d)\n",
-      &task,
-      task.get_name(),
-      task.get_pid());
+         &task, task.get_name(), task.get_pid());
 #endif
-
-  UniquePtr<Task> removed_task;
 
   _runqueue.remove_if([&removed_task, &task](auto& t) {
     return t.get() == &task &&
@@ -68,7 +64,7 @@ UniquePtr<Task> TaskScheduler::remove_task(const Task& task) {
 
 
 void TaskScheduler::schedule() {
-  _mutex.lock();
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Maybe move the first task in the runqueue to the end.
   if (_runqueue.size() > 1) [[likely]] {
@@ -78,10 +74,8 @@ void TaskScheduler::schedule() {
 
 #ifdef DEBUG
     auto& next_task = _runqueue.front();
-    printf(">>>> context switch: next: pid = %d [%s], SP = 0x%x\n",
-                                                         next_task->get_pid(),
-                                                         next_task->get_name(),
-                                                         next_task->_context.sp);
+    printf(">>>> context switch: next: pid = %d [%s], SP = 0x%p\n",
+           next_task->get_pid(), next_task->get_name(), next_task->_context.sp);
 #endif
   }
 
@@ -89,7 +83,6 @@ void TaskScheduler::schedule() {
   Task::current()->set_state(Task::State::SLEEPING);
   _runqueue.front()->set_state(Task::State::RUNNING);
 
-  _mutex.unlock();
   switch_to(Task::current(), _runqueue.front().get());
 }
 
@@ -100,6 +93,10 @@ void TaskScheduler::maybe_reschedule() {
 
   _need_reschedule = false;
   Task::current()->set_time_slice(TASK_TIME_SLICE);
+
+#ifdef DEBUG
+  printk("Preempting current task @0x%p... (pid = %d)\n", Task::current(), Task::current()->get_pid());
+#endif
 
   schedule();
 }

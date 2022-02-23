@@ -6,6 +6,7 @@
 #include <Singleton.h>
 #include <String.h>
 
+#include <mm/mmu.h>
 #include <mm/AddressSanitizer.h>
 #include <mm/Zone.h>
 
@@ -13,9 +14,11 @@ namespace valkyrie::kernel {
 
 class MemoryManager : public Singleton<MemoryManager> {
  public:
-  void* get_free_page();
+  void* get_free_page(bool physical = false);
+
+  // Operates on virtual memory addresses.
   void* kmalloc(size_t size);
-  void  kfree(void* p);
+  void kfree(void* p);
 
   String get_buddy_info() const;
   String get_slob_info() const;
@@ -33,7 +36,6 @@ class MemoryManager : public Singleton<MemoryManager> {
   const size_t _ram_size;
   Zone _zones[2];
   AddressSanitizer _kasan;
-  mutable Mutex _mutex;
 };
 
 }  // namespace valkyrie::kernel
@@ -41,8 +43,8 @@ class MemoryManager : public Singleton<MemoryManager> {
 
 extern "C" void* switch_user_va_space(void* ttbr0_el1);
 
-extern "C" inline void* get_free_page() {
-  return valkyrie::kernel::MemoryManager::the().get_free_page();
+extern "C" inline void* get_free_page(bool physical = false) {
+  return valkyrie::kernel::MemoryManager::the().get_free_page(physical);
 }
 
 extern "C" inline void* kmalloc(const size_t requested_size) {

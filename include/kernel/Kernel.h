@@ -3,6 +3,7 @@
 #define VALKYRIE_KERNEL_H_
 
 #include <Config.h>
+#include <Mutex.h>
 #include <Singleton.h>
 
 #include <dev/Console.h>
@@ -26,6 +27,8 @@ class Kernel : public Singleton<Kernel> {
 
   static constexpr const char* panic_msg = "Kernel panic - not syncing: ";
 
+  static RecursiveMutex mutex;
+
  protected:
   Kernel();
 
@@ -48,13 +51,14 @@ extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char* fmt, Args&&... args) {
-  ExceptionManager::the().disableIRQs();
+  ExceptionManager::disableIRQs();
+
+  uint64_t sp;
+  asm volatile("mov %0, sp" : "=r" (sp));
+
+  switch_user_va_space(nullptr);
 
   auto& console = Console::the();
-
-  uint64_t stack_pointer;
-  asm volatile("mov %0, sp" : "=r" (stack_pointer));
-
   console.clear_color();
   printk("");
   console.set_color(Console::Color::RED, /*bold=*/true);
@@ -63,17 +67,15 @@ template <typename... Args>
   printf(fmt, forward<Args>(args)...);
   console.clear_color();
 
-  printk("SP = 0x%x ", stack_pointer);
-  /*
-  if (Task::current()) {
-    printf("PID = %d", Task::current()->get_pid());
-  }
-  */
-  printf("\n");
+  void* ttbr0_el1;
+  asm volatile("mrs %0, ttbr0_el1" : "=r" (ttbr0_el1));
 
+  printk("");
+  auto task = Task::current();
+  printf("Current task: pid %d [%s], ttbr0_el1 = 0x%p, kernel sp = 0x%p\n",
+         task->get_pid(), task->get_name(), ttbr0_el1, sp);
 
-  MemoryManager::the().dump_buddy_allocator_info();
-
+  console.clear_color();
   printk("");
   console.set_color(Console::Color::RED, /*bold=*/true);
   printf("---[ end ");

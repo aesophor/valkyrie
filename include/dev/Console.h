@@ -3,13 +3,16 @@
 #define VALKYRIE_CONSOLE_H_
 
 #include <printf.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 #include <dev/CharacterDevice.h>
 
 namespace valkyrie::kernel {
 
 class Console : public CharacterDevice {
+  MAKE_NONCOPYABLE(Console);
+  MAKE_NONMOVABLE(Console);
+
  public:
   enum class Color {
     BLACK,
@@ -23,12 +26,7 @@ class Console : public CharacterDevice {
   };
 
   static Console& the();
-
   virtual ~Console() = default;
-  Console(const Console&) = delete;
-  Console(Console&&) = delete;
-  Console& operator =(const Console&) = delete;
-  Console& operator =(Console&&) = delete;
 
   virtual char read_char() override;
   virtual void write_char(const char c) override; 
