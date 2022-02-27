@@ -8,7 +8,7 @@
 
 ## Kernel Features
 
-* Aarch64 (64-bit) kernel with (user & kernel) preemptive multi-threading
+* AArch64 (64-bit) kernel with (user & kernel) preemptive multi-threading
 * Virtual memory support
 * Virtual filesystem (VFS)
 * FAT32 filesystem (supports long filenames)
