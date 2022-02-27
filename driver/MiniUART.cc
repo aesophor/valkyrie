@@ -85,14 +85,7 @@
 
 namespace valkyrie::kernel {
 
-MiniUART::MiniUART()
-    : _is_debugging(),
-      _is_read_buffer_enabled(),
-      _is_write_buffer_enabled(),
-      _read_buffer_bytes_pending(),
-      _write_buffer_bytes_pending(),
-      _read_buffer(),
-      _write_buffer() {
+MiniUART::MiniUART() {
   // Configure GPFSEL1 register to set both gpio14 and gpio15 to use ALT5.
   uint32_t reg = io::get<uint32_t>(GPFSEL1);
   reg &= ~(0b111 << 12);     // clear the 12~15th bits (gpio14)
@@ -119,33 +112,6 @@ MiniUART::MiniUART()
   io::put<uint32_t>(AUX_MU_IIR_REG, 1);     // FIFO empty, currently no irq pending
   io::put<uint32_t>(AUX_MU_CNTL_REG, 3);    // re-enable tx/rx
 }
-
-
-char MiniUART::read_char() {
-  return getchar();
-}
-
-void MiniUART::write_char(const char c) {
-  putchar(c);
-}
-
-
-char MiniUART::getchar() {
-  return getchar_sync();
-}
-
-void MiniUART::gets(char* s) {
-  (_is_read_buffer_enabled) ? gets_async(s) : gets_sync(s);
-}
-
-void MiniUART::putchar(const char c) {
-  (_is_write_buffer_enabled) ? putchar_async(c) : putchar_sync(c);
-}
-
-void MiniUART::puts(const char* s, bool newline) {
-  (_is_write_buffer_enabled) ? puts_async(s, newline) : puts_sync(s, newline);
-}
-
 
 
 uint8_t MiniUART::recv() {
@@ -198,128 +164,6 @@ void MiniUART::puts_sync(const char* s, bool newline) {
   if (newline) {
     putchar_sync('\n');
   }
-}
-
-
-
-void MiniUART::enable_interrupts() const {
-  // Enable mini UART interrupt routing
-  io::put<uint32_t>(ENABLE_IRQS_1, MINI_UART_IRQ);
-}
-
-void MiniUART::disable_interrupts() const {
-  // Disable mini UART interrupt routing
-  io::put<uint32_t>(DISABLE_IRQS_1, MINI_UART_IRQ);
-}
-
-bool MiniUART::has_pending_irq() const {
-  return io::get<uint32_t>(IRQ_BASIC_PENDING) & IRQ_PENDING_1_HAS_PENDING_IRQ &&
-         io::get<uint32_t>(IRQ_PENDING_1) & MINI_UART_IRQ;
-}
-
-void MiniUART::handle_irq() {
-  bool has_pending_tx_irq = (io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b01;
-  bool has_pending_rx_irq = (io::get<uint32_t>(AUX_MU_IIR_REG) >> 1) & 0b10;
-
-  if (has_pending_tx_irq) {
-    handle_tx_irq();
-  }
-  if (has_pending_rx_irq) {
-    handle_rx_irq();
-  }
-
-  disable_interrupts();
-}
-
-
-void MiniUART::handle_tx_irq() {
-  flush_write_buffer();
-}
-
-void MiniUART::handle_rx_irq() {
-  auto byte = io::get<uint8_t>(AUX_MU_IO_REG);
-
-  if (byte == BACKSPACE) {
-    if (_read_buffer_bytes_pending > 0) {
-      _read_buffer_bytes_pending--;
-      puts_async("\b \b", /*newline=*/false);
-    }
-  } else {
-    byte = (byte == '\r') ? '\n' : byte;
-    _read_buffer[_read_buffer_bytes_pending++] = byte;
-    putchar_async(byte);
-  }
-
-  if (_is_debugging) {
-    printf("[");
-    for (int i = 0; i < _read_buffer_bytes_pending; i++) {
-      printf("0x%x,", _read_buffer[i]);
-    }
-    printf("] (%d)\n", _read_buffer_bytes_pending);
-  }
-}
-
-void MiniUART::flush_write_buffer() {
-  for (int i = 0; i < _write_buffer_bytes_pending; i++) {
-    putchar_sync(_write_buffer[i]);
-  }
-  _write_buffer_bytes_pending = 0;
-}
-
-
-void MiniUART::gets_async(char* s) {
-  enable_interrupts();
-
-  while (_read_buffer_bytes_pending == 0) {
-    enable_interrupts();
-  };
-
-  while (_read_buffer[_read_buffer_bytes_pending - 1] != '\n') {
-    enable_interrupts();
-  }
-  _read_buffer[_read_buffer_bytes_pending - 1] = 0;
-
-  strcpy(s, reinterpret_cast<char*>(_read_buffer));
-  _read_buffer_bytes_pending = 0;
-}
-
-void MiniUART::putchar_async(const char c) {
-  if (_write_buffer_bytes_pending >= WRITE_BUFFER_SIZE) {
-    flush_write_buffer();
-  }
-
-  // Write the byte to the _write_buffer.
-  _write_buffer[_write_buffer_bytes_pending++] = c;
-
-  // Let mini UART interrupt the CPU when it becomes available,
-  // and then we do the actual writing.
-  enable_interrupts();
-}
-
-void MiniUART::puts_async(const char* s, bool newline) {
-  for (size_t i = 0; i < strlen(s); i++) {
-    putchar_async(s[i]);
-  }
-  if (newline) {
-    putchar_async('\n');
-  }
-}
-
-
-bool MiniUART::is_debugging() const {
-  return _is_debugging;
-}
-
-void MiniUART::set_debugging(bool debugging) {
-  _is_debugging = debugging;
-}
-
-void MiniUART::set_read_buffer_enabled(bool enabled) {
-  _is_read_buffer_enabled = enabled;
-}
-
-void MiniUART::set_write_buffer_enabled(bool enabled) {
-  _is_write_buffer_enabled = enabled;
 }
 
 }  // namespace valkyrie::kernel

@@ -8,9 +8,6 @@
 #include <dev/CharacterDevice.h>
 #include <driver/GPIO.h>
 
-#define READ_BUFFER_SIZE  512
-#define WRITE_BUFFER_SIZE 512
-
 namespace valkyrie::kernel {
 
 class MiniUART : public Singleton<MiniUART>,
@@ -18,55 +15,26 @@ class MiniUART : public Singleton<MiniUART>,
  public:
   virtual ~MiniUART() = default;
 
-  virtual char read_char() override;
-  virtual void write_char(const char c) override;
+  virtual char read_char() override { return getchar(); }
+  virtual void write_char(const char c) override { putchar(c); }
 
-  char getchar();
-  void gets(char* s);
-  void putchar(const char c);
-  void puts(const char* s, bool newline = true);
-
-  void enable_interrupts() const;
-  void disable_interrupts() const;
-  bool has_pending_irq() const;
-  void handle_irq();
-
-  bool is_debugging() const;
-  void set_debugging(bool debugging);
-  void set_read_buffer_enabled(bool enabled);
-  void set_write_buffer_enabled(bool enabled);
+  char getchar() { return getchar_sync(); }
+  void gets(char* s) { gets_sync(s); }
+  void putchar(const char c) { putchar_sync(c); }
+  void puts(const char* s, bool newline = true) { puts_sync(s, newline); }
 
  protected:
   MiniUART();
 
  private:
-  // Synchronous I/O
   uint8_t recv();
   void send(const uint8_t byte);
+
+  // Synchronous I/O
   char getchar_sync();
   void gets_sync(char* s);
   void putchar_sync(const char c);
   void puts_sync(const char* s, bool newline = true);
-
-  // Asynchronous I/O
-  void handle_tx_irq();
-  void handle_rx_irq();
-  void flush_write_buffer();
-  char getchar_async();
-  void gets_async(char* s);
-  void putchar_async(const char c);
-  void puts_async(const char* s, bool newline = true);
-
-
-  bool _is_debugging;
-  bool _is_read_buffer_enabled;
-  bool _is_write_buffer_enabled;
-
-  int _read_buffer_bytes_pending;
-  int _write_buffer_bytes_pending;
-
-  uint8_t _read_buffer[READ_BUFFER_SIZE];
-  uint8_t _write_buffer[WRITE_BUFFER_SIZE];
 };
 
 }  // namespace valkyrie::kernel
