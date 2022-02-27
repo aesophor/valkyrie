@@ -64,7 +64,7 @@ Task::Task(bool is_user_task,
   }
 
   _context.lr = reinterpret_cast<size_t>(entry_point);
-  _context.sp = _kstack_page.end() - 0x10;
+  _context.sp = _kstack_page.end();
 
   strcpy(_name, name);
 
@@ -257,7 +257,7 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   // Construct the argv chain on the user stack.
   // Currently `_ustack_page` and `user_sp` contains physical addresses.
   size_t user_sp = copy_arguments_to_user_stack(_argv);
-  size_t kernel_sp = _kstack_page.end() - 0x10;
+  size_t kernel_sp = _kstack_page.end();
 
   // Convert `user_sp` to virtual addresses.
   size_t offset = _ustack_page.offset_of(user_sp);
@@ -384,7 +384,7 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
   int argc = 0;
   char** copied_argv = nullptr;
   char** copied_argv_ptr = nullptr;
-  size_t user_sp = _ustack_page.end() - 0x10;
+  size_t user_sp = _ustack_page.end();
   UniquePtr<String[]> strings;
   UniquePtr<char*[]> copied_str_addrs;
 
