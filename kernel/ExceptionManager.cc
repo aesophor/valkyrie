@@ -43,9 +43,8 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
     disableIRQs();
 
     // Handle pending POSIX signals.
-    //Task::current()->handle_pending_signals();
+    Task::current()->handle_pending_signals();
 
-    // User preemption.
     TaskScheduler::the().maybe_reschedule();
 
     if (Task::current()->is_user_task()) {
@@ -95,20 +94,12 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
 }
 
 void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
-  /*
-  if (MiniUART::the().has_pending_irq()) {
-    MiniUART::the().handle_irq();
-    return;
-  }
-  */
-
+  // XXX: For now we have tiemr IRQ as the only interrupt source.
   const Exception ex = ExceptionManager::the().get_current_exception();
 
   switch_user_va_space(nullptr);
 
   TimerMultiplexer::the().tick();
-
-  // Kernel preemption.
   TaskScheduler::the().tick();
   TaskScheduler::the().maybe_reschedule();
 
@@ -117,30 +108,19 @@ void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
   if (ex.ret_addr < KERNEL_BASE) {
     switch_user_va_space(Task::current()->get_ttbr0_el1());
   }
-
-  /*
-  auto task = []() { printf("ok\n"); };
-  _tasklet_scheduler.add_tasklet(task);
-
-  // Do all the unfinished deferred tasks
-  // with interrupts enabled.
-  enableIRQs();
-  _tasklet_scheduler.finish_all();
-  */
 }
 
 
 ExceptionManager::Exception ExceptionManager::get_current_exception() {
   Exception ex;
+  uint32_t esr_el1; 
 
-  // Obtain return address of current exception.
   asm volatile("mrs %0, ELR_EL1" : "=r" (ex.ret_addr));
+  asm volatile("mrs %0, ESR_EL1" : "=r" (esr_el1));
 
   // ESR_EL1[31:26] = EC
   // ESR_EL1[25] = IL
   // ESR_EL1[24:0] = ISS
-  uint32_t esr_el1; 
-  asm volatile("mrs %0, ESR_EL1" : "=r" (esr_el1));
   ex.ec = esr_el1 >> 26;
   ex.iss = esr_el1 & 0x1ffffff;
 
