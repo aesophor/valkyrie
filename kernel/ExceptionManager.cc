@@ -102,11 +102,7 @@ void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
   }
   */
 
-  // The timer interrupt can be triggered either when the CPU
-  // is running in kernel mode or user mode, so we should just
-  // back up the old pgd and restore it to ttbr0_el1 at the end.
-  void* old_pgd;
-  asm volatile("mrs %0, TTBR0_EL1" : "=r" (old_pgd));
+  const Exception ex = ExceptionManager::the().get_current_exception();
 
   switch_user_va_space(nullptr);
 
@@ -116,7 +112,11 @@ void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
   TaskScheduler::the().tick();
   TaskScheduler::the().maybe_reschedule();
 
-  switch_user_va_space(old_pgd);
+  // A timer IRQ can come from either kernel or user mode, so
+  // we only need to restore ttbr0_el1 if we're returning to user mode.
+  if (ex.ret_addr < KERNEL_BASE) {
+    switch_user_va_space(Task::current()->get_ttbr0_el1());
+  }
 
   /*
   auto task = []() { printf("ok\n"); };
