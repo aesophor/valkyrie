@@ -1,4 +1,4 @@
-CXX = aarch64-linux-gnu-g++
+CXX = aarch64-unknown-linux-gnu-g++
 CXXFLAGS = -std=c++20\
 	   -I../vlibc\
 	   -ffreestanding\

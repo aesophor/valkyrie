@@ -1,8 +1,8 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <vlibc.h>
 #include <cstring.h>
+#include <vlibc.h>
 
-bool validate_user(const char* username, const char* password);
+bool validate_user(const char *username, const char *password);
 
 int main(int argc, char **argv) {
   int pid;
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
         break;
 
       case 0: {
-        char* arguments[4] = {"/bin/sh", username, nullptr};
+        char *arguments[4] = {"/bin/sh", username, nullptr};
         exec("/bin/sh", arguments);
         break;
       }
@@ -43,8 +43,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-
-bool validate_user(const char* username, const char* password) {
+bool validate_user(const char *username, const char *password) {
   if (!strlen(username)) {
     return false;
   }
@@ -52,4 +51,3 @@ bool validate_user(const char* username, const char* password) {
   // TODO:
   return true;
 }
-

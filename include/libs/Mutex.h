@@ -34,7 +34,8 @@ class RecursiveMutex {
 
     // XXX: This must not happen...
     if (_depth < 0) {
-      while (1);
+      while (1)
+        ;
     }
   }
 
@@ -43,15 +44,18 @@ class RecursiveMutex {
   int _depth;
 };
 
-
 template <typename T>
 class LockGuard {
  public:
-  LockGuard(T& t) : _t(t) { _t.lock(); }
-  ~LockGuard() { _t.unlock(); }
+  LockGuard(T &t) : _t(t) {
+    _t.lock();
+  }
+  ~LockGuard() {
+    _t.unlock();
+  }
 
  private:
-  T& _t;
+  T &_t;
 };
 
 }  // namespace valkyrie::kernel

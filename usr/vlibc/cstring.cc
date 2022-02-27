@@ -3,9 +3,9 @@
 
 extern "C" {
 
-void* memcpy(void* dest, const void* src, size_t n) {
-  const uint8_t* src_p = reinterpret_cast<const uint8_t*>(src);
-  uint8_t* dest_p = reinterpret_cast<uint8_t*>(dest);
+void *memcpy(void *dest, const void *src, size_t n) {
+  const uint8_t *src_p = reinterpret_cast<const uint8_t *>(src);
+  uint8_t *dest_p = reinterpret_cast<uint8_t *>(dest);
 
   for (; n > 0; n--) {
     *dest_p++ = *src_p++;
@@ -13,8 +13,8 @@ void* memcpy(void* dest, const void* src, size_t n) {
   return dest;
 }
 
-void* memset(void* dest, uint8_t val, size_t n) {
-  uint8_t* dest_p = reinterpret_cast<uint8_t*>(dest);
+void *memset(void *dest, uint8_t val, size_t n) {
+  uint8_t *dest_p = reinterpret_cast<uint8_t *>(dest);
 
   for (; n > 0; n--) {
     *dest_p++ = val;
@@ -22,9 +22,9 @@ void* memset(void* dest, uint8_t val, size_t n) {
   return dest;
 }
 
-int memcmp(const void* ptr1, const void* ptr2, size_t num) {
-  const uint8_t* p1 = reinterpret_cast<const uint8_t*>(ptr1);
-  const uint8_t* p2 = reinterpret_cast<const uint8_t*>(ptr2);
+int memcmp(const void *ptr1, const void *ptr2, size_t num) {
+  const uint8_t *p1 = reinterpret_cast<const uint8_t *>(ptr1);
+  const uint8_t *p2 = reinterpret_cast<const uint8_t *>(ptr2);
 
   while (num-- > 0) {
     if (*p1++ != *p2++) {
@@ -34,8 +34,7 @@ int memcmp(const void* ptr1, const void* ptr2, size_t num) {
   return 0;
 }
 
-
-size_t strlen(const char* s) {
+size_t strlen(const char *s) {
   size_t len = 0;
 
   for (; *s; s++) {
@@ -44,7 +43,7 @@ size_t strlen(const char* s) {
   return len;
 }
 
-int strcmp(const char* s1, const char* s2) {
+int strcmp(const char *s1, const char *s2) {
   while (*s1 || *s2) {
     if (*s1 == *s2) {
       ++s1;
@@ -56,7 +55,7 @@ int strcmp(const char* s1, const char* s2) {
   return 0;
 }
 
-int strncmp(const char* s1, const char* s2, size_t n) {
+int strncmp(const char *s1, const char *s2, size_t n) {
   while ((*s1 || *s2) && n--) {
     if (*s1 == *s2) {
       ++s1;
@@ -68,8 +67,8 @@ int strncmp(const char* s1, const char* s2, size_t n) {
   return 0;
 }
 
-char* strcpy(char* dest, const char* src) {
-  char* ret = dest;
+char *strcpy(char *dest, const char *src) {
+  char *ret = dest;
   while (*src) {
     *dest++ = *src++;
   }
@@ -77,8 +76,8 @@ char* strcpy(char* dest, const char* src) {
   return ret;
 }
 
-char* strncpy(char* dest, const char* src, size_t n) {
-  char* ret = dest;
+char *strncpy(char *dest, const char *src, size_t n) {
+  char *ret = dest;
   while (*src && n--) {
     *dest++ = *src++;
   }
@@ -86,8 +85,8 @@ char* strncpy(char* dest, const char* src, size_t n) {
   return ret;
 }
 
-char* strcat(char* dest, const char* src) {
-  char* cur = dest + strlen(dest);
+char *strcat(char *dest, const char *src) {
+  char *cur = dest + strlen(dest);
   while (*src) {
     *cur++ = *src++;
   }
@@ -95,7 +94,7 @@ char* strcat(char* dest, const char* src) {
   return dest;
 }
 
-char* strstr(const char* haystack, const char* needle){
+char *strstr(const char *haystack, const char *needle) {
   int haystack_size = strlen(haystack);
   int needle_size = strlen(needle);
 
@@ -114,22 +113,17 @@ char* strstr(const char* haystack, const char* needle){
     }
 
     if (matched) {
-      return const_cast<char*>(haystack + i);
+      return const_cast<char *>(haystack + i);
     }
   }
   return nullptr;
 }
 
-
-int atoi(const char* str, const int base) {
-  static auto is_digit = [](const char c) -> bool {
-    return c >= '0' && c <= '9';
-  };
+int atoi(const char *str, const int base) {
+  static auto is_digit = [](const char c) -> bool { return c >= '0' && c <= '9'; };
 
   static auto is_alphanumeric = [](const char c) -> bool {
-    return (c >= '0' && c <= '9') ||
-           (c >= 'A' && c <= 'F') ||
-           (c >= 'a' && c <= 'f');
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
   };
 
   static auto to_decimal = [](const char c) -> int {
@@ -181,7 +175,7 @@ int atoi(const char* str, const int base) {
       break;
   }
 
-  for (; ptr < (int) len && is_valid(str[ptr]); ptr++) {
+  for (; ptr < (int)len && is_valid(str[ptr]); ptr++) {
     if (result > INT_MAX / base) {
       return (is_negative) ? INT_MIN : INT_MAX;
     }
@@ -196,5 +190,4 @@ int atoi(const char* str, const int base) {
 
   return (is_negative) ? -result : result;
 }
-
 }

@@ -10,18 +10,29 @@
 
 namespace valkyrie::kernel {
 
-class MiniUART : public Singleton<MiniUART>,
-                 public CharacterDevice::Driver {
+class MiniUART : public Singleton<MiniUART>, public CharacterDevice::Driver {
  public:
   virtual ~MiniUART() = default;
 
-  virtual char read_char() override { return getchar(); }
-  virtual void write_char(const char c) override { putchar(c); }
+  virtual char read_char() override {
+    return getchar();
+  }
+  virtual void write_char(const char c) override {
+    putchar(c);
+  }
 
-  char getchar() { return getchar_sync(); }
-  void gets(char* s) { gets_sync(s); }
-  void putchar(const char c) { putchar_sync(c); }
-  void puts(const char* s, bool newline = true) { puts_sync(s, newline); }
+  char getchar() {
+    return getchar_sync();
+  }
+  void gets(char *s) {
+    gets_sync(s);
+  }
+  void putchar(const char c) {
+    putchar_sync(c);
+  }
+  void puts(const char *s, bool newline = true) {
+    puts_sync(s, newline);
+  }
 
  protected:
   MiniUART();
@@ -32,9 +43,9 @@ class MiniUART : public Singleton<MiniUART>,
 
   // Synchronous I/O
   char getchar_sync();
-  void gets_sync(char* s);
+  void gets_sync(char *s);
   void putchar_sync(const char c);
-  void puts_sync(const char* s, bool newline = true);
+  void puts_sync(const char *s, bool newline = true);
 };
 
 }  // namespace valkyrie::kernel

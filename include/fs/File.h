@@ -8,8 +8,8 @@
 #ifndef VALKYRIE_FILE_H_
 #define VALKYRIE_FILE_H_
 
-#include <Types.h>
 #include <Memory.h>
+#include <Types.h>
 
 #include <fs/Vnode.h>
 
@@ -18,11 +18,10 @@ namespace valkyrie::kernel {
 // Forward declaration
 class FileSystem;
 
-
 struct File final {
-  File(FileSystem& fs, SharedPtr<Vnode> vnode, int options);
+  File(FileSystem &fs, SharedPtr<Vnode> vnode, int options);
 
-  FileSystem& fs;  // the filesystem to which this file belong.
+  FileSystem &fs;  // the filesystem to which this file belong.
   SharedPtr<Vnode> vnode;
   size_t pos;  // the next r/w position of this opened file.
   int options;

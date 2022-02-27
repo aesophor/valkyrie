@@ -23,9 +23,7 @@ class WeakPtr {
   WeakPtr() : _ctrl() {}
 
   // Constructor (from a SharedPtr<T>)
-  explicit
-  WeakPtr(const SharedPtr<T>& r) 
-      : _ctrl(r._ctrl) {
+  explicit WeakPtr(const SharedPtr<T> &r) : _ctrl(r._ctrl) {
     inc_use_count_weak();
   }
 
@@ -35,13 +33,12 @@ class WeakPtr {
   }
 
   // Copy constructor
-  WeakPtr(const WeakPtr& r)
-      : _ctrl(r._ctrl) {
+  WeakPtr(const WeakPtr &r) : _ctrl(r._ctrl) {
     inc_use_count_weak();
   }
 
   // Copy assignment operator
-  WeakPtr& operator =(const WeakPtr& r) {
+  WeakPtr &operator=(const WeakPtr &r) {
     if (_ctrl && _ctrl->use_count_weak > 0) {
       dec_use_count_weak();
     }
@@ -52,13 +49,12 @@ class WeakPtr {
   }
 
   // Move constructor
-  WeakPtr(WeakPtr&& r)
-      : _ctrl(r._ctrl) {
+  WeakPtr(WeakPtr &&r) : _ctrl(r._ctrl) {
     r._ctrl = nullptr;
   }
-  
+
   // Move assignment operator
-  WeakPtr& operator =(WeakPtr&& r) {
+  WeakPtr &operator=(WeakPtr &&r) {
     if (_ctrl && _ctrl->use_count_weak > 0) {
       dec_use_count_weak();
     }
@@ -73,12 +69,11 @@ class WeakPtr {
     return lock();
   }
 
-
   void reset() {
     dec_use_count_weak();
   }
 
-  void swap(WeakPtr& r) {
+  void swap(WeakPtr &r) {
     using ::valkyrie::kernel::swap;
     swap(*this, r);
   }
@@ -120,16 +115,13 @@ class WeakPtr {
     }
   }
 
-
-  typename SharedPtr<T>::ControlBlock* _ctrl;
+  typename SharedPtr<T>::ControlBlock *_ctrl;
 };
-
-
 
 // Explicit (full) specialization of struct `Hash` for WeakPtr<T>
 template <typename T>
 struct Hash<WeakPtr<T>> {
-  size_t operator ()(const WeakPtr<T>& wp) const {
+  size_t operator()(const WeakPtr<T> &wp) const {
     constexpr size_t prime = 31;
     size_t ret = 7;
 

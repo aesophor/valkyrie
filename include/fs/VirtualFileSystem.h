@@ -14,15 +14,14 @@
 #include <fs/File.h>
 #include <fs/FileSystem.h>
 
-#define NR_SPECIAL_ENTRIES 2  /* "." and ".." */
+#define NR_SPECIAL_ENTRIES 2 /* "." and ".." */
 
 namespace valkyrie::kernel {
 
 class VFS : public Singleton<VFS> {
  public:
   struct Mount final {
-    Mount(SharedPtr<FileSystem> guest_fs,
-          SharedPtr<Vnode> guest_vnode,
+    Mount(SharedPtr<FileSystem> guest_fs, SharedPtr<Vnode> guest_vnode,
           SharedPtr<Vnode> host_vnode);
 
     SharedPtr<FileSystem> guest_fs;
@@ -35,31 +34,28 @@ class VFS : public Singleton<VFS> {
   void mount_procfs();
   void populate_devtmpfs();
 
-
-  SharedPtr<File> open(const String& pathname, int options);
+  SharedPtr<File> open(const String &pathname, int options);
   int close(SharedPtr<File> file);
-  int write(SharedPtr<File> file, const void* buf, size_t len);
-  int read(SharedPtr<File> file, void* buf, size_t len);
-  int access(const String& pathname, int options);
-  int mkdir(const String& pathname);
-  int rmdir(const String& pathname);
-  int unlink(const String& pathname);
-  int mount(const String& device_name, const String& mountpoint, const String& fs_name);
-  int umount(const String& mountpoint);
-  int mknod(const String& pathname, mode_t mode, dev_t dev);
+  int write(SharedPtr<File> file, const void *buf, size_t len);
+  int read(SharedPtr<File> file, void *buf, size_t len);
+  int access(const String &pathname, int options);
+  int mkdir(const String &pathname);
+  int rmdir(const String &pathname);
+  int unlink(const String &pathname);
+  int mount(const String &device_name, const String &mountpoint, const String &fs_name);
+  int umount(const String &mountpoint);
+  int mknod(const String &pathname, mode_t mode, dev_t dev);
 
   // Retrieves the target vnode by `pathname`.
-  [[nodiscard]]
-  SharedPtr<Vnode> resolve_path(const String& pathname,
-                                SharedPtr<Vnode>* out_parent = nullptr,
-                                String* out_basename = nullptr);
+  [[nodiscard]] SharedPtr<Vnode> resolve_path(const String &pathname,
+                                              SharedPtr<Vnode> *out_parent = nullptr,
+                                              String *out_basename = nullptr);
 
   // The API for each device to register itself to the VFS.
-  [[nodiscard]] dev_t register_device(Device& device);
+  [[nodiscard]] dev_t register_device(Device &device);
 
-
-  [[nodiscard]] FileSystem& get_rootfs();
-  [[nodiscard]] List<SharedPtr<File>>& get_opened_files();
+  [[nodiscard]] FileSystem &get_rootfs();
+  [[nodiscard]] List<SharedPtr<File>> &get_opened_files();
   [[nodiscard]] SharedPtr<Vnode> get_host_vnode(SharedPtr<Vnode> vnode);
 
  protected:
@@ -67,27 +63,21 @@ class VFS : public Singleton<VFS> {
 
  private:
   void mount_rootfs(SharedPtr<FileSystem> fs);
-  void mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive);
+  void mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive &archive);
 
-  SharedPtr<Vnode> create(const String& pathname,
-                          const char* content,
-                          size_t size,
-                          mode_t mode,
-                          uid_t uid,
-                          gid_t gid);
+  SharedPtr<Vnode> create(const String &pathname, const char *content, size_t size,
+                          mode_t mode, uid_t uid, gid_t gid);
 
-  [[nodiscard]] Device* find_registered_device(dev_t dev);
+  [[nodiscard]] Device *find_registered_device(dev_t dev);
 
-  [[nodiscard]]
-  SharedPtr<Vnode> get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode);
-
+  [[nodiscard]] SharedPtr<Vnode> get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode);
 
   static uint32_t _next_dev_major;
 
   List<UniquePtr<Mount>> _mounts;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)
   List<UniquePtr<StorageDevice>> _storage_devices;
-  List<Pair<dev_t, Device*>> _registered_devices;
+  List<Pair<dev_t, Device *>> _registered_devices;
 };
 
 }  // namespace valkyrie::kernel

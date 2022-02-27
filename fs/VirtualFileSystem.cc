@@ -10,8 +10,8 @@
 #include <fs/CPIOArchive.h>
 #include <fs/DirectoryEntry.h>
 #include <fs/File.h>
-#include <fs/Stat.h>
 #include <fs/ProcFS.h>
+#include <fs/Stat.h>
 #include <fs/TmpFS.h>
 #include <fs/Vnode.h>
 #include <kernel/Kernel.h>
@@ -21,12 +21,7 @@ namespace valkyrie::kernel {
 
 uint32_t VFS::_next_dev_major = 1;
 
-VFS::VFS()
-    : _mounts(),
-      _opened_files(),
-      _storage_devices(),
-      _registered_devices() {}
-
+VFS::VFS() : _mounts(), _opened_files(), _storage_devices(), _registered_devices() {}
 
 void VFS::mount_rootfs() {
   // TODO: currently it only supports SD card.
@@ -44,7 +39,7 @@ void VFS::mount_rootfs(SharedPtr<FileSystem> fs) {
   _mounts.push_back(make_unique<Mount>(fs, fs->get_root_vnode(), fs->get_root_vnode()));
 }
 
-void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive) {
+void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive &archive) {
   mount_rootfs(fs);
 
   if (!archive.is_valid()) [[unlikely]] {
@@ -52,7 +47,7 @@ void VFS::mount_rootfs(SharedPtr<FileSystem> fs, const CPIOArchive& archive) {
     Kernel::panic("VFS::mount_rootfs: unable to mount rootfs\n");
   }
 
-  archive.for_each([this](const auto& entry) {
+  archive.for_each([this](const auto &entry) {
     mode_t mode = (entry.content_len) ? S_IFREG : S_IFDIR;
     create(entry.pathname, entry.content, entry.content_len, mode, 0, 0);
   });
@@ -94,13 +89,8 @@ void VFS::populate_devtmpfs() {
   }
 }
 
-
-SharedPtr<Vnode> VFS::create(const String& pathname,
-                             const char* content,
-                             size_t size,
-                             mode_t mode,
-                             uid_t uid,
-                             gid_t gid) {
+SharedPtr<Vnode> VFS::create(const String &pathname, const char *content, size_t size,
+                             mode_t mode, uid_t uid, gid_t gid) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (pathname == "." || pathname == "..") {
@@ -128,16 +118,15 @@ SharedPtr<Vnode> VFS::create(const String& pathname,
   return parent->create_child(basename, content, size, mode, 0, 0);
 }
 
-SharedPtr<File> VFS::open(const String& pathname, int options) {
+SharedPtr<File> VFS::open(const String &pathname, int options) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Lookup pathname from the root vnode.
   SharedPtr<Vnode> target = resolve_path(pathname);
 
   // Check if this file has already been opened by any other process.
-  auto it = _opened_files.find_if([&target](const auto& f) {
-    return f->vnode.get() == target.get();
-  });
+  auto it = _opened_files.find_if(
+      [&target](const auto &f) { return f->vnode.get() == target.get(); });
 
   // If yes, then we can return its file handle now.
   if (it != _opened_files.end()) {
@@ -170,16 +159,14 @@ int VFS::close(SharedPtr<File> file) {
     return -1;
   }
 
-  auto it = _opened_files.find_if([file](const auto& f) {
-    return f->vnode == file->vnode;
-  });
+  auto it = _opened_files.find_if([file](const auto &f) { return f->vnode == file->vnode; });
 
   // `file` != nullptr but the file is not opened.
   // The user is probably trying to close an unopened file?
   if (it == _opened_files.end()) [[unlikely]] {
     return -1;
   }
-  
+
   file->pos = 0;
 
   // Why should we release this file from the system-wide file table
@@ -189,15 +176,13 @@ int VFS::close(SharedPtr<File> file) {
   // 2. `_opened_files` contains one instance
   // 3. sys_close contains one instance
   if (file.use_count() <= 3) {
-    _opened_files.remove_if([file](const auto& f) {
-      return f->vnode == file->vnode;
-    });
+    _opened_files.remove_if([file](const auto &f) { return f->vnode == file->vnode; });
   }
 
   return 0;
 }
 
-int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
+int VFS::write(SharedPtr<File> file, const void *buf, size_t len) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // 1. write len byte from buf to the opened file.
@@ -212,18 +197,19 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
     file->vnode->set_content(move(new_content), len);
 
   } else if (file->vnode->is_character_device()) {
-    auto cdev = static_cast<CharacterDevice*>(find_registered_device(file->vnode->get_dev()));
+    auto cdev = static_cast<CharacterDevice *>(find_registered_device(file->vnode->get_dev()));
 
     if (cdev->get_name() == "console") {
-      Console::the().write(reinterpret_cast<const char*>(buf), len);
+      Console::the().write(reinterpret_cast<const char *>(buf), len);
     } else {
       for (size_t i = 0; i < len; i++) {
-        cdev->write_char(reinterpret_cast<const char*>(buf)[i]);
+        cdev->write_char(reinterpret_cast<const char *>(buf)[i]);
       }
     }
 
   } else {
-    printk("VFS::write on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
+    printk("VFS::write on this file type is not supported yet, mode = 0x%x\n",
+           file->vnode->get_mode());
     return -1;
   }
 
@@ -231,7 +217,7 @@ int VFS::write(SharedPtr<File> file, const void* buf, size_t len) {
   return len;
 }
 
-int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
+int VFS::read(SharedPtr<File> file, void *buf, size_t len) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // 1. read min(len, readable file data size) byte to buf from the opened file.
@@ -241,7 +227,7 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
   }
 
   if (file->vnode->is_regular_file()) {
-    char* content = file->vnode->get_content();
+    char *content = file->vnode->get_content();
     size_t size = file->vnode->get_size();
     size_t readable_size = size - file->pos;
 
@@ -256,13 +242,14 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
       file->pos = 0;
       len = 0;
     } else {
-      const char* name;
+      const char *name;
       DirectoryEntry e;
       SharedPtr<Vnode> child_vnode = file->vnode->get_ith_child(file->pos);
 
       if (!child_vnode) [[unlikely]] {
-        Kernel::panic("VFS::read: child_vnode == nullptr. "
-                      "get_ith_child() is probably buggy.\n");
+        Kernel::panic(
+            "VFS::read: child_vnode == nullptr. "
+            "get_ith_child() is probably buggy.\n");
       }
 
       if (file->pos == 0) {
@@ -274,31 +261,32 @@ int VFS::read(SharedPtr<File> file, void* buf, size_t len) {
       }
 
       strncpy(e.name, name, min(strlen(name), sizeof(e.name)));
-      memcpy(buf, reinterpret_cast<char*>(&e), sizeof(e));
+      memcpy(buf, reinterpret_cast<char *>(&e), sizeof(e));
       file->pos++;
       len = sizeof(e);
     }
 
   } else if (file->vnode->is_character_device()) {
-    auto cdev = static_cast<CharacterDevice*>(find_registered_device(file->vnode->get_dev()));
+    auto cdev = static_cast<CharacterDevice *>(find_registered_device(file->vnode->get_dev()));
 
     if (cdev->get_name() == "console") {
-      Console::the().read(reinterpret_cast<char*>(buf), len);
+      Console::the().read(reinterpret_cast<char *>(buf), len);
     } else {
       for (size_t i = 0; i < len; i++) {
-        reinterpret_cast<char*>(buf)[i] = cdev->read_char();
+        reinterpret_cast<char *>(buf)[i] = cdev->read_char();
       }
     }
 
   } else {
-    printk("VFS::read: on this file type is not supported yet, mode = 0x%x\n", file->vnode->get_mode());
+    printk("VFS::read: on this file type is not supported yet, mode = 0x%x\n",
+           file->vnode->get_mode());
     return -1;
   }
 
   return len;
 }
 
-int VFS::access(const String& pathname, int options) {
+int VFS::access(const String &pathname, int options) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Check user's permission for a file.
@@ -312,7 +300,7 @@ int VFS::access(const String& pathname, int options) {
   return 0;
 }
 
-int VFS::mkdir(const String& pathname) {
+int VFS::mkdir(const String &pathname) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (create(pathname, nullptr, 0, S_IFDIR, 0, 0)) {
@@ -321,19 +309,17 @@ int VFS::mkdir(const String& pathname) {
   return -1;
 }
 
-int VFS::rmdir(const String& pathname) {
+int VFS::rmdir(const String &pathname) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
   return -1;
 }
 
-int VFS::unlink(const String& pathname) {
+int VFS::unlink(const String &pathname) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
   return -1;
 }
 
-int VFS::mount(const String& device_name,
-               const String& mountpoint,
-               const String& fs_name) {
+int VFS::mount(const String &device_name, const String &mountpoint, const String &fs_name) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Check if `mountpoint` exists.
@@ -350,7 +336,7 @@ int VFS::mount(const String& device_name,
 
   // For memory-based filesystems, `device_name` can be used as
   // the name for the mounted file system.
-  
+
   // `fs_name` is the filesystem’s name.
   // The VFS should find and call the filesystem’s method to set up the mount.
   if (fs_name == "tmpfs") {
@@ -369,7 +355,7 @@ int VFS::mount(const String& device_name,
   return 0;
 }
 
-int VFS::umount(const String& mountpoint) {
+int VFS::umount(const String &mountpoint) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Check if `mountpoint` is valid.
@@ -380,9 +366,8 @@ int VFS::umount(const String& mountpoint) {
     return -1;
   }
 
-  auto it = _mounts.find_if([&vnode](const auto& mount) {
-    return mount->guest_vnode == vnode;
-  });
+  auto it =
+      _mounts.find_if([&vnode](const auto &mount) { return mount->guest_vnode == vnode; });
 
   if (it == _mounts.end()) [[unlikely]] {
     printk("VFS::umount: %s has not been mounted yet\n", mountpoint.c_str());
@@ -390,24 +375,20 @@ int VFS::umount(const String& mountpoint) {
   }
 
   printk("VFS: umounting %s\n", mountpoint.c_str());
-  _mounts.remove_if([&vnode](const auto& mount) {
-    return mount->guest_vnode == vnode;
-  });
+  _mounts.remove_if([&vnode](const auto &mount) { return mount->guest_vnode == vnode; });
 
   // FIXME: free the corresponding fs
   return 0;
 }
 
-int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
+int VFS::mknod(const String &pathname, mode_t mode, dev_t dev) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // This special filesystem node must be either:
   // 1. a character device
   // 2. a block device
   // 3. a fifo device (pipe)
-  if (!(mode & S_IFCHR) &&
-      !(mode & S_IFBLK) &&
-      !(mode & S_IFIFO)) [[unlikely]] {
+  if (!(mode & S_IFCHR) && !(mode & S_IFBLK) && !(mode & S_IFIFO)) [[unlikely]] {
     printk("VFS::mknod: invalid mode provided\n");
     return -1;
   }
@@ -423,7 +404,6 @@ int VFS::mknod(const String& pathname, mode_t mode, dev_t dev) {
   return 0;
 }
 
-
 SharedPtr<Vnode> VFS::get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
@@ -431,17 +411,15 @@ SharedPtr<Vnode> VFS::get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode) {
     return nullptr;
   }
 
-  auto it = _mounts.find_if([&vnode](const auto& mount) {
+  auto it = _mounts.find_if([&vnode](const auto &mount) {
     return mount->host_vnode->hash_code() == vnode->hash_code();
   });
 
   return (it != _mounts.end()) ? (*it)->guest_vnode : vnode;
 }
 
-
-SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
-                                   SharedPtr<Vnode>* out_parent,
-                                   String* out_basename) {
+SharedPtr<Vnode> VFS::resolve_path(const String &pathname, SharedPtr<Vnode> *out_parent,
+                                   String *out_basename) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (pathname == ".") {
@@ -463,10 +441,9 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
     return get_rootfs().get_root_vnode();
   }
 
-
   const bool absolute = pathname.front() == '/';
-  auto root_vnode = (absolute) ? get_rootfs().get_root_vnode() :
-                                 Task::current()->get_cwd_vnode();
+  auto root_vnode =
+      (absolute) ? get_rootfs().get_root_vnode() : Task::current()->get_cwd_vnode();
 
   // If `pathname` is something like "/bin",
   // then we can simply check if "bin" exists under the root vnode.
@@ -507,46 +484,38 @@ SharedPtr<Vnode> VFS::resolve_path(const String& pathname,
   return vnode;
 }
 
-
-dev_t VFS::register_device(Device& device) {
+dev_t VFS::register_device(Device &device) {
   dev_t dev = Device::encode(_next_dev_major++, 0);
-  _registered_devices.push_back(Pair<dev_t, Device*>{dev, &device});
+  _registered_devices.push_back(Pair<dev_t, Device *>{dev, &device});
   return dev;
 }
 
-Device* VFS::find_registered_device(dev_t dev) {
-  auto it = _registered_devices.find_if([dev](const auto& entry) {
-    return Device::major(dev) == Device::major(entry.first);
-  });
+Device *VFS::find_registered_device(dev_t dev) {
+  auto it = _registered_devices.find_if(
+      [dev](const auto &entry) { return Device::major(dev) == Device::major(entry.first); });
 
   return (it != _registered_devices.end()) ? it->second : nullptr;
 }
 
-
-FileSystem& VFS::get_rootfs() {
+FileSystem &VFS::get_rootfs() {
   return *(_mounts.front()->guest_fs);
 }
 
-List<SharedPtr<File>>& VFS::get_opened_files() {
+List<SharedPtr<File>> &VFS::get_opened_files() {
   return _opened_files;
 }
 
 SharedPtr<Vnode> VFS::get_host_vnode(SharedPtr<Vnode> guest_vnode) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
-  auto it = _mounts.find_if([&guest_vnode](const auto& mount) {
-    return mount->guest_vnode == guest_vnode;
-  });
+  auto it = _mounts.find_if(
+      [&guest_vnode](const auto &mount) { return mount->guest_vnode == guest_vnode; });
 
   return (it != _mounts.end()) ? it->get()->host_vnode : nullptr;
 }
 
-
-VFS::Mount::Mount(SharedPtr<FileSystem> guest_fs,
-                  SharedPtr<Vnode> guest_vnode,
+VFS::Mount::Mount(SharedPtr<FileSystem> guest_fs, SharedPtr<Vnode> guest_vnode,
                   SharedPtr<Vnode> host_vnode)
-    : guest_fs(move(guest_fs)),
-      guest_vnode(move(guest_vnode)),
-      host_vnode(move(host_vnode)) {}
+    : guest_fs(move(guest_fs)), guest_vnode(move(guest_vnode)), host_vnode(move(host_vnode)) {}
 
 }  // namespace valkyrie::kernel

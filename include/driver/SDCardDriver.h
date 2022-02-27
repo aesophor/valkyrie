@@ -5,24 +5,23 @@
 #include <Singleton.h>
 
 #include <dev/BlockDevice.h>
-#include <driver/IO.h>
 #include <driver/GPIO.h>
+#include <driver/IO.h>
 
 namespace valkyrie::kernel {
 
-class SDCardDriver : public Singleton<SDCardDriver>,
-                     public BlockDevice::Driver {
+class SDCardDriver : public Singleton<SDCardDriver>, public BlockDevice::Driver {
  public:
   virtual ~SDCardDriver() = default;
 
-  virtual void read_block(int block_idx, void* buf) override;
-  virtual void write_block(int block_idx, const void* buf) override;
+  virtual void read_block(int block_idx, void *buf) override;
+  virtual void write_block(int block_idx, const void *buf) override;
 
  protected:
   SDCardDriver();
 
  private:
-  void pin_setup();  
+  void pin_setup();
   void sdhost_setup();
   int sdcard_setup();
 
@@ -31,7 +30,6 @@ class SDCardDriver : public Singleton<SDCardDriver>,
   int wait_fifo();
   void wait_finish();
   void set_block(int size, int cnt);
-
 
   bool _is_high_capacity;  // SDHC
 };

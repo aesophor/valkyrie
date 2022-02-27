@@ -10,8 +10,8 @@ int main(int argc, char **argv) {
       printf("init: fork failed\n");
       break;
 
-    case 0: { // child
-      char* arguments[] = {"/sbin/login", nullptr};
+    case 0: {  // child
+      char *arguments[] = {"/sbin/login", nullptr};
       exec("/sbin/login", arguments);
       break;
     }

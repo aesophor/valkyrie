@@ -12,21 +12,19 @@ namespace valkyrie::kernel {
 
 class StorageDevice : public BlockDevice {
  public:
-  StorageDevice(const String& name,
-                BlockDevice::Driver& driver,
+  StorageDevice(const String &name, BlockDevice::Driver &driver,
                 size_t block_size = PAGE_SIZE);
 
   virtual ~StorageDevice() override = default;
-  StorageDevice(const StorageDevice&) = delete;
-  StorageDevice(StorageDevice&&) = delete;
-  StorageDevice& operator =(const StorageDevice&) = delete;
-  StorageDevice& operator =(StorageDevice&&) = delete;
+  StorageDevice(const StorageDevice &) = delete;
+  StorageDevice(StorageDevice &&) = delete;
+  StorageDevice &operator=(const StorageDevice &) = delete;
+  StorageDevice &operator=(StorageDevice &&) = delete;
 
+  virtual void read_block(int block_index, void *buf) override;
+  virtual void write_block(int block_index, const void *buf) override;
 
-  virtual void read_block(int block_index, void* buf) override;
-  virtual void write_block(int block_index, const void* buf) override;
-
-  DiskPartition& get_first_partition() const;
+  DiskPartition &get_first_partition() const;
 
  protected:
   List<UniquePtr<DiskPartition>> _partitions;

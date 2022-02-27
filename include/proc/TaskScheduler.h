@@ -2,10 +2,10 @@
 #ifndef VALKYRIE_TASK_SCHEDULER_H_
 #define VALKYRIE_TASK_SCHEDULER_H_
 
-#include <Singleton.h>
 #include <List.h>
 #include <Memory.h>
 #include <Mutex.h>
+#include <Singleton.h>
 
 #include <proc/Task.h>
 
@@ -17,7 +17,7 @@ class TaskScheduler : public Singleton<TaskScheduler> {
   void run();
 
   void enqueue_task(UniquePtr<Task> task);
-  UniquePtr<Task> remove_task(const Task& task);
+  UniquePtr<Task> remove_task(const Task &task);
 
   void schedule();
   void maybe_reschedule();

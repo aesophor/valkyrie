@@ -9,12 +9,12 @@ class AddressSanitizer {
   AddressSanitizer();
   ~AddressSanitizer() = default;
 
-  bool mark_free_chk(void* p);
+  bool mark_free_chk(void *p);
   void mark_allocated(void *p);
   void show() const;
 
  private:
-  void* _allocated_pointers[1000];
+  void *_allocated_pointers[1000];
 };
 
 }  // namespace valkyrie::kernel

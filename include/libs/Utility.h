@@ -12,24 +12,23 @@ struct Pair {
   T2 second;
 };
 
-
 template <typename T>
-constexpr RemoveReference<T>&& move(T&& t) {
-  return static_cast<RemoveReference<T>&&>(t);
+constexpr RemoveReference<T> &&move(T &&t) {
+  return static_cast<RemoveReference<T> &&>(t);
 }
 
 template <typename T>
-constexpr T&& forward(RemoveReference<T>& t) {
-  return static_cast<T&&>(t);
+constexpr T &&forward(RemoveReference<T> &t) {
+  return static_cast<T &&>(t);
 }
 
 template <typename T>
-constexpr T&& forward(RemoveReference<T>&& t) {
-  return static_cast<T&&>(t);
+constexpr T &&forward(RemoveReference<T> &&t) {
+  return static_cast<T &&>(t);
 }
 
 template <typename T>
-constexpr void swap(T& t1, T& t2) {
+constexpr void swap(T &t1, T &t2) {
   T tmp = move(t1);
   t1 = move(t2);
   t2 = move(tmp);

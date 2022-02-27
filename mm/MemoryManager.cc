@@ -3,8 +3,8 @@
 
 #include <dev/Console.h>
 #include <driver/Mailbox.h>
-#include <mm/Page.h>
 #include <kernel/Kernel.h>
+#include <mm/Page.h>
 
 namespace valkyrie::kernel {
 
@@ -13,20 +13,19 @@ MemoryManager::MemoryManager()
       _zones{Zone(0x10000000), Zone(0x10200000)},
       _kasan() {}
 
-
-void* MemoryManager::get_free_page(bool physical) {
+void *MemoryManager::get_free_page(bool physical) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
-  void* ret = _zones[0].buddy_allocator.allocate_one_page_frame();
+  void *ret = _zones[0].buddy_allocator.allocate_one_page_frame();
   _kasan.mark_allocated(ret);
 
   return physical ? ret
-                  : reinterpret_cast<void*>(KERNEL_BASE + reinterpret_cast<size_t>(ret));
+                  : reinterpret_cast<void *>(KERNEL_BASE + reinterpret_cast<size_t>(ret));
 }
 
-void* MemoryManager::kmalloc(size_t size) {
+void *MemoryManager::kmalloc(size_t size) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
-  void* ret;
+  void *ret;
 
   if (size + SlobAllocator::get_chunk_header_size() >= PAGE_SIZE) {
     ret = _zones[0].buddy_allocator.allocate(size);
@@ -38,13 +37,13 @@ void* MemoryManager::kmalloc(size_t size) {
   return ret;
 }
 
-void MemoryManager::kfree(void* p) {
+void MemoryManager::kfree(void *p) {
   // If `p` is a virtual kernel address, convert it to physical.
   size_t addr = reinterpret_cast<size_t>(p);
   if (addr >= KERNEL_BASE) {
     addr -= KERNEL_BASE;
   }
-  p = reinterpret_cast<void*>(addr);
+  p = reinterpret_cast<void *>(addr);
 
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
   _kasan.mark_free_chk(p);
@@ -55,7 +54,6 @@ void MemoryManager::kfree(void* p) {
     _zones[1].slob_allocator.deallocate(p);
   }
 }
-
 
 String MemoryManager::get_buddy_info() const {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
@@ -82,34 +80,32 @@ void MemoryManager::dump_kasan_info() const {
   _kasan.show();
 }
 
-
 size_t MemoryManager::get_ram_size() const {
   return _ram_size;
 }
 
 }  // namespace valkyrie::kernel
 
-
-void* operator new(size_t size) {
+void *operator new(size_t size) {
   return kmalloc(size);
 }
 
-void* operator new[](size_t size) {
+void *operator new[](size_t size) {
   return kmalloc(size);
 }
 
-void operator delete(void* p) noexcept {
+void operator delete(void *p) noexcept {
   return kfree(p);
 }
 
-void operator delete[](void* p) noexcept {
+void operator delete[](void *p) noexcept {
   return kfree(p);
 }
 
-void operator delete(void* p, size_t) noexcept {
+void operator delete(void *p, size_t) noexcept {
   return kfree(p);
 }
 
-void operator delete[](void* p, size_t) noexcept {
+void operator delete[](void *p, size_t) noexcept {
   return kfree(p);
 }

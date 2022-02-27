@@ -15,83 +15,78 @@ class ContiguousIterator {
   ~ContiguousIterator() = default;
 
   // Copy constructor
-  ContiguousIterator(const ContiguousIterator& r)
-      : _container(r._container),
-        _index(r._index) {}
+  ContiguousIterator(const ContiguousIterator &r)
+      : _container(r._container), _index(r._index) {}
 
   // Copy assignment operator
-  ContiguousIterator& operator =(const ContiguousIterator& r) {
+  ContiguousIterator &operator=(const ContiguousIterator &r) {
     _index = r._index;
     return *this;
   }
 
-  bool operator ==(const ContiguousIterator& r) const {
+  bool operator==(const ContiguousIterator &r) const {
     return _index == r._index;
   }
 
-  bool operator !=(const ContiguousIterator& r) const {
+  bool operator!=(const ContiguousIterator &r) const {
     return _index != r._index;
   }
 
-  bool operator <(const ContiguousIterator& r) const {
+  bool operator<(const ContiguousIterator &r) const {
     return _index < r._index;
   }
 
-  bool operator >(const ContiguousIterator& r) const {
+  bool operator>(const ContiguousIterator &r) const {
     return _index > r._index;
   }
 
-  bool operator <=(const ContiguousIterator& r) const {
+  bool operator<=(const ContiguousIterator &r) const {
     return _index <= r._index;
   }
 
-  bool operator >=(const ContiguousIterator& r) const {
+  bool operator>=(const ContiguousIterator &r) const {
     return _index >= r._index;
   }
 
-
-  const ValueType& operator*() const {
+  const ValueType &operator*() const {
     return _container[_index];
   }
 
-  const ValueType* operator->() const {
+  const ValueType *operator->() const {
     return &_container[_index];
   }
 
-
-  ValueType& operator*() {
+  ValueType &operator*() {
     return _container[_index];
   }
 
-  ValueType* operator->() {
+  ValueType *operator->() {
     return &_container[_index];
   }
-
 
   // Prefix increment
-  ContiguousIterator& operator ++() {
+  ContiguousIterator &operator++() {
     ++_index;
     return *this;
   }
 
   // Prefix decrement
-  ContiguousIterator& operator --() {
+  ContiguousIterator &operator--() {
     --_index;
     return *this;
   }
 
   // Postfix increment
-  ContiguousIterator operator ++(int) {
+  ContiguousIterator operator++(int) {
     ++_index;
     return *this;
   }
 
   // Postfix decrement
-  ContiguousIterator operator --(int) {
+  ContiguousIterator operator--(int) {
     --_index;
     return *this;
   }
-
 
   bool is_end() const {
     return _index == ContiguousIterator::end(_container)._index;
@@ -103,19 +98,18 @@ class ContiguousIterator {
 
  private:
   // Constructor
-  ContiguousIterator(Container& container, size_t index)
-      : _container(container),
-        _index(index) {}
+  ContiguousIterator(Container &container, size_t index)
+      : _container(container), _index(index) {}
 
-  static ContiguousIterator begin(Container& container) {
+  static ContiguousIterator begin(Container &container) {
     return {container, 0};
   }
 
-  static ContiguousIterator end(Container& container) {
+  static ContiguousIterator end(Container &container) {
     return {container, container.size()};
   }
 
-  Container& _container;
+  Container &_container;
   size_t _index;
 };
 

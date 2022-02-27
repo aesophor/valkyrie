@@ -5,17 +5,15 @@
 
 namespace valkyrie::kernel {
 
-Console& Console::the() {
+Console &Console::the() {
   static Console instance(MiniUART::the());
   return instance;
 }
 
-Console::Console(CharacterDevice::Driver& driver)
-    : CharacterDevice("console", driver) {
-  auto __putchar = [](void*, char c) { putchar(c); };
+Console::Console(CharacterDevice::Driver &driver) : CharacterDevice("console", driver) {
+  auto __putchar = [](void *, char c) { putchar(c); };
   init_printf(nullptr, __putchar);
 }
-
 
 char Console::read_char() {
   return _driver.read_char();
@@ -26,8 +24,8 @@ void Console::write_char(const char c) {
 }
 
 int Console::read(char buf[], size_t size) {
-  int i = 0;
-  while (i < (int) size) {
+  size_t i = 0;
+  while (i < size) {
     auto c = read_char();
 
     if (c == 0x7f) {
@@ -54,7 +52,6 @@ int Console::write(const char buf[], size_t size) {
   return size;
 }
 
-
 void Console::set_color(Console::Color fg_color, bool bold) {
   printf("\033[%d;3%dm", bold, fg_color);
 }
@@ -64,12 +61,15 @@ void Console::clear_color() {
   write(s, sizeof(s));
 }
 
-}  // namespace valkyrie::kernel::console
-
+}  // namespace valkyrie::kernel
 
 using valkyrie::kernel::Console;
 
 extern "C" {
-char getchar() { return Console::the().read_char(); }
-void putchar(const char c) { Console::the().write_char(c); }
+char getchar() {
+  return Console::the().read_char();
+}
+void putchar(const char c) {
+  Console::the().write_char(c);
+}
 }

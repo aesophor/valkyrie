@@ -16,11 +16,7 @@
 
 namespace valkyrie::kernel {
 
-enum Signal {
-  SIGINT = 2,
-  SIGKILL = 9,
-  __NR_signals
-};
+enum Signal { SIGINT = 2, SIGKILL = 9, __NR_signals };
 
 // Default signal handler table
 extern void (*__default_signal_handler_table[Signal::__NR_signals])();
@@ -29,7 +25,6 @@ extern void (*__default_signal_handler_table[Signal::__NR_signals])();
 void sigint_default_handler();
 void sigkill_default_handler();
 void sig_unsupported_handler();
-
 
 inline bool is_signal_valid(const int signal) {
   return signal >= 0 && signal < Signal::__NR_signals;
@@ -44,6 +39,6 @@ inline void invoke_default_signal_handler(const Signal signal) {
   __default_signal_handler_table[signal]();
 }
 
-}  // namespace valkyrie::kernl
+}  // namespace valkyrie::kernel
 
 #endif  // VALKYRIE_SIGNAL_H_

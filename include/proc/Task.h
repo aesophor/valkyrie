@@ -5,8 +5,8 @@
 #include <List.h>
 #include <Memory.h>
 #include <Mutex.h>
-#include <Types.h>
 #include <TypeTraits.h>
+#include <Types.h>
 #include <Utility.h>
 
 #include <fs/File.h>
@@ -15,7 +15,7 @@
 #include <mm/VirtualMemoryMap.h>
 #include <proc/Signal.h>
 
-#define TASK_TIME_SLICE   64
+#define TASK_TIME_SLICE 64
 #define TASK_NAME_MAX_LEN 16
 #define NR_TASK_FD_LIMITS 16
 
@@ -25,7 +25,7 @@ namespace valkyrie::kernel {
 class Task;
 class TrapFrame;
 
-extern "C" void switch_to(Task* prev, Task* next);
+extern "C" void switch_to(Task *prev, Task *next);
 
 class Task {
   // Friend declaration
@@ -36,42 +36,30 @@ class Task {
   MAKE_NONMOVABLE(Task);
 
  public:
-  enum class State {
-    CREATED,
-    RUNNING,
-    SLEEPING,
-    TERMINATED,
-    SIZE
-  };
+  enum class State { CREATED, RUNNING, SLEEPING, TERMINATED, SIZE };
 
   // Constructor
-  Task(bool is_user_task,
-       Task* parent,
-       void (*entry_point)(),
-       const char* name);
+  Task(bool is_user_task, Task *parent, void (*entry_point)(), const char *name);
 
   // Destructor
   ~Task();
 
-
-  [[gnu::always_inline]]
-  inline static Task* current() {
-    Task* ret;
-    asm volatile("mrs %0, TPIDR_EL1" : "=r" (ret));
+  [[gnu::always_inline]] inline static Task *current() {
+    Task *ret;
+    asm volatile("mrs %0, TPIDR_EL1" : "=r"(ret));
     return ret;
   }
 
-  [[gnu::always_inline]]
-  inline void save_context() {
+  [[gnu::always_inline]] inline void save_context() {
     switch_to(this, nullptr);
   }
 
-  static List<Task*> get_active_tasks();
-  static Task* get_by_pid(const pid_t pid);
+  static List<Task *> get_active_tasks();
+  static Task *get_by_pid(const pid_t pid);
 
   int do_fork();
-  int do_exec(const char* name, const char* const _argv[]);
-  int do_wait(int* wstatus);
+  int do_exec(const char *name, const char *const _argv[]);
+  int do_wait(int *wstatus);
   [[noreturn]] void do_exit(int error_code);
   long do_kill(pid_t pid, Signal signal);
   int do_signal(int signal, void (*handler)());
@@ -83,25 +71,41 @@ class Task {
   SharedPtr<File> get_file_by_fd(const int fd) const;
   bool is_fd_valid(const int fd) const;
 
+  bool is_user_task() const {
+    return _is_user_task;
+  }
+  Task::State get_state() const {
+    return _state;
+  }
+  pid_t get_pid() const {
+    return _pid;
+  }
+  TrapFrame *get_trap_frame() const {
+    return _trap_frame;
+  }
+  const char *get_name() const {
+    return _name;
+  }
 
-  bool is_user_task() const { return _is_user_task; }
-  Task::State get_state() const { return _state; }
-  pid_t get_pid() const { return _pid; }
-  TrapFrame* get_trap_frame() const { return _trap_frame; }
-  const char* get_name() const { return _name; }
+  void set_state(Task::State state) {
+    _state = state;
+  }
+  void set_trap_frame(TrapFrame *trap_frame) {
+    _trap_frame = trap_frame;
+  }
 
-  void set_state(Task::State state) { _state = state; }
-  void set_trap_frame(TrapFrame* trap_frame) { _trap_frame = trap_frame; }
-
-  int get_time_slice() const { return _time_slice; }
-  void set_time_slice(int time_slice) { _time_slice = time_slice; }
+  int get_time_slice() const {
+    return _time_slice;
+  }
+  void set_time_slice(int time_slice) {
+    _time_slice = time_slice;
+  }
 
   void tick() {
     if (_time_slice > 0) {
       _time_slice--;
     }
   }
-
 
   size_t get_children_count() const {
     return _active_children.size() + _terminated_children.size();
@@ -114,7 +118,6 @@ class Task {
   size_t get_terminated_children_count() const {
     return _terminated_children.size();
   }
-  
 
   SharedPtr<Vnode> get_cwd_vnode() const {
     return _cwd_vnode;
@@ -124,14 +127,18 @@ class Task {
     _cwd_vnode = move(vnode);
   }
 
-  const VMMap& get_vmmap() const { return _vmmap; }
-  size_t* get_ttbr0_el1() const { return _vmmap.get_pgd(); }
+  const VMMap &get_vmmap() const {
+    return _vmmap;
+  }
+  size_t *get_ttbr0_el1() const {
+    return _vmmap.get_pgd();
+  }
 
  private:
-  size_t copy_arguments_to_user_stack(const char* const _argv[]);
+  size_t copy_arguments_to_user_stack(const char *const _argv[]);
 
-  static Task* _init;
-  static Task* _kthreadd;
+  static Task *_init;
+  static Task *_kthreadd;
   static pid_t _next_pid;
 
   // For now we keep this as the first member of Task, so that
@@ -153,8 +160,8 @@ class Task {
   } _context;
 
   bool _is_user_task;
-  Task* _parent;
-  List<Task*> _active_children;
+  Task *_parent;
+  List<Task *> _active_children;
   List<UniquePtr<Task>> _terminated_children;
   Task::State _state;
   int _error_code;
@@ -164,7 +171,7 @@ class Task {
   void (*_entry_point)();
   Page _kstack_page;
   Page _ustack_page;
-  TrapFrame* _trap_frame;
+  TrapFrame *_trap_frame;
   char _name[TASK_NAME_MAX_LEN];
 
   // POSIX signals
@@ -178,14 +185,13 @@ class Task {
   SharedPtr<Vnode> _cwd_vnode;
 };
 
-
 template <typename... Args>
-static UniquePtr<Task> make_kernel_task(Args&&... args) {
+static UniquePtr<Task> make_kernel_task(Args &&...args) {
   return make_unique<Task>(false, forward<Args>(args)...);
 }
 
 template <typename... Args>
-static UniquePtr<Task> make_user_task(Args&&... args) {
+static UniquePtr<Task> make_user_task(Args &&...args) {
   return make_unique<Task>(true, forward<Args>(args)...);
 }
 

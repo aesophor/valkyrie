@@ -4,9 +4,9 @@
 #include <CString.h>
 
 #include <dev/Console.h>
-#include <kernel/Kernel.h>
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
+#include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
 
@@ -14,21 +14,12 @@ TmpFS::TmpFS()
     : _next_inode_index(1),
       _root_inode(make_shared<TmpFSInode>(*this, nullptr, "/", nullptr, 0, S_IFDIR, 0, 0)) {}
 
-
 SharedPtr<Vnode> TmpFS::get_root_vnode() {
   return _root_inode;
 }
 
-
-
-TmpFSInode::TmpFSInode(TmpFS& fs,
-                       SharedPtr<TmpFSInode> parent,
-                       const String& name,
-                       const char* content,
-                       off_t size,
-                       mode_t mode,
-                       uid_t uid,
-                       gid_t gid)
+TmpFSInode::TmpFSInode(TmpFS &fs, SharedPtr<TmpFSInode> parent, const String &name,
+                       const char *content, off_t size, mode_t mode, uid_t uid, gid_t gid)
     : Vnode(fs._next_inode_index++, size, mode, uid, gid),
       _fs(fs),
       _name(name),
@@ -42,14 +33,10 @@ TmpFSInode::TmpFSInode(TmpFS& fs,
   }
 }
 
-
-SharedPtr<Vnode> TmpFSInode::create_child(const String& name,
-                                          const char* content,
-                                          off_t size,
-                                          mode_t mode,
-                                          uid_t uid,
-                                          gid_t gid) {
-  auto inode = make_shared<TmpFSInode>(_fs, shared_from_this(), name, content, size, mode, uid, gid);
+SharedPtr<Vnode> TmpFSInode::create_child(const String &name, const char *content, off_t size,
+                                          mode_t mode, uid_t uid, gid_t gid) {
+  auto inode =
+      make_shared<TmpFSInode>(_fs, shared_from_this(), name, content, size, mode, uid, gid);
   _children.push_back(inode);
   return inode;
 }
@@ -58,12 +45,11 @@ void TmpFSInode::add_child(SharedPtr<Vnode> child) {
   _children.push_back(move(static_pointer_cast<TmpFSInode>(child)));
 }
 
-SharedPtr<Vnode> TmpFSInode::remove_child(const String& name) {
+SharedPtr<Vnode> TmpFSInode::remove_child(const String &name) {
   SharedPtr<Vnode> removed_child;
 
-  _children.remove_if([&removed_child, &name](auto& vnode) {
-    return vnode->_name == name &&
-           (removed_child = move(vnode), true);
+  _children.remove_if([&removed_child, &name](auto &vnode) {
+    return vnode->_name == name && (removed_child = move(vnode), true);
   });
 
   if (!removed_child) [[unlikely]] {
@@ -73,16 +59,14 @@ SharedPtr<Vnode> TmpFSInode::remove_child(const String& name) {
   return removed_child;
 }
 
-SharedPtr<Vnode> TmpFSInode::get_child(const String& name) {
+SharedPtr<Vnode> TmpFSInode::get_child(const String &name) {
   if (name == ".") {
     return shared_from_this();
   } else if (name == "..") {
     return get_parent();
   }
 
-  auto it = _children.find_if([&name](auto& vnode) {
-    return vnode->_name == name;
-  });
+  auto it = _children.find_if([&name](auto &vnode) { return vnode->_name == name; });
 
   return (it != _children.end()) ? *it : nullptr;
 }
@@ -118,7 +102,6 @@ void TmpFSInode::set_parent(SharedPtr<Vnode> parent) {
   _parent = parent;
 }
 
-
 int TmpFSInode::chmod(const mode_t mode) {
   return -1;
 }
@@ -131,7 +114,7 @@ String TmpFSInode::get_name() const {
   return _name;
 }
 
-char* TmpFSInode::get_content() {
+char *TmpFSInode::get_content() {
   return _content.get();
 }
 

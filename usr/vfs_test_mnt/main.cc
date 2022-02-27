@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <vlibc.h>
 #include <cstring.h>
+#include <vlibc.h>
 
 int main(int argc, char **argv) {
   char buf[8];

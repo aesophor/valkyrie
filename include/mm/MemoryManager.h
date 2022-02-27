@@ -6,19 +6,19 @@
 #include <Singleton.h>
 #include <String.h>
 
-#include <mm/mmu.h>
 #include <mm/AddressSanitizer.h>
 #include <mm/Zone.h>
+#include <mm/mmu.h>
 
 namespace valkyrie::kernel {
 
 class MemoryManager : public Singleton<MemoryManager> {
  public:
-  void* get_free_page(bool physical = false);
+  void *get_free_page(bool physical = false);
 
   // Operates on virtual memory addresses.
-  void* kmalloc(size_t size);
-  void kfree(void* p);
+  void *kmalloc(size_t size);
+  void kfree(void *p);
 
   String get_buddy_info() const;
   String get_slob_info() const;
@@ -40,28 +40,27 @@ class MemoryManager : public Singleton<MemoryManager> {
 
 }  // namespace valkyrie::kernel
 
+extern "C" void *switch_user_va_space(void *ttbr0_el1);
 
-extern "C" void* switch_user_va_space(void* ttbr0_el1);
-
-extern "C" inline void* get_free_page(bool physical = false) {
+extern "C" inline void *get_free_page(bool physical = false) {
   return valkyrie::kernel::MemoryManager::the().get_free_page(physical);
 }
 
-extern "C" inline void* kmalloc(const size_t requested_size) {
+extern "C" inline void *kmalloc(const size_t requested_size) {
   return valkyrie::kernel::MemoryManager::the().kmalloc(requested_size);
 }
 
-extern "C" inline void kfree(void* p) {
+extern "C" inline void kfree(void *p) {
   valkyrie::kernel::MemoryManager::the().kfree(p);
 }
 
-void* operator new(size_t size);
-void* operator new[](size_t size);
+void *operator new(size_t size);
+void *operator new[](size_t size);
 
-void operator delete(void* p) noexcept;
-void operator delete[](void* p) noexcept;
+void operator delete(void *p) noexcept;
+void operator delete[](void *p) noexcept;
 
-void operator delete(void* p, size_t) noexcept;
-void operator delete[](void* p, size_t) noexcept;
+void operator delete(void *p, size_t) noexcept;
+void operator delete[](void *p, size_t) noexcept;
 
 #endif  // VALKYRIE_MEMORY_MANAGER_H_

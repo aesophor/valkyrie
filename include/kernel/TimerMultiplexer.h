@@ -17,7 +17,7 @@ namespace valkyrie::kernel {
 class TimerMultiplexer : public Singleton<TimerMultiplexer> {
  public:
   struct Event {
-    using Callback = Function<void ()>;
+    using Callback = Function<void()>;
 
     Callback callback;
     uint32_t timeout;
@@ -25,10 +25,9 @@ class TimerMultiplexer : public Singleton<TimerMultiplexer> {
 
   void tick();
 
-  void add_timer(Event::Callback callback,
-                 const uint32_t timeout);
+  void add_timer(Event::Callback callback, const uint32_t timeout);
 
-  ARMCoreTimer& get_arm_core_timer();
+  ARMCoreTimer &get_arm_core_timer();
 
  protected:
   TimerMultiplexer();

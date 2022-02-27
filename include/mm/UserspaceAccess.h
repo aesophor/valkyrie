@@ -13,9 +13,8 @@ namespace valkyrie::kernel {
 // Converts the virtual address to physical address
 // by parsing the page table of current process.
 template <typename T>
-T copy_from_user(const void __user* const p) {
-  return reinterpret_cast<T>(
-      Task::current()->get_vmmap().get_physical_address(p));
+T copy_from_user(const void __user *const p) {
+  return reinterpret_cast<T>(Task::current()->get_vmmap().get_physical_address(p));
 }
 
 }  // namespace valkyrie::kernel

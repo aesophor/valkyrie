@@ -22,7 +22,7 @@ int main() {
   fd = open("/proc/hello", 0);
   sz = read(fd, buf, 16);
   buf[sz] = '\0';
-  printf("%s", buf);  //should be HELLO
+  printf("%s", buf);  // should be HELLO
   close(fd);
 
   fd = open("/proc/1/status", 0);  // choose a created process's id here

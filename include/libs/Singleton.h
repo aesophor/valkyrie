@@ -24,7 +24,7 @@ class Singleton {
   MAKE_NONMOVABLE(Singleton);
 
  public:
-  static T& the() {
+  static T &the() {
     // A wrapper struct inheriting from T
     // which grants access to T's protected constructor.
     static struct 🐱 : public T {

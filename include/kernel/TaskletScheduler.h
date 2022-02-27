@@ -23,9 +23,8 @@ class TaskletScheduler final {
  public:
   TaskletScheduler() : _tasklet_queue() {}
 
-
   template <typename T>
-  void add_tasklet(T&& handler) {
+  void add_tasklet(T &&handler) {
     if (_tasklet_queue.full()) {
       printk("tasklet queue is full. calling do_all()...\n");
       finish_all();
@@ -34,7 +33,6 @@ class TaskletScheduler final {
     printk("adding a tasklet to the queue...\n");
     _tasklet_queue.push(make_unique<Tasklet>(forward<T>(handler)));
   }
-
 
   void finish_all() {
     for (size_t i = 0; i < _tasklet_queue.size(); i++) {

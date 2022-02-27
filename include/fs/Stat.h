@@ -3,21 +3,21 @@
 #define VALKYRIE_STAT_H_
 
 // open() options
-#define O_RDONLY    (1 <<  0)
-#define O_WRONLY    (1 <<  1)
-#define O_RDWR      (O_RDONLY | O_WRONLY)
-#define O_ACCMODE   (O_RDONLY | O_WRONLY)
-#define O_EXEC      (1 <<  2)
-#define O_CREAT     (1 <<  3)
-#define O_EXCL      (1 <<  4)
-#define O_NOCTTY    (1 <<  5)
-#define O_TRUNC     (1 <<  6)
-#define O_APPEND    (1 <<  7)
-#define O_NONBLOCK  (1 <<  8)
-#define O_DIRECTORY (1 <<  9)
-#define O_NOFOLLOW  (1 << 10)
-#define O_CLOEXEC   (1 << 11)
-#define O_DIRECT    (1 << 12)
+#define O_RDONLY (1 << 0)
+#define O_WRONLY (1 << 1)
+#define O_RDWR (O_RDONLY | O_WRONLY)
+#define O_ACCMODE (O_RDONLY | O_WRONLY)
+#define O_EXEC (1 << 2)
+#define O_CREAT (1 << 3)
+#define O_EXCL (1 << 4)
+#define O_NOCTTY (1 << 5)
+#define O_TRUNC (1 << 6)
+#define O_APPEND (1 << 7)
+#define O_NONBLOCK (1 << 8)
+#define O_DIRECTORY (1 << 9)
+#define O_NOFOLLOW (1 << 10)
+#define O_CLOEXEC (1 << 11)
+#define O_DIRECT (1 << 12)
 
 // access() options
 #define R_OK 4
@@ -45,15 +45,14 @@
 #define S_ISGID 0002000  // set group id on execution
 #define S_ISVTX 0001000  // save swapped text even after use
 
-
 // Directory entry type flags
-#define S_IFMT   0170000  // file type bitmask
-#define S_IFDIR  0040000  // file type is directory
-#define S_IFCHR  0020000  // file type is character device
-#define S_IFBLK  0060000  // file type is block device
-#define S_IFREG  0100000  // file type is regular file
-#define S_IFIFO  0010000  // file type is fifo
-#define S_IFLNK  0120000  // file type is symlink
+#define S_IFMT 0170000    // file type bitmask
+#define S_IFDIR 0040000   // file type is directory
+#define S_IFCHR 0020000   // file type is character device
+#define S_IFBLK 0060000   // file type is block device
+#define S_IFREG 0100000   // file type is regular file
+#define S_IFIFO 0010000   // file type is fifo
+#define S_IFLNK 0120000   // file type is symlink
 #define S_IFSOCK 0140000  // file type is socket
 
 #endif  // VALKYRIE_STAT_H_

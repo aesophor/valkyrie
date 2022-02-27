@@ -18,7 +18,7 @@ class CPIOArchive final {
   explicit CPIOArchive(const size_t base_addr);
 
   bool is_valid() const;
-  void for_each(Function<void (const CPIOArchive::Entry&)> callback) const;
+  void for_each(Function<void(const CPIOArchive::Entry &)> callback) const;
 
  private:
   struct [[gnu::packed]] Header final {
@@ -40,19 +40,19 @@ class CPIOArchive final {
 
   struct Entry final {
     Entry() = default;
-    Entry(const char* ptr);
+    Entry(const char *ptr);
 
     bool is_valid() const;
 
-    const CPIOArchive::Header* header;
-    const char* pathname;
-    const char* content;
+    const CPIOArchive::Header *header;
+    const char *pathname;
+    const char *content;
     size_t pathname_len;
     size_t content_len;
   };
 
-  const char* const _base_addr;
-  const char* _ptr;
+  const char *const _base_addr;
+  const char *_ptr;
 };
 
 }  // namespace valkyrie::kernel

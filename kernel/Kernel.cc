@@ -19,7 +19,6 @@ Kernel::Kernel()
       _task_scheduler(TaskScheduler::the()),
       _vfs(VFS::the()) {}
 
-
 void Kernel::run() {
   print_banner();
   print_hardware_info();
@@ -46,7 +45,6 @@ void Kernel::run() {
 
   Kernel::panic("You shouldn't have reached here...\n");
 }
-
 
 void Kernel::print_banner() {
   _console.set_color(Console::Color::GREEN, /*bold=*/true);

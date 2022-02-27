@@ -1,7 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 //
 // Compiler.cc - Some routines required by the linker.
-// 
+//
 // References:
 // [1] https://itanium-cxx-abi.github.io/cxx-abi/abi.html#dso-dtor-runtime-api
 
@@ -17,4 +17,4 @@ extern "C" void __cxa_atexit(void) {}
 
 // __dso_handle is a "guard" that is used to
 // identify dynamic shared objects during global destruction.
-void* __dso_handle = nullptr;
+void *__dso_handle = nullptr;

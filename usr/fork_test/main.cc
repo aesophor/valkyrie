@@ -9,7 +9,7 @@ void fork_test() {
   int wstatus;
   int pid;
 
-  if ((ret = fork()) == 0) { // child
+  if ((ret = fork()) == 0) {  // child
     printf("pid: %d, cnt: %d, ptr: 0x%x\n", getpid(), cnt, &cnt);
     ++cnt;
     fork();
@@ -25,11 +25,10 @@ void fork_test() {
     printf("waited child with pid = %d and error_code = %d\n", pid, wstatus);
     printf("parent terminating...\n");
   }
-  asm volatile("mov %0, sp" : "=r" (cnt));
-  asm volatile("mov %0, lr" : "=r" (ret));
+  asm volatile("mov %0, sp" : "=r"(cnt));
+  asm volatile("mov %0, lr" : "=r"(ret));
   printf("SP = 0x%x, LR = 0x%x\n", cnt, ret);
 }
-
 
 int main(int argc, char **argv) {
   printf("argc = %d\n", argc);

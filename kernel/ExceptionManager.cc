@@ -7,15 +7,15 @@
 #include <kernel/TimerMultiplexer.h>
 #include <proc/TaskScheduler.h>
 
-extern "C" void* evt;
+extern "C" void *evt;
 
 namespace valkyrie::kernel {
 
 bool ExceptionManager::_is_activated = false;
 
-void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
+void ExceptionManager::handle_exception(TrapFrame *trap_frame) {
   uint64_t spsr_el1;
-  asm volatile("mrs %0, SPSR_EL1" : "=r" (spsr_el1));
+  asm volatile("mrs %0, SPSR_EL1" : "=r"(spsr_el1));
 
   const Exception ex = ExceptionManager::the().get_current_exception();
 
@@ -32,6 +32,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
     // e.g., a child task created by sys_fork(),
     // so we should call `Task::get_current()` again
     // to make sure that we are operating on the correct Task object.
+    // clang-format off
     Task::current()->get_trap_frame()->x0 = do_syscall(trap_frame->x8,
                                                        trap_frame->x0,
                                                        trap_frame->x1,
@@ -39,6 +40,7 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
                                                        trap_frame->x3,
                                                        trap_frame->x4,
                                                        trap_frame->x5);
+    // clang-format on
 
     disableIRQs();
 
@@ -86,14 +88,15 @@ void ExceptionManager::handle_exception(TrapFrame* trap_frame) {
       break;
 
     case 0b100101:
-      Kernel::panic("Data Abort taken without a change in Exception level (invalid data access)\n");
+      Kernel::panic(
+          "Data Abort taken without a change in Exception level (invalid data access)\n");
 
     default:
       Kernel::panic("Unknown exception: EC=%d, ISS=%d\n", ex.ec, ex.iss);
   }
 }
 
-void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
+void ExceptionManager::handle_irq(TrapFrame *trap_frame) {
   // XXX: For now we have tiemr IRQ as the only interrupt source.
   const Exception ex = ExceptionManager::the().get_current_exception();
 
@@ -110,13 +113,12 @@ void ExceptionManager::handle_irq(TrapFrame* trap_frame) {
   }
 }
 
-
 ExceptionManager::Exception ExceptionManager::get_current_exception() {
   Exception ex;
-  uint32_t esr_el1; 
+  uint32_t esr_el1;
 
-  asm volatile("mrs %0, ELR_EL1" : "=r" (ex.ret_addr));
-  asm volatile("mrs %0, ESR_EL1" : "=r" (esr_el1));
+  asm volatile("mrs %0, ELR_EL1" : "=r"(ex.ret_addr));
+  asm volatile("mrs %0, ESR_EL1" : "=r"(esr_el1));
 
   // ESR_EL1[31:26] = EC
   // ESR_EL1[25] = IL
@@ -127,7 +129,7 @@ ExceptionManager::Exception ExceptionManager::get_current_exception() {
   return ex;
 }
 
-void ExceptionManager::dump_registers(TrapFrame* trap_frame) {
+void ExceptionManager::dump_registers(TrapFrame *trap_frame) {
   printk("--- Dumping CPU Registers ---\n");
   printk("x0: 0x%p\n", trap_frame->x0);
   printk("x1: 0x%p\n", trap_frame->x1);

@@ -8,7 +8,7 @@
 #include <fs/FileSystem.h>
 #include <fs/Vnode.h>
 
-#define NR_MAX_PARTITIONS  4
+#define NR_MAX_PARTITIONS 4
 
 namespace valkyrie::kernel {
 
@@ -28,7 +28,6 @@ struct [[gnu::packed]] MBR final {
 
   uint16_t signature;
 };
-
 
 static_assert(sizeof(MBR) == 512);
 static_assert(sizeof(MBR::PartitionMetadata) == 16);

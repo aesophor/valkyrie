@@ -2,8 +2,9 @@
 //
 // [PART 1] Configure General-Purpose I/O Function Selector
 //
-// According to: https://grasslab.github.io/NYCU_Operating_System_Capstone/hardware/uart.html#gpio
-// To use mini UART, we should set both gpio14 and gpio15 to use ALT5.
+// According to:
+// https://grasslab.github.io/NYCU_Operating_System_Capstone/hardware/uart.html#gpio To use
+// mini UART, we should set both gpio14 and gpio15 to use ALT5.
 //
 // In order to do so, we need to find the correct GPFSEL register (function selector),
 // and in our case it is GPFSEL1 because it manages gpio10 ~ gpio19.
@@ -59,27 +60,27 @@
 // The bus addresses for peripherals are set up to map onto the peripheral
 // bus address range starting at 0x7E000000. Thus a peripheral advertised here
 // at bus address 0x7Ennnnnn is available at physical address 0x3Fnnnnnn.
-#define AUX_ENABLES     (MMIO_BASE + 0x215004)
-#define AUX_MU_IO_REG   (MMIO_BASE + 0x215040)
-#define AUX_MU_IER_REG  (MMIO_BASE + 0x215044)
-#define AUX_MU_IIR_REG  (MMIO_BASE + 0x215048)
-#define AUX_MU_LCR_REG  (MMIO_BASE + 0x21504c)
-#define AUX_MU_MCR_REG  (MMIO_BASE + 0x215050)
-#define AUX_MU_LSR_REG  (MMIO_BASE + 0x215054)
-#define AUX_MU_MSR_REG  (MMIO_BASE + 0x215058)
-#define AUX_MU_SCRATCH  (MMIO_BASE + 0x21505c)
+#define AUX_ENABLES (MMIO_BASE + 0x215004)
+#define AUX_MU_IO_REG (MMIO_BASE + 0x215040)
+#define AUX_MU_IER_REG (MMIO_BASE + 0x215044)
+#define AUX_MU_IIR_REG (MMIO_BASE + 0x215048)
+#define AUX_MU_LCR_REG (MMIO_BASE + 0x21504c)
+#define AUX_MU_MCR_REG (MMIO_BASE + 0x215050)
+#define AUX_MU_LSR_REG (MMIO_BASE + 0x215054)
+#define AUX_MU_MSR_REG (MMIO_BASE + 0x215058)
+#define AUX_MU_SCRATCH (MMIO_BASE + 0x21505c)
 #define AUX_MU_CNTL_REG (MMIO_BASE + 0x215060)
 #define AUX_MU_STAT_REG (MMIO_BASE + 0x215064)
 #define AUX_MU_BAUD_REG (MMIO_BASE + 0x215068)
 
-#define GPFSEL_INPUT  0b000
+#define GPFSEL_INPUT 0b000
 #define GPFSEL_OUTPUT 0b001
-#define GPFSEL_ALT0   0b100
-#define GPFSEL_ALT1   0b101
-#define GPFSEL_ALT2   0b110
-#define GPFSEL_ALT3   0b111
-#define GPFSEL_ALT4   0b011
-#define GPFSEL_ALT5   0b010
+#define GPFSEL_ALT0 0b100
+#define GPFSEL_ALT1 0b101
+#define GPFSEL_ALT2 0b110
+#define GPFSEL_ALT3 0b111
+#define GPFSEL_ALT4 0b011
+#define GPFSEL_ALT5 0b010
 
 #define BACKSPACE 0x7f
 
@@ -103,8 +104,8 @@ MiniUART::MiniUART() {
   io::put<uint32_t>(GPPUDCLK0, 0);                      // remove the clock
 
   // Enable mini UART.
-  io::put<uint32_t>(AUX_ENABLES, 1);        // enable mini UART and access to mini UART registers
-  io::put<uint32_t>(AUX_MU_CNTL_REG, 0);    // disable tx/rx during configuration
+  io::put<uint32_t>(AUX_ENABLES, 1);      // enable mini UART and access to mini UART registers
+  io::put<uint32_t>(AUX_MU_CNTL_REG, 0);  // disable tx/rx during configuration
   io::put<uint32_t>(AUX_MU_IER_REG, 0b11);  // enable tx/rx interrupts
   io::put<uint32_t>(AUX_MU_LCR_REG, 3);     // sets the data size to 8 bit
   io::put<uint32_t>(AUX_MU_MCR_REG, 0);     // disable auto flow control
@@ -113,14 +114,15 @@ MiniUART::MiniUART() {
   io::put<uint32_t>(AUX_MU_CNTL_REG, 3);    // re-enable tx/rx
 }
 
-
 uint8_t MiniUART::recv() {
-  while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 1));
+  while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 1))
+    ;
   return io::get<uint8_t>(AUX_MU_IO_REG);
 }
 
 void MiniUART::send(const uint8_t byte) {
-  while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 0x20));
+  while (!(io::get<uint32_t>(AUX_MU_LSR_REG) & 0x20))
+    ;
   io::put<uint8_t>(AUX_MU_IO_REG, byte);
 }
 
@@ -131,8 +133,8 @@ char MiniUART::getchar_sync() {
   return c;
 }
 
-void MiniUART::gets_sync(char* s) {
-  const char* const begin = s;
+void MiniUART::gets_sync(char *s) {
+  const char *const begin = s;
   char c;
 
   while ((c = getchar_sync()) != '\n') {
@@ -157,7 +159,7 @@ void MiniUART::putchar_sync(const char c) {
   }
 }
 
-void MiniUART::puts_sync(const char* s, bool newline) {
+void MiniUART::puts_sync(const char *s, bool newline) {
   for (size_t i = 0; i < strlen(s); i++) {
     putchar_sync(s[i]);
   }

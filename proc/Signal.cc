@@ -8,18 +8,8 @@ namespace valkyrie::kernel {
 #define UNDEFINED sig_unsupported_handler
 
 void (*__default_signal_handler_table[Signal::__NR_signals])() = {
-  UNDEFINED,
-  UNDEFINED,
-  sigint_default_handler,
-  UNDEFINED,
-  UNDEFINED,
-  UNDEFINED,
-  UNDEFINED,
-  UNDEFINED,
-  UNDEFINED,
-  sigkill_default_handler
-};
-
+    UNDEFINED, UNDEFINED, sigint_default_handler, UNDEFINED, UNDEFINED, UNDEFINED, UNDEFINED,
+    UNDEFINED, UNDEFINED, sigkill_default_handler};
 
 void sigint_default_handler() {
   sig_unsupported_handler();

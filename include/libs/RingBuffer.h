@@ -18,36 +18,30 @@ class RingBuffer {
   using Iterator = ContiguousIterator<RingBuffer, ValueType>;
 
   // Constructor
-  explicit
-  RingBuffer(int capacity = DEFAULT_CAPACITY)
-      : _data(make_unique<T[]>(capacity)),
-        _head(),
-        _tail(),
-        _size(),
-        _capacity(capacity) {}
+  explicit RingBuffer(int capacity = DEFAULT_CAPACITY)
+      : _data(make_unique<T[]>(capacity)), _head(), _tail(), _size(), _capacity(capacity) {}
 
   // Destructor
   ~RingBuffer() = default;
 
   // Copy constructor
-  RingBuffer(const RingBuffer& r) = delete;
+  RingBuffer(const RingBuffer &r) = delete;
 
   // Copy assignment operator
-  RingBuffer& operator =(const RingBuffer& r) = delete;
+  RingBuffer &operator=(const RingBuffer &r) = delete;
 
   // Move constructor
-  RingBuffer(RingBuffer&& r) = delete;
+  RingBuffer(RingBuffer &&r) = delete;
 
   // Move assignment operator
-  RingBuffer& operator =(RingBuffer&& r) = delete;
+  RingBuffer &operator=(RingBuffer &&r) = delete;
 
-
-  T& operator[] (size_t i) {
+  T &operator[](size_t i) {
     return _data[i];
   }
 
   template <typename U>
-  void push(U&& val) {
+  void push(U &&val) {
     _data[_tail] = forward<U>(val);
 
     if (full()) {
@@ -73,24 +67,45 @@ class RingBuffer {
     _size = 0;
   }
 
-  Iterator begin() { return Iterator::begin(*this); }
-  Iterator end() { return Iterator::end(*this); }
-  ConstIterator begin() const { return ConstIterator::begin(*this); }
-  ConstIterator end() const { return ConstIterator::end(*this); }
+  Iterator begin() {
+    return Iterator::begin(*this);
+  }
+  Iterator end() {
+    return Iterator::end(*this);
+  }
+  ConstIterator begin() const {
+    return ConstIterator::begin(*this);
+  }
+  ConstIterator end() const {
+    return ConstIterator::end(*this);
+  }
 
-  size_t size() const { return _size; }
-  size_t capacity() const { return _capacity; }
-  bool empty() const { return _tail == _head; }
-  bool full() const { return (_tail + 1) % static_cast<int>(_capacity) == _head; }
+  size_t size() const {
+    return _size;
+  }
+  size_t capacity() const {
+    return _capacity;
+  }
+  bool empty() const {
+    return _tail == _head;
+  }
+  bool full() const {
+    return (_tail + 1) % static_cast<int>(_capacity) == _head;
+  }
 
-  T& front() { return _data[_head]; }
-  T& back() { return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1]; }
-
-  const T& front() const { return _data[_head]; }
-  const T& back() const {
+  T &front() {
+    return _data[_head];
+  }
+  T &back() {
     return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1];
   }
 
+  const T &front() const {
+    return _data[_head];
+  }
+  const T &back() const {
+    return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1];
+  }
 
  protected:
   UniquePtr<T[]> _data;

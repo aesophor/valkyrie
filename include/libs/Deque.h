@@ -14,22 +14,19 @@ template <typename T>
 class Deque {
  public:
   // Constructor
-  explicit
-  Deque(int init_capacity = DEFAULT_SIZE)
-    : _data(make_unique<T[]>(init_capacity)),
-      _size(),
-      _capacity(init_capacity) {}
+  explicit Deque(int init_capacity = DEFAULT_SIZE)
+      : _data(make_unique<T[]>(init_capacity)), _size(), _capacity(init_capacity) {}
 
   // Destructor
   ~Deque() = default;
 
   // Copy constructor
-  Deque(const Deque& r) {
+  Deque(const Deque &r) {
     *this = r;
   }
 
   // Copy assignment operator
-  Deque& operator =(const Deque& r) {
+  Deque &operator=(const Deque &r) {
     // Resize and copy the data over.
     resize(r._capacity);
     for (size_t i = 0; i < r._size; i++) {
@@ -41,12 +38,12 @@ class Deque {
   }
 
   // Move constructor
-  Deque(Deque&& r) {
+  Deque(Deque &&r) {
     *this = move(r);
   }
 
   // Move assignment operator
-  Deque& operator =(Deque&& r) {
+  Deque &operator=(Deque &&r) {
     _data = move(r._data);
     _size = r._size;
     _capacity = r._capacity;
@@ -55,18 +52,17 @@ class Deque {
     return *this;
   }
 
-
-  T& operator [](size_t i) {
+  T &operator[](size_t i) {
     return _data[i];
   }
 
   template <typename U>
-  void push_back(U&& val) {
+  void push_back(U &&val) {
     insert(_size, forward<U>(val));
   }
 
   template <typename U>
-  void push_front(U&& val) {
+  void push_front(U &&val) {
     insert(0, forward<U>(val));
   }
 
@@ -81,7 +77,7 @@ class Deque {
   // Insert val at the specified index, shifting
   // the remaining elements to the right.
   template <typename U>
-  void insert(int index, U&& val) {
+  void insert(int index, U &&val) {
     if (_size == _capacity) {
       resize(_capacity * 2);
     }
@@ -94,7 +90,7 @@ class Deque {
   }
 
   void erase(int index) {
-    for (int i = index; i < (int) _size - 1; i++) {
+    for (int i = index; i < (int)_size - 1; i++) {
       _data[i] = move(_data[i + 1]);
     }
     _size--;
@@ -104,7 +100,7 @@ class Deque {
     }
   }
 
-  void remove(const T& val) {
+  void remove(const T &val) {
     for (size_t i = 0; i < _size; i++) {
       if (_data[i] == val) {
         erase(i);
@@ -113,7 +109,7 @@ class Deque {
     }
   }
 
-  int find(const T& val) {
+  int find(const T &val) {
     // Linear search
     for (int i = 0; i < _size; i++) {
       if (_data[i] == val) {
@@ -142,15 +138,31 @@ class Deque {
     _size = 0;
   }
 
-  size_t size() const { return _size; }
-  size_t capacity() const { return _capacity; }
-  bool empty() const { return _size == 0; }
-  const T& at(int index) const { return _data.get()[index]; }
+  size_t size() const {
+    return _size;
+  }
+  size_t capacity() const {
+    return _capacity;
+  }
+  bool empty() const {
+    return _size == 0;
+  }
+  const T &at(int index) const {
+    return _data.get()[index];
+  }
 
-  T& front() { return _data[0]; }
-  T& back() { return _data[_size - 1]; }
-  const T& front() const { return _data[0]; }
-  const T& back() const { return _data[_size - 1]; }
+  T &front() {
+    return _data[0];
+  }
+  T &back() {
+    return _data[_size - 1];
+  }
+  const T &front() const {
+    return _data[0];
+  }
+  const T &back() const {
+    return _data[_size - 1];
+  }
 
  private:
   UniquePtr<T[]> _data;

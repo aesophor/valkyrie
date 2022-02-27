@@ -22,7 +22,7 @@ class FAT32 final : public FileSystem {
   friend class FAT32Inode;
 
  public:
-  FAT32(DiskPartition& disk_partition);
+  FAT32(DiskPartition &disk_partition);
   virtual ~FAT32() = default;
 
   virtual SharedPtr<Vnode> get_root_vnode() override;
@@ -38,11 +38,11 @@ class FAT32 final : public FileSystem {
   // both entries.
   struct [[gnu::packed]] Entry {
     [[gnu::always_inline]] bool is_deleted() const {
-      return *reinterpret_cast<const uint8_t*>(this) == 0xe5;
+      return *reinterpret_cast<const uint8_t *>(this) == 0xe5;
     }
 
     [[gnu::always_inline]] bool is_the_end() const {
-      return *reinterpret_cast<const uint8_t*>(this) == 0;
+      return *reinterpret_cast<const uint8_t *>(this) == 0;
     }
   };
 
@@ -93,7 +93,7 @@ class FAT32 final : public FileSystem {
   };
 
   struct [[gnu::packed]] BootSector final {
-    BootSector(DiskPartition& disk_partition);
+    BootSector(DiskPartition &disk_partition);
 
     uint8_t bootjmp[3];
     uint8_t oem_name[8];
@@ -129,35 +129,26 @@ class FAT32 final : public FileSystem {
   static_assert(sizeof(DirectoryEntry) == 32);
   static_assert(sizeof(BootSector) == 90);
 
-
-  [[gnu::always_inline]]
-  uint32_t fat0_sector_index(const uint32_t entry_index = 0) const {
-    return _metadata.reserved_sector_count +
-           entry_index / _nr_fat_entries_per_sector;
+  [[gnu::always_inline]] uint32_t fat0_sector_index(const uint32_t entry_index = 0) const {
+    return _metadata.reserved_sector_count + entry_index / _nr_fat_entries_per_sector;
   }
 
-  [[gnu::always_inline]]
-  uint32_t fat1_sector_index(const uint32_t entry_index = 0) const {
+  [[gnu::always_inline]] uint32_t fat1_sector_index(const uint32_t entry_index = 0) const {
     return fat0_sector_index() + _metadata.table_size_32 +
-           entry_index / _nr_fat_entries_per_sector;
+        entry_index / _nr_fat_entries_per_sector;
   }
 
-  [[gnu::always_inline]]
-  uint32_t data_region_sector_index() const {
+  [[gnu::always_inline]] uint32_t data_region_sector_index() const {
     return fat1_sector_index() + _metadata.table_size_32;
   }
 
-  [[gnu::always_inline]]
-  uint32_t cluster_sector_index(const uint32_t i) const {
-    return data_region_sector_index() +
-           (i - 2) * _metadata.sectors_per_cluster;
+  [[gnu::always_inline]] uint32_t cluster_sector_index(const uint32_t i) const {
+    return data_region_sector_index() + (i - 2) * _metadata.sectors_per_cluster;
   }
 
-  [[gnu::always_inline]]
-  uint32_t nr_single_fat_entries() const {
+  [[gnu::always_inline]] uint32_t nr_single_fat_entries() const {
     return _metadata.table_size_32 * _nr_fat_entries_per_sector;
   }
-
 
   // Read/Write the i-th entry of the first FAT.
   uint32_t fat_read(const uint32_t fat_entry_index) const;
@@ -165,11 +156,11 @@ class FAT32 final : public FileSystem {
   uint32_t fat_find_free_cluster() const;
 
   // Read/Write the i-th cluster from/to the data region.
-  void cluster_read(const uint32_t cluster_number, void* buf) const;
-  void cluster_write(const uint32_t cluster_number, const void* buf) const;
+  void cluster_read(const uint32_t cluster_number, void *buf) const;
+  void cluster_write(const uint32_t cluster_number, const void *buf) const;
 
   // LFN entry checksum
-  uint8_t lfn_checksum(const uint8_t* short_filename) const;
+  uint8_t lfn_checksum(const uint8_t *short_filename) const;
 
   // Generate short file name from a given long file name.
   // The algorithm is provided in Microsoft's fatspec.pdf p.30
@@ -177,16 +168,14 @@ class FAT32 final : public FileSystem {
 
   // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
   bool is_valid_short_filename_char(const uint8_t c) const;
-  bool can_fit_within_83_short_filename(const String& long_filename) const;
+  bool can_fit_within_83_short_filename(const String &long_filename) const;
 
-
-  DiskPartition& _disk_partition;
+  DiskPartition &_disk_partition;
   const BootSector _metadata;
   int _nr_fat_entries_per_sector;
   int _next_inode_index;
   SharedPtr<FAT32Inode> _root_inode;
 };
-
 
 class FAT32Inode final : public Vnode {
   // Friend declaration
@@ -194,38 +183,33 @@ class FAT32Inode final : public Vnode {
   friend struct Hash<FAT32Inode>;
 
  public:
-  FAT32Inode(FAT32& fs,
-             const String& name,
-             uint32_t first_cluster_number,
-             uint32_t parent_cluster_number,
-             uint32_t parent_cluster_offset,
-             off_t size,
-             mode_t mode,
-             uid_t uid,
-             gid_t gid);
+  FAT32Inode(FAT32 &fs, const String &name, uint32_t first_cluster_number,
+             uint32_t parent_cluster_number, uint32_t parent_cluster_offset, off_t size,
+             mode_t mode, uid_t uid, gid_t gid);
 
   virtual ~FAT32Inode() = default;
 
-
-  virtual SharedPtr<Vnode> create_child(const String& name,
-                                        const char* content,
-                                        off_t size,
-                                        mode_t mode,
-                                        uid_t uid,
-                                        gid_t gid) override;
+  virtual SharedPtr<Vnode> create_child(const String &name, const char *content, off_t size,
+                                        mode_t mode, uid_t uid, gid_t gid) override;
   virtual void add_child(SharedPtr<Vnode> child) override {}
-  virtual SharedPtr<Vnode> remove_child(const String& name) override { return nullptr; }
-  virtual SharedPtr<Vnode> get_child(const String& name) override;
+  virtual SharedPtr<Vnode> remove_child(const String &name) override {
+    return nullptr;
+  }
+  virtual SharedPtr<Vnode> get_child(const String &name) override;
   virtual SharedPtr<Vnode> get_ith_child(size_t i) override;
   virtual size_t get_children_count() const override;
   virtual SharedPtr<Vnode> get_parent() override;
   virtual void set_parent(SharedPtr<Vnode> parent) override;
 
-  virtual int chmod(const mode_t) override { return 0; }
-  virtual int chown(const uid_t, const gid_t) override { return 0; }
+  virtual int chmod(const mode_t) override {
+    return 0;
+  }
+  virtual int chown(const uid_t, const gid_t) override {
+    return 0;
+  }
 
   virtual String get_name() const override;
-  virtual char* get_content() override;
+  virtual char *get_content() override;
   virtual void set_content(UniquePtr<char[]> content, off_t new_size) override;
   virtual size_t hash_code() const override;
   virtual bool is_root_vnode() const override;
@@ -235,19 +219,18 @@ class FAT32Inode final : public Vnode {
 
   void allocate_first_cluster() const;
 
-  void update_dentry_to_disk(Function<void (FAT32::DirectoryEntry*)> callback) const;
+  void update_dentry_to_disk(Function<void(FAT32::DirectoryEntry *)> callback) const;
 
-  SharedPtr<FAT32Inode>
-  find_child_if(Function<bool (const FAT32::DirectoryEntryView&)> predicate,
-                uint32_t* out_offset = nullptr) const; 
+  SharedPtr<FAT32Inode> find_child_if(
+      Function<bool(const FAT32::DirectoryEntryView &)> predicate,
+      uint32_t *out_offset = nullptr) const;
 
   // This method can be used to:
   // 1. iterate through all children and apply the callback `f` on each children, or
   // 2. iterate through all children and return when the predicate `f` yields true.
-  void iterate_children(Function<bool (const FAT32::DirectoryEntryView&)> f) const; 
+  void iterate_children(Function<bool(const FAT32::DirectoryEntryView &)> f) const;
 
-
-  FAT32& _fs;
+  FAT32 &_fs;
   String _name;
 
   uint32_t _first_cluster_number;
@@ -256,17 +239,16 @@ class FAT32Inode final : public Vnode {
   UniquePtr<char[]> _content;
 };
 
-
 // Explicit (full) specialization of `struct Hash` for FAT32Inode.
 template <>
 struct Hash<FAT32Inode> final {
-  size_t operator ()(const FAT32Inode& inode) {
+  size_t operator()(const FAT32Inode &inode) {
     constexpr size_t prime = 17;
     size_t ret = 7;
 
     ret += prime * hash(inode._size);
     ret += prime * hash(inode._mode);
-    //ret += hash(inode._name);
+    // ret += hash(inode._name);
     ret += prime * hash(inode._first_cluster_number);
     return ret;
   }

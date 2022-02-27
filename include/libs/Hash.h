@@ -11,19 +11,19 @@ struct Hash;
 
 // Partial specialization of struct `Hash` for pointer types.
 template <typename T>
-struct Hash<T*> final {
-  size_t operator ()(T* key) const {
+struct Hash<T *> final {
+  size_t operator()(T *key) const {
     return reinterpret_cast<size_t>(key);
   };
 };
 
 // Explicit (full) specialization of struct `Hash` for primitive types.
-#define DEFINE_TRIVIAL_HASH(key_type)         \
-  template <>                                 \
-  struct Hash<key_type> final {               \
-    size_t operator ()(key_type key) const {  \
-      return static_cast<size_t>(key);        \
-    }                                         \
+#define DEFINE_TRIVIAL_HASH(key_type)       \
+  template <>                               \
+  struct Hash<key_type> final {             \
+    size_t operator()(key_type key) const { \
+      return static_cast<size_t>(key);      \
+    }                                       \
   }
 
 DEFINE_TRIVIAL_HASH(bool);
@@ -41,9 +41,10 @@ DEFINE_TRIVIAL_HASH(unsigned long long);
 
 // TODO: add full specialization for float and double.
 
-
 template <typename T>
-size_t hash(T t) { return Hash<decltype(t)>{}(t); }
+size_t hash(T t) {
+  return Hash<decltype(t)>{}(t);
+}
 
 }  // namespace valkyrie::kernel
 

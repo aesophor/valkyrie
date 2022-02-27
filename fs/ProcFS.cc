@@ -5,9 +5,9 @@
 #include <CString.h>
 
 #include <dev/Console.h>
-#include <kernel/Kernel.h>
 #include <fs/Stat.h>
 #include <fs/VirtualFileSystem.h>
+#include <kernel/Kernel.h>
 #include <mm/MemoryManager.h>
 
 namespace valkyrie::kernel {
@@ -16,13 +16,12 @@ namespace {
 
 bool is_switch_on = false;
 
-auto all_digits = [](const String& s) {
+auto all_digits = [](const String &s) {
   return !s.empty() &&
-    find_if(s.begin(), s.end(), [](char c) { return !is_digit(c); }) == s.end();
+      find_if(s.begin(), s.end(), [](char c) { return !is_digit(c); }) == s.end();
 };
 
 }  // namespace
-
 
 ProcFS::ProcFS()
     : _next_inode_index(1),
@@ -36,24 +35,23 @@ ProcFS::ProcFS()
   _root_inode->add_child(make_shared<SlobInfoInode>(*this));
 }
 
-
 SharedPtr<Vnode> ProcFS::get_root_vnode() {
   return _root_inode;
 }
 
 void ProcFS::repopulate_task_directories() {
   // Remove the task directories for tasks that no longer exist.
-  _root_inode->_children.remove_if([](const auto& inode) {
-    Task* task = nullptr;
+  _root_inode->_children.remove_if([](const auto &inode) {
+    Task *task = nullptr;
     return all_digits(inode->get_name()) &&
-           !(task = Task::get_by_pid(atoi(inode->get_name().c_str())));
+        !(task = Task::get_by_pid(atoi(inode->get_name().c_str())));
   });
 
   for (auto task : Task::get_active_tasks()) {
-    auto it = _root_inode->_children.find_if([&task](const auto& inode) {
+    auto it = _root_inode->_children.find_if([&task](const auto &inode) {
       pid_t pid;
       return all_digits(inode->get_name()) &&
-             (pid = atoi(inode->get_name().c_str())) == task->get_pid();
+          (pid = atoi(inode->get_name().c_str())) == task->get_pid();
     });
 
     char pid_str[32] = {};
@@ -67,10 +65,7 @@ void ProcFS::repopulate_task_directories() {
   }
 }
 
-
-ProcFSInode::ProcFSInode(ProcFS& fs,
-                         SharedPtr<ProcFSInode> parent,
-                         const String& name,
+ProcFSInode::ProcFSInode(ProcFS &fs, SharedPtr<ProcFSInode> parent, const String &name,
                          mode_t mode)
     : Vnode(fs._next_inode_index++, 0, mode, 0, 0),
       _fs(fs),
@@ -79,13 +74,8 @@ ProcFSInode::ProcFSInode(ProcFS& fs,
       _parent(parent),
       _children() {}
 
-
-SharedPtr<Vnode> ProcFSInode::create_child(const String& name,
-                                           const char* content,
-                                           off_t size,
-                                           mode_t mode,
-                                           uid_t uid,
-                                           gid_t gid) {
+SharedPtr<Vnode> ProcFSInode::create_child(const String &name, const char *content, off_t size,
+                                           mode_t mode, uid_t uid, gid_t gid) {
   Kernel::panic("ProcFS: invalid version of `create_child()` called: %s\n", name.c_str());
   /*
   auto inode = make_shared<ProcFSInode>(_fs, shared_from_this(), name, mode, type);
@@ -98,12 +88,11 @@ void ProcFSInode::add_child(SharedPtr<Vnode> child) {
   _children.push_back(move(static_pointer_cast<ProcFSInode>(child)));
 }
 
-SharedPtr<Vnode> ProcFSInode::remove_child(const String& name) {
+SharedPtr<Vnode> ProcFSInode::remove_child(const String &name) {
   SharedPtr<Vnode> removed_child;
 
-  _children.remove_if([&removed_child, &name](auto& vnode) {
-    return vnode->_name == name &&
-           (removed_child = move(vnode), true);
+  _children.remove_if([&removed_child, &name](auto &vnode) {
+    return vnode->_name == name && (removed_child = move(vnode), true);
   });
 
   if (!removed_child) [[unlikely]] {
@@ -113,7 +102,7 @@ SharedPtr<Vnode> ProcFSInode::remove_child(const String& name) {
   return removed_child;
 }
 
-SharedPtr<Vnode> ProcFSInode::get_child(const String& name) {
+SharedPtr<Vnode> ProcFSInode::get_child(const String &name) {
   if (name == ".") {
     return shared_from_this();
   } else if (name == "..") {
@@ -126,11 +115,9 @@ SharedPtr<Vnode> ProcFSInode::get_child(const String& name) {
   // and all the chars in `name` are digits, then
   // we have to check whether the task with pid = `name` exists.
   if (is_root_vnode() && all_digits(name)) {
-    auto it = _children.find_if([&name](auto& vnode) {
-      return vnode->_name == name;
-    });
+    auto it = _children.find_if([&name](auto &vnode) { return vnode->_name == name; });
 
-    Task* task = Task::get_by_pid(atoi(name.c_str()));
+    Task *task = Task::get_by_pid(atoi(name.c_str()));
 
     if (!task) [[unlikely]] {
       if (it != _children.end()) {
@@ -153,9 +140,7 @@ SharedPtr<Vnode> ProcFSInode::get_child(const String& name) {
     }
 
   } else {
-    auto it = _children.find_if([&name](const auto& vnode) {
-      return vnode->_name == name;
-    });
+    auto it = _children.find_if([&name](const auto &vnode) { return vnode->_name == name; });
 
     ret = (it != _children.end()) ? *it : nullptr;
   }
@@ -195,7 +180,6 @@ void ProcFSInode::set_parent(SharedPtr<Vnode> parent) {
   _parent = parent;
 }
 
-
 int ProcFSInode::chmod(const mode_t mode) {
   return -1;
 }
@@ -208,7 +192,7 @@ String ProcFSInode::get_name() const {
   return _name;
 }
 
-char* ProcFSInode::get_content() {
+char *ProcFSInode::get_content() {
   printk("ProcFS: ProcFSInode::get_content() called...\n");
   return nullptr;
 }
@@ -225,8 +209,7 @@ bool ProcFSInode::is_root_vnode() const {
   return this == _fs._root_inode.get();
 }
 
-
-char* SwitchInode::get_content() {
+char *SwitchInode::get_content() {
   constexpr size_t len = 2;
   _content = make_unique<char[]>(len);
 
@@ -242,10 +225,10 @@ char* SwitchInode::get_content() {
 }
 
 void SwitchInode::set_content(UniquePtr<char[]> content, off_t new_size) {
- is_switch_on = static_cast<bool>(atoi(content.get()));
+  is_switch_on = static_cast<bool>(atoi(content.get()));
 }
 
-char* HelloInode::get_content() {
+char *HelloInode::get_content() {
   constexpr size_t len = 6;
   _content = make_unique<char[]>(len);
 
@@ -259,7 +242,7 @@ char* HelloInode::get_content() {
   return _content.get();
 }
 
-char* BuddyInfoInode::get_content() {
+char *BuddyInfoInode::get_content() {
   String s = MemoryManager::the().get_buddy_info();
   size_t len = s.size();
   _content = make_unique<char[]>(len);
@@ -269,7 +252,7 @@ char* BuddyInfoInode::get_content() {
   return _content.get();
 }
 
-char* SlobInfoInode::get_content() {
+char *SlobInfoInode::get_content() {
   String s = MemoryManager::the().get_slob_info();
   size_t len = s.size();
   _content = make_unique<char[]>(len);
@@ -279,9 +262,9 @@ char* SlobInfoInode::get_content() {
   return _content.get();
 }
 
-char* TaskStatusInode::get_content() {
+char *TaskStatusInode::get_content() {
   pid_t pid = 0;
-  Task* task = nullptr;
+  Task *task = nullptr;
 
   if (auto parent = _parent.lock()) [[likely]] {
     pid = atoi(parent->get_name().c_str());

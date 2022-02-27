@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_BLOCK_DEVICE_H_
 #define VALKYRIE_BLOCK_DEVICE_H_
 
-#include <Types.h>
 #include <Memory.h>
+#include <Types.h>
 
 #include <dev/Device.h>
 #include <mm/Page.h>
@@ -16,32 +16,28 @@ class BlockDevice : public Device {
    public:
     virtual ~Driver() = default;
 
-    virtual void read_block(int block_index, void* buf) = 0;
-    virtual void write_block(int block_index, const void* buf) = 0;
+    virtual void read_block(int block_index, void *buf) = 0;
+    virtual void write_block(int block_index, const void *buf) = 0;
   };
 
-
-  BlockDevice(const String& name,
-              BlockDevice::Driver& driver,
-              size_t block_size = PAGE_SIZE);
+  BlockDevice(const String &name, BlockDevice::Driver &driver, size_t block_size = PAGE_SIZE);
 
   virtual ~BlockDevice() = default;
-  BlockDevice(const BlockDevice&) = delete;
-  BlockDevice(BlockDevice&&) = delete;
-  BlockDevice& operator =(const BlockDevice&) = delete;
-  BlockDevice& operator =(BlockDevice&&) = delete;
+  BlockDevice(const BlockDevice &) = delete;
+  BlockDevice(BlockDevice &&) = delete;
+  BlockDevice &operator=(const BlockDevice &) = delete;
+  BlockDevice &operator=(BlockDevice &&) = delete;
 
   virtual bool is_character_device() const override;
   virtual bool is_block_device() const override;
 
-  virtual void read_block(int block_index, void* buf) = 0;
-  virtual void write_block(int block_index, const void* buf) = 0;
-
+  virtual void read_block(int block_index, void *buf) = 0;
+  virtual void write_block(int block_index, const void *buf) = 0;
 
   size_t get_block_size() const;
 
  protected:
-  BlockDevice::Driver& _driver;
+  BlockDevice::Driver &_driver;
   size_t _block_size;
 };
 

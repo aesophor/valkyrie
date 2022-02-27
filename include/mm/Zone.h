@@ -21,7 +21,7 @@ struct Zone final {
   static size_t get_pages_count();
 
   BuddyAllocator buddy_allocator;
-  SlobAllocator  slob_allocator;
+  SlobAllocator slob_allocator;
 };
 
 }  // namespace valkyrie::kernel

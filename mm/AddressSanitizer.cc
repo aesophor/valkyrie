@@ -7,12 +7,11 @@ namespace valkyrie::kernel {
 
 AddressSanitizer::AddressSanitizer() : _allocated_pointers() {}
 
-
 bool AddressSanitizer::mark_free_chk(void *p) {
   for (int i = 0; i < 1000; i++) {
     if (p == _allocated_pointers[i]) {
       _allocated_pointers[i] = nullptr;
-      //show();
+      // show();
       return true;
     }
   }
@@ -21,7 +20,7 @@ bool AddressSanitizer::mark_free_chk(void *p) {
   return false;
 }
 
-void AddressSanitizer::mark_allocated(void* p) {
+void AddressSanitizer::mark_allocated(void *p) {
   for (int i = 0; i < 1000; i++) {
     if (_allocated_pointers[i] == p) {
       Kernel::panic("*** kasan: pointer 0x%x is already allocated...\n", p);
@@ -31,7 +30,7 @@ void AddressSanitizer::mark_allocated(void* p) {
   for (int i = 0; i < 1000; i++) {
     if (!_allocated_pointers[i]) {
       _allocated_pointers[i] = p;
-      //show();
+      // show();
       return;
     }
   }

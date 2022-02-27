@@ -2,26 +2,25 @@
 #ifndef VALKYRIE_DEVICE_H_
 #define VALKYRIE_DEVICE_H_
 
-#include <Types.h>
 #include <String.h>
+#include <Types.h>
 
 namespace valkyrie::kernel {
 
 class Device {
  public:
-  Device(const String& name);
+  Device(const String &name);
 
   virtual ~Device() = default;
-  Device(const Device&) = delete;
-  Device(Device&&) = delete;
-  Device& operator =(const Device&) = delete;
-  Device& operator =(Device&&) = delete;
+  Device(const Device &) = delete;
+  Device(Device &&) = delete;
+  Device &operator=(const Device &) = delete;
+  Device &operator=(Device &&) = delete;
 
   virtual bool is_character_device() const = 0;
   virtual bool is_block_device() const = 0;
 
-  const String& get_name() const;
-
+  const String &get_name() const;
 
   // Idea borrowed from Linux kernel. See:
   // https://elixir.bootlin.com/linux/latest/source/include/linux/kdev_t.h

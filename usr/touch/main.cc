@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <vlibc.h>
 #include <cstring.h>
+#include <vlibc.h>
 
 #define O_CREAT ((1 << 3))
 

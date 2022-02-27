@@ -1,14 +1,14 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <vlibc.h>
 #include <cstring.h>
+#include <vlibc.h>
 
-int run_shell(const char* username);
+int run_shell(const char *username);
 
 int main(int argc, char **argv) {
   return run_shell(argv[1]);
 }
 
-int get_argc(const char* s) {
+int get_argc(const char *s) {
   size_t len = strlen(s);
   int ret = 0;
 
@@ -33,18 +33,20 @@ int get_argc(const char* s) {
 
 // Makes the current argument terminate by a NULL byte,
 // and returns the pointer to the next argument.
-char* get_next_arg(char* s) {
-  while (*s && *s != ' ') s++;
+char *get_next_arg(char *s) {
+  while (*s && *s != ' ')
+    s++;
   *s++ = 0;
-  while (*s && *s == ' ') s++;
+  while (*s && *s == ' ')
+    s++;
   return s;
 }
 
-int run_shell(const char* username) {
+int run_shell(const char *username) {
   char buf[256];
   int wstatus = 0;
   int argc;
-  char* str;
+  char *str;
   char prompt = (!strncmp(username, "root", 4)) ? '#' : '$';
 
   while (true) {
@@ -54,16 +56,16 @@ int run_shell(const char* username) {
 
     argc = get_argc(buf);
     str = buf;
-    while (*str && *str == ' ' && str < buf + sizeof(buf)) str++;
+    while (*str && *str == ' ' && str < buf + sizeof(buf))
+      str++;
 
-    char* arguments[argc + 1];
+    char *arguments[argc + 1];
     arguments[0] = str;
     for (int i = 1; i < argc; i++) {
       str = get_next_arg(str);
       arguments[i] = str;
     }
     arguments[argc] = nullptr;
-
 
     if (!strlen(buf)) {
       continue;

@@ -5,11 +5,11 @@
 #include <String.h>
 #include <Types.h>
 
-#define MAX_ORDER          10
+#define MAX_ORDER 10
 #define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
 
-#define ALLOCATED          static_cast<int8_t>(-1)
-#define DONT_ALLOCATE      static_cast<int8_t>(-2)
+#define ALLOCATED static_cast<int8_t>(-1)
+#define DONT_ALLOCATE static_cast<int8_t>(-2)
 
 namespace valkyrie::kernel {
 
@@ -18,53 +18,53 @@ class BuddyAllocator {
   explicit BuddyAllocator(const size_t zone_begin);
 
   ~BuddyAllocator() = default;
-  BuddyAllocator(const BuddyAllocator&) = delete;
-  BuddyAllocator(BuddyAllocator&&) = delete;
-  BuddyAllocator& operator =(const BuddyAllocator&) = delete;
-  BuddyAllocator& operator =(BuddyAllocator&&) = delete;
+  BuddyAllocator(const BuddyAllocator &) = delete;
+  BuddyAllocator(BuddyAllocator &&) = delete;
+  BuddyAllocator &operator=(const BuddyAllocator &) = delete;
+  BuddyAllocator &operator=(BuddyAllocator &&) = delete;
 
-  void* allocate_one_page_frame();
-  void* allocate(size_t requested_size);
-  void deallocate(void* p);
+  void *allocate_one_page_frame();
+  void *allocate(size_t requested_size);
+  void deallocate(void *p);
 
   String to_string() const;
   void dump() const;
 
  private:
   struct BlockHeader {
-    BlockHeader* next;
+    BlockHeader *next;
     int32_t order;
     int32_t index;
   };
 
-  BlockHeader* get_block_header(const void* p);
-  void* get_page_frame(const int index) const;
-  
-  void mark_block_as_allocated(const BlockHeader* block);
-  void mark_block_as_allocatable(const BlockHeader* block);
+  BlockHeader *get_block_header(const void *p);
+  void *get_page_frame(const int index) const;
 
-  void free_list_del_head(BlockHeader* block);
-  void free_list_add_head(BlockHeader* block);
-  void free_list_del_entry(BlockHeader* block);
+  void mark_block_as_allocated(const BlockHeader *block);
+  void mark_block_as_allocatable(const BlockHeader *block);
+
+  void free_list_del_head(BlockHeader *block);
+  void free_list_add_head(BlockHeader *block);
+  void free_list_del_entry(BlockHeader *block);
 
   // Iteratively split the given block
   // until it is exactly the size of PAGE_SIZE * 2^`target_order`.
-  BlockHeader* split_block(BlockHeader* block, const int target_order);
-  BlockHeader* get_buddy(BlockHeader* block);
+  BlockHeader *split_block(BlockHeader *block, const int target_order);
+  BlockHeader *get_buddy(BlockHeader *block);
 
   int size_to_order(const size_t size) const;
   int order_to_size(const size_t order) const;
-  bool is_block_allocated(const BlockHeader* block) const;
+  bool is_block_allocated(const BlockHeader *block) const;
   size_t normalize_size(size_t size) const;
   size_t get_zone_end() const;
-
 
   // The address of the beginning of this zone.
   // Each buddy allocator manages a "zone".
   const size_t _zone_begin;
 
   // The Frame Array (or "The Array")
-  // See: https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab3.html#data-structure
+  // See:
+  // https://grasslab.github.io/NYCU_Operating_System_Capstone/labs/lab3.html#data-structure
   //
   // Each element represents exactly one `PAGE_SIZE` physical page frame.
   // For example, if `PAGE_SIZE` is 4096, then each element represents
@@ -80,7 +80,7 @@ class BuddyAllocator {
 
   // An array of Singly-linked Lists of free page frames of different sizes.
   // See: https://www.kernel.org/doc/gorman/html/understand/understand009.html
-  BlockHeader* _free_lists[MAX_ORDER];
+  BlockHeader *_free_lists[MAX_ORDER];
 
   // Header pool
   BlockHeader _headers[MAX_ORDER_NR_PAGES];

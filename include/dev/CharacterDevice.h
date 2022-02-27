@@ -2,8 +2,8 @@
 #ifndef VALKYRIE_CHARACTER_DEVICE_H_
 #define VALKYRIE_CHARACTER_DEVICE_H_
 
-#include <Types.h>
 #include <Memory.h>
+#include <Types.h>
 
 #include <dev/Device.h>
 #include <mm/Page.h>
@@ -20,15 +20,13 @@ class CharacterDevice : public Device {
     virtual void write_char(const char c) = 0;
   };
 
-
-  CharacterDevice(const String& name,
-                  CharacterDevice::Driver& driver);
+  CharacterDevice(const String &name, CharacterDevice::Driver &driver);
 
   virtual ~CharacterDevice() = default;
-  CharacterDevice(const CharacterDevice&) = delete;
-  CharacterDevice(CharacterDevice&&) = delete;
-  CharacterDevice& operator =(const CharacterDevice&) = delete;
-  CharacterDevice& operator =(CharacterDevice&&) = delete;
+  CharacterDevice(const CharacterDevice &) = delete;
+  CharacterDevice(CharacterDevice &&) = delete;
+  CharacterDevice &operator=(const CharacterDevice &) = delete;
+  CharacterDevice &operator=(CharacterDevice &&) = delete;
 
   virtual bool is_character_device() const override;
   virtual bool is_block_device() const override;
@@ -37,7 +35,7 @@ class CharacterDevice : public Device {
   virtual void write_char(const char c) = 0;
 
  protected:
-  CharacterDevice::Driver& _driver;
+  CharacterDevice::Driver &_driver;
 };
 
 }  // namespace valkyrie::kernel

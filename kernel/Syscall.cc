@@ -9,41 +9,24 @@
 
 namespace valkyrie::kernel {
 
-#define SYSCALL_DECL(func) \
-  reinterpret_cast<const size_t>(func)
+#define SYSCALL_DECL(func) reinterpret_cast<const size_t>(func)
 
 const size_t __syscall_table[Syscall::__NR_syscall] = {
-  SYSCALL_DECL(sys_read),
-  SYSCALL_DECL(sys_write),
-  SYSCALL_DECL(sys_open),
-  SYSCALL_DECL(sys_close),
-  SYSCALL_DECL(sys_fork),
-  SYSCALL_DECL(sys_exec),
-  SYSCALL_DECL(sys_exit),
-  SYSCALL_DECL(sys_getpid),
-  SYSCALL_DECL(sys_wait),
-  SYSCALL_DECL(sys_sched_yield),
-  SYSCALL_DECL(sys_kill),
-  SYSCALL_DECL(sys_signal),
-  SYSCALL_DECL(sys_access),
-  SYSCALL_DECL(sys_chdir),
-  SYSCALL_DECL(sys_mkdir),
-  SYSCALL_DECL(sys_rmdir),
-  SYSCALL_DECL(sys_unlink),
-  SYSCALL_DECL(sys_mount),
-  SYSCALL_DECL(sys_umount),
-  SYSCALL_DECL(sys_mknod),
-  SYSCALL_DECL(sys_getcwd),
+    SYSCALL_DECL(sys_read),        SYSCALL_DECL(sys_write),  SYSCALL_DECL(sys_open),
+    SYSCALL_DECL(sys_close),       SYSCALL_DECL(sys_fork),   SYSCALL_DECL(sys_exec),
+    SYSCALL_DECL(sys_exit),        SYSCALL_DECL(sys_getpid), SYSCALL_DECL(sys_wait),
+    SYSCALL_DECL(sys_sched_yield), SYSCALL_DECL(sys_kill),   SYSCALL_DECL(sys_signal),
+    SYSCALL_DECL(sys_access),      SYSCALL_DECL(sys_chdir),  SYSCALL_DECL(sys_mkdir),
+    SYSCALL_DECL(sys_rmdir),       SYSCALL_DECL(sys_unlink), SYSCALL_DECL(sys_mount),
+    SYSCALL_DECL(sys_umount),      SYSCALL_DECL(sys_mknod),  SYSCALL_DECL(sys_getcwd),
 };
 
-
-
-int sys_read(int fd, void __user* buf, size_t count) {
-  buf = copy_from_user<void*>(buf);
+int sys_read(int fd, void __user *buf, size_t count) {
+  buf = copy_from_user<void *>(buf);
 
   // TODO: define stdin...
   if (fd == 0) {
-    return Console::the().read(reinterpret_cast<char*>(buf), count);
+    return Console::the().read(reinterpret_cast<char *>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -56,12 +39,12 @@ int sys_read(int fd, void __user* buf, size_t count) {
   return VFS::the().read(file, buf, count);
 }
 
-int sys_write(int fd, const void __user* buf, size_t count) {
-  buf = copy_from_user<const void*>(buf);
+int sys_write(int fd, const void __user *buf, size_t count) {
+  buf = copy_from_user<const void *>(buf);
 
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
-    return Console::the().write(reinterpret_cast<const char*>(buf), count);
+    return Console::the().write(reinterpret_cast<const char *>(buf), count);
   }
 
   SharedPtr<File> file = Task::current()->get_file_by_fd(fd);
@@ -74,8 +57,8 @@ int sys_write(int fd, const void __user* buf, size_t count) {
   return VFS::the().write(file, buf, count);
 }
 
-int sys_open(const char __user* pathname, int options) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_open(const char __user *pathname, int options) {
+  pathname = copy_from_user<const char *>(pathname);
 
   SharedPtr<File> file = VFS::the().open(pathname, options);
 
@@ -106,14 +89,14 @@ int sys_fork() {
   return Task::current()->do_fork();
 }
 
-int sys_exec(const char __user* name, const char __user* argv[]) {
-  name = copy_from_user<const char*>(name);
-  argv = copy_from_user<const char**>(argv);
+int sys_exec(const char __user *name, const char __user *argv[]) {
+  name = copy_from_user<const char *>(name);
+  argv = copy_from_user<const char **>(argv);
   return Task::current()->do_exec(name, argv);
 }
 
-int sys_wait(int __user* wstatus) {
-  wstatus = copy_from_user<int*>(wstatus);
+int sys_wait(int __user *wstatus) {
+  wstatus = copy_from_user<int *>(wstatus);
   return Task::current()->do_wait(wstatus);
 }
 
@@ -134,19 +117,19 @@ long sys_kill(pid_t pid, int signal) {
   return Task::current()->do_kill(pid, static_cast<Signal>(signal));
 }
 
-int sys_signal(int signal, void (__user* handler)()) {
+int sys_signal(int signal, void(__user *handler)()) {
   return Task::current()->do_signal(signal, handler);
 }
 
-int sys_access(const char __user* pathname, int options) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_access(const char __user *pathname, int options) {
+  pathname = copy_from_user<const char *>(pathname);
   return VFS::the().access(pathname, options);
 }
 
-int sys_chdir(const char __user* pathname) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_chdir(const char __user *pathname) {
+  pathname = copy_from_user<const char *>(pathname);
 
-  auto& vfs = VFS::the();
+  auto &vfs = VFS::the();
 
   if (vfs.access(pathname, 0) == -1) [[unlikely]] {
     return -1;
@@ -159,46 +142,45 @@ int sys_chdir(const char __user* pathname) {
     return -1;
   }
 
-  Task::current()->set_cwd_vnode(move(vnode)); 
+  Task::current()->set_cwd_vnode(move(vnode));
   return 0;
 }
 
-int sys_mkdir(const char __user* pathname) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_mkdir(const char __user *pathname) {
+  pathname = copy_from_user<const char *>(pathname);
   return VFS::the().mkdir(pathname);
 }
 
-int sys_rmdir(const char __user* pathname) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_rmdir(const char __user *pathname) {
+  pathname = copy_from_user<const char *>(pathname);
   return VFS::the().rmdir(pathname);
 }
 
-int sys_unlink(const char __user* pathname) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_unlink(const char __user *pathname) {
+  pathname = copy_from_user<const char *>(pathname);
   return VFS::the().unlink(pathname);
 }
 
-int sys_mount(const char __user* device_name,
-              const char __user* mountpoint,
-              const char __user* fs_name) {
-  device_name = copy_from_user<const char*>(device_name);
-  mountpoint = copy_from_user<const char*>(mountpoint);
-  fs_name = copy_from_user<const char*>(fs_name);
+int sys_mount(const char __user *device_name, const char __user *mountpoint,
+              const char __user *fs_name) {
+  device_name = copy_from_user<const char *>(device_name);
+  mountpoint = copy_from_user<const char *>(mountpoint);
+  fs_name = copy_from_user<const char *>(fs_name);
 
   return VFS::the().mount(device_name, mountpoint, fs_name);
 }
 
-int sys_umount(const char __user* mountpoint) {
-  mountpoint = copy_from_user<const char*>(mountpoint);
+int sys_umount(const char __user *mountpoint) {
+  mountpoint = copy_from_user<const char *>(mountpoint);
   return VFS::the().umount(mountpoint);
 }
 
-int sys_mknod(const char __user* pathname, mode_t mode, dev_t dev) {
-  pathname = copy_from_user<const char*>(pathname);
+int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev) {
+  pathname = copy_from_user<const char *>(pathname);
   return VFS::the().mknod(pathname, mode, dev);
 }
 
-int sys_getcwd(char __user* buf) {
+int sys_getcwd(char __user *buf) {
   return 0;
 }
 

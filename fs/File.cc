@@ -3,10 +3,7 @@
 
 namespace valkyrie::kernel {
 
-File::File(FileSystem& fs, SharedPtr<Vnode> vnode, int options)
-    : fs(fs),
-      vnode(move(vnode)),
-      pos(),
-      options(options) {}
+File::File(FileSystem &fs, SharedPtr<Vnode> vnode, int options)
+    : fs(fs), vnode(move(vnode)), pos(), options(options) {}
 
 }  // namespace valkyrie::kernel

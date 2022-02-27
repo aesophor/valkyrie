@@ -40,30 +40,28 @@ enum Syscall {
 extern const size_t __syscall_table[Syscall::__NR_syscall];
 
 // Individual system call declaration.
-int sys_read(int fd, void __user* buf, size_t count);
-int sys_write(int fd, const void __user* buf, size_t count);
-int sys_open(const char __user* pathname, int options);
+int sys_read(int fd, void __user *buf, size_t count);
+int sys_write(int fd, const void __user *buf, size_t count);
+int sys_open(const char __user *pathname, int options);
 int sys_close(int fd);
 int sys_fork();
-int sys_exec(const char __user* name, const char __user* argv[]);
+int sys_exec(const char __user *name, const char __user *argv[]);
 [[noreturn]] void sys_exit(int error_code);
 int sys_getpid();
-int sys_wait(int __user* wstatus);
+int sys_wait(int __user *wstatus);
 int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
-int sys_signal(int signal, void (__user* handler)());
-int sys_access(const char __user* pathname, int options);
-int sys_chdir(const char __user* pathname);
-int sys_mkdir(const char __user* pathname);
-int sys_rmdir(const char __user* pathname);
-int sys_unlink(const char __user* pathname);
-int sys_mount(const char __user* device_name,
-              const char __user* mountpoint,
-              const char __user* fs_name);
-int sys_umount(const char __user* mountpoint);
-int sys_mknod(const char __user* pathname, mode_t mode, dev_t dev);
-int sys_getcwd(char __user* buf);
-
+int sys_signal(int signal, void(__user *handler)());
+int sys_access(const char __user *pathname, int options);
+int sys_chdir(const char __user *pathname);
+int sys_mkdir(const char __user *pathname);
+int sys_rmdir(const char __user *pathname);
+int sys_unlink(const char __user *pathname);
+int sys_mount(const char __user *device_name, const char __user *mountpoint,
+              const char __user *fs_name);
+int sys_umount(const char __user *mountpoint);
+int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev);
+int sys_getcwd(char __user *buf);
 
 inline bool is_syscall_id_valid(const uint64_t id) {
   return id < Syscall::__NR_syscall;

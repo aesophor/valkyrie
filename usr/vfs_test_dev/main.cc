@@ -1,12 +1,13 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <vlibc.h>
 #include <cstring.h>
+#include <vlibc.h>
 
 #define O_CREAT ((1 << 3))
 
 int main(int argc, char **argv) {
-  char s[] = "this message is written to /dev/console, "
-             "now type something: ";
+  char s[] =
+      "this message is written to /dev/console, "
+      "now type something: ";
 
   char buf[32];
 

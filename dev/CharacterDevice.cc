@@ -3,11 +3,8 @@
 
 namespace valkyrie::kernel {
 
-CharacterDevice::CharacterDevice(const String& name,
-                                 CharacterDevice::Driver& driver)
-    : Device(name),
-      _driver(driver) {}
-
+CharacterDevice::CharacterDevice(const String &name, CharacterDevice::Driver &driver)
+    : Device(name), _driver(driver) {}
 
 bool CharacterDevice::is_character_device() const {
   return false;

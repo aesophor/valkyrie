@@ -3,11 +3,9 @@
 
 namespace valkyrie::kernel {
 
-Device::Device(const String& name)
-    : _name(name) {}
+Device::Device(const String &name) : _name(name) {}
 
-
-const String& Device::get_name() const {
+const String &Device::get_name() const {
   return _name;
 }
 

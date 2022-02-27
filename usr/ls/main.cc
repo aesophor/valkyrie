@@ -1,6 +1,6 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
-#include <vlibc.h>
 #include <cstring.h>
+#include <vlibc.h>
 
 #define DENTRY_NAME_LEN 256
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     goto out;
   }
 
-  while ((ret = read(fd, reinterpret_cast<char*>(&dentry), sizeof(dentry)))) {
+  while ((ret = read(fd, reinterpret_cast<char *>(&dentry), sizeof(dentry)))) {
     printf("%s ", dentry.name);
   }
   printf("\n");

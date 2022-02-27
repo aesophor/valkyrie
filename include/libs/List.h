@@ -25,52 +25,47 @@ class List {
   using Iterator = ListIterator<ValueType>;
 
   // Constructor
-  List()
-      : _head(make_unique<Node>()),
-        _size() {}
+  List() : _head(make_unique<Node>()), _size() {}
 
   // Destructor
   ~List() {
-    Node* ptr = _head->next;
+    Node *ptr = _head->next;
     while (ptr != _head.get()) {
-      Node* next = ptr->next;
+      Node *next = ptr->next;
       delete ptr;
       ptr = next;
     }
   }
 
   // Copy constructor
-  List(const List& r) {
+  List(const List &r) {
     *this = r;  // delegate to copy assignment operator
   }
 
   // Copy assignment operator
-  List& operator =(const List& r) {
+  List &operator=(const List &r) {
     _head = make_unique<Node>();
     _size = 0;
 
     // Deep copy this list.
-    for (const auto& data : r) {
+    for (const auto &data : r) {
       push_back(data);
     }
     return *this;
   }
 
   // Move constructor
-  List(List&& r) noexcept
-      : _head(make_unique<Node>()),
-        _size() {
+  List(List &&r) noexcept : _head(make_unique<Node>()), _size() {
     *this = move(r);  // delegate to move assignment operator
   }
 
   // Move assignment operator
-  List& operator =(List&& r) noexcept {
+  List &operator=(List &&r) noexcept {
     _head.swap(r._head);
     _size = r._size;
     r._size = 0;
     return *this;
   }
-
 
   operator bool() const {
     return !empty();
@@ -83,27 +78,26 @@ class List {
   Iterator end() {
     return Iterator::end(*this);
   }
-  
+
   /*
   ConstIterator begin() const {
     return ConstIterator::begin(*this);
   }
-  
+
   ConstIterator end() const {
     return ConstIterator::end(*this);
   }
   */
 
-
   template <typename U>
-  void push_back(U&& val) {
-    Node* new_node = new Node(forward<U>(val));
+  void push_back(U &&val) {
+    Node *new_node = new Node(forward<U>(val));
     list_add(new_node, _head->prev, _head.get());
   }
 
   template <typename U>
-  void push_front(U&& val) {
-    Node* new_node = new Node(forward<U>(val));
+  void push_front(U &&val) {
+    Node *new_node = new Node(forward<U>(val));
     list_add(new_node, _head.get(), _head->next);
   }
 
@@ -116,15 +110,15 @@ class List {
   }
 
   void erase(int index) {
-    Node* node = _head->next;
+    Node *node = _head->next;
     while (index--) {
       node = node->next;
     }
     list_del_entry(node);
   }
-  
-  void remove(const T& val) {
-    Node* node = _head->next;
+
+  void remove(const T &val) {
+    Node *node = _head->next;
     while (node != _head.get()) {
       if (node->data == val) {
         list_del_entry(node);
@@ -134,8 +128,8 @@ class List {
     }
   }
 
-  void remove_if(Function<bool (T&)> predicate, bool check_all = false) {
-    for (Node* node = _head->next; node != _head.get(); node = node->next) {
+  void remove_if(Function<bool(T &)> predicate, bool check_all = false) {
+    for (Node *node = _head->next; node != _head.get(); node = node->next) {
       if (predicate(node->data)) {
         list_del_entry(node);
         if (!check_all) {
@@ -145,7 +139,7 @@ class List {
     }
   }
 
-  Iterator find_if(Function<bool (T&)> predicate) {
+  Iterator find_if(Function<bool(T &)> predicate) {
     for (Iterator it = begin(); it != end(); it++) {
       if (predicate(*it)) {
         return it;
@@ -154,7 +148,7 @@ class List {
     return end();
   }
 
-  ConstIterator find_if(Function<bool (const T&)> predicate) const {
+  ConstIterator find_if(Function<bool(const T &)> predicate) const {
     for (ConstIterator it = begin(); it != end(); it++) {
       if (predicate(*it)) {
         return it;
@@ -163,14 +157,14 @@ class List {
     return end();
   }
 
-  void for_each(Function<void (T&)> callback) {
-    for (auto& data : *this) {
+  void for_each(Function<void(T &)> callback) {
+    for (auto &data : *this) {
       callback(data);
     }
   }
 
-  void for_each(Function<void (const T&)> callback) const {
-    for (const auto& data : *this) {
+  void for_each(Function<void(const T &)> callback) const {
+    for (const auto &data : *this) {
       callback(data);
     }
   }
@@ -181,7 +175,6 @@ class List {
     }
   }
 
-
   size_t size() const {
     return _size;
   }
@@ -190,60 +183,45 @@ class List {
     return _head->next == _head.get();
   }
 
-  T& front() {
+  T &front() {
     return _head->next->data;
   }
 
-  T& back() {
+  T &back() {
     return _head->prev->data;
   }
 
-  const T& front() const {
+  const T &front() const {
     return _head->next->data;
   }
 
-  const T& back() const {
+  const T &back() const {
     return _head->prev->data;
   }
-
 
  protected:
   struct Node final {
     // Default constructor
-    Node()
-        : prev(this),
-          next(this),
-          data() {}
+    Node() : prev(this), next(this), data() {}
 
     // Universal reference constructor
     template <typename U>
-    Node(U&& val)
-        : prev(),
-          next(),
-          data(forward<U>(val)) {}
+    Node(U &&val) : prev(), next(), data(forward<U>(val)) {}
 
-    Node* prev;
-    Node* next;
+    Node *prev;
+    Node *next;
     T data;
   };
 
-  bool is_list_add_valid(const Node* new_node,
-                         const Node* prev,
-                         const Node* next) {
-    return next->prev == prev &&
-           prev->next == next &&
-           new_node != prev &&
-           new_node != next;
+  bool is_list_add_valid(const Node *new_node, const Node *prev, const Node *next) {
+    return next->prev == prev && prev->next == next && new_node != prev && new_node != next;
   }
 
-  bool is_list_del_entry_valid(const Node* entry) {
-    return entry->prev->next == entry &&
-           entry->next->prev == entry;
+  bool is_list_del_entry_valid(const Node *entry) {
+    return entry->prev->next == entry && entry->next->prev == entry;
   }
 
-  void list_add(Node* new_node,
-                Node* prev,
-                Node* next) {
+  void list_add(Node *new_node, Node *prev, Node *next) {
     if (!is_list_add_valid(new_node, prev, next)) {
       return;
     }
@@ -254,13 +232,12 @@ class List {
     _size++;
   }
 
-  void list_del(Node* prev,
-                Node* next) {
+  void list_del(Node *prev, Node *next) {
     next->prev = prev;
     prev->next = next;
   }
 
-  void list_del_entry(Node* entry) {
+  void list_del_entry(Node *entry) {
     if (!is_list_del_entry_valid(entry)) {
       return;
     }
@@ -272,11 +249,9 @@ class List {
     _size--;
   }
 
-
   UniquePtr<Node> _head;
   size_t _size;
 };
-
 
 template <typename ValueType>
 class ListIterator {
@@ -289,65 +264,63 @@ class ListIterator {
   ~ListIterator() = default;
 
   // Copy constructor
-  ListIterator(const ListIterator& r)
-      : _list(r._list),
-        _current(r._current),
-        _index(r._index) {}
+  ListIterator(const ListIterator &r)
+      : _list(r._list), _current(r._current), _index(r._index) {}
 
   // Copy assignment operator
-  ListIterator& operator =(const ListIterator& r) {
+  ListIterator &operator=(const ListIterator &r) {
     _current = r._current;
     _index = r._index;
     return *this;
   }
 
-  bool operator ==(const ListIterator& r) const {
+  bool operator==(const ListIterator &r) const {
     return _current == r._current;
   }
 
-  bool operator !=(const ListIterator& r) const {
+  bool operator!=(const ListIterator &r) const {
     return _current != r._current;
   }
 
-  const ValueType& operator *() const {
+  const ValueType &operator*() const {
     return _current->data;
   }
 
-  const ValueType* operator ->() const {
+  const ValueType *operator->() const {
     return &(_current->data);
   }
 
-  ValueType& operator *() {
+  ValueType &operator*() {
     return _current->data;
   }
 
-  ValueType* operator ->() {
+  ValueType *operator->() {
     return &(_current->data);
   }
 
   // Prefix increment
-  ListIterator& operator ++() {
+  ListIterator &operator++() {
     _current = _current->next;
     _index++;
     return *this;
   }
 
   // Prefix decrement
-  ListIterator& operator --() {
+  ListIterator &operator--() {
     _current = _current->prev;
     _index--;
     return *this;
   }
 
   // Postfix increment
-  ListIterator operator ++(int) {
+  ListIterator operator++(int) {
     _current = _current->next;
     _index++;
     return *this;
   }
 
   // Postfix decrement
-  ListIterator operator --(int) {
+  ListIterator operator--(int) {
     _current = _current->prev;
     _index--;
     return *this;
@@ -361,27 +334,21 @@ class ListIterator {
     return _index;
   }
 
-
  private:
   // Constructor
-  ListIterator(List<ValueType>& list,
-               typename List<ValueType>::Node* current,
-               size_t index)
-      : _list(list),
-        _current(current),
-        _index() {}
+  ListIterator(List<ValueType> &list, typename List<ValueType>::Node *current, size_t index)
+      : _list(list), _current(current), _index() {}
 
-
-  static ListIterator begin(List<ValueType>& list) {
+  static ListIterator begin(List<ValueType> &list) {
     return {list, list._head->next, 0};
   }
 
-  static ListIterator end(List<ValueType>& list) {
+  static ListIterator end(List<ValueType> &list) {
     return {list, list._head.get(), list._size - 1};
   }
 
-  List<ValueType>& _list;
-  typename List<ValueType>::Node* _current;
+  List<ValueType> &_list;
+  typename List<ValueType>::Node *_current;
   size_t _index;
 };
 

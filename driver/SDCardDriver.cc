@@ -28,7 +28,7 @@
 #define SDHOST_NO_REPONSE 0x400
 #define SDHOST_BUSY 0x800
 #define SDHOST_NEW_CMD 0x8000
-#define SDHOST_ARG (SDHOST_BASE + 0x4) 
+#define SDHOST_ARG (SDHOST_BASE + 0x4)
 #define SDHOST_TOUT (SDHOST_BASE + 0x8)
 #define SDHOST_TOUT_DEFAULT 0xf00000
 #define SDHOST_CDIV (SDHOST_BASE + 0xc)
@@ -58,13 +58,11 @@
 
 namespace valkyrie::kernel {
 
-SDCardDriver::SDCardDriver()
-    : _is_high_capacity() {
+SDCardDriver::SDCardDriver() : _is_high_capacity() {
   pin_setup();
   sdhost_setup();
   sdcard_setup();
 }
-
 
 void SDCardDriver::pin_setup() {
   io::put<uint32_t>(GPFSEL4, 0x24000000);
@@ -135,9 +133,8 @@ int SDCardDriver::sdcard_setup() {
   return 0;
 }
 
-
-void SDCardDriver::read_block(int block_index, void* buf) {
-  uint32_t* buf_u = reinterpret_cast<uint32_t*>(buf);
+void SDCardDriver::read_block(int block_index, void *buf) {
+  uint32_t *buf_u = reinterpret_cast<uint32_t *>(buf);
   bool success = false;
 
   if (!_is_high_capacity) {
@@ -164,8 +161,8 @@ void SDCardDriver::read_block(int block_index, void* buf) {
   wait_finish();
 }
 
-void SDCardDriver::write_block(int block_index, const void* buf) {
-  const uint32_t* buf_u = reinterpret_cast<const uint32_t*>(buf);
+void SDCardDriver::write_block(int block_index, const void *buf) {
+  const uint32_t *buf_u = reinterpret_cast<const uint32_t *>(buf);
   bool success = false;
 
   if (!_is_high_capacity) {
@@ -191,7 +188,6 @@ void SDCardDriver::write_block(int block_index, const void* buf) {
 
   wait_finish();
 }
-
 
 int SDCardDriver::sd_cmd(uint32_t cmd, uint32_t arg) {
   io::put<uint32_t>(SDHOST_ARG, arg);

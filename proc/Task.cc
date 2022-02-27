@@ -13,27 +13,21 @@
 #include <proc/TaskScheduler.h>
 
 #define USER_BINARY_PAGE 0x400000
-#define USER_STACK_PAGE  0x00007ffffffff000
+#define USER_STACK_PAGE 0x00007ffffffff000
 
-extern "C" void switch_to_user_mode(void* entry_point,
-                                    size_t user_sp,
-                                    size_t kernel_sp,
-                                    void* page_table);
+extern "C" void switch_to_user_mode(void *entry_point, size_t user_sp, size_t kernel_sp,
+                                    void *page_table);
 
 namespace valkyrie::kernel {
 
 // The pointer to the init and kthreadd task.
-Task* Task::_init = nullptr;
-Task* Task::_kthreadd = nullptr;
+Task *Task::_init = nullptr;
+Task *Task::_kthreadd = nullptr;
 
 // PID starts at 0 (idle task)
 uint32_t Task::_next_pid = 0;
 
-
-Task::Task(bool is_user_task,
-           Task* parent,
-           void (*entry_point)(),
-           const char* name)
+Task::Task(bool is_user_task, Task *parent, void (*entry_point)(), const char *name)
     : _context(),
       _is_user_task(is_user_task),
       _parent(parent),
@@ -52,7 +46,6 @@ Task::Task(bool is_user_task,
       _custom_signal_handlers(),
       _fd_table(),
       _cwd_vnode(VFS::the().get_rootfs().get_root_vnode()) {
-
   if (_pid == 1) [[unlikely]] {
     Task::_init = this;
   } else if (_pid == 2) [[unlikely]] {
@@ -76,11 +69,12 @@ Task::Task(bool is_user_task,
   _fd_table[2] = opened;
 
 #ifdef DEBUG
-  printk("constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, _ustack_page = 0x%x\n",
-         this, _name, _pid, _entry_point, _kstack_page.begin(), _ustack_page.begin());
+  printk(
+      "constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, "
+      "_ustack_page = 0x%x\n",
+      this, _name, _pid, _entry_point, _kstack_page.begin(), _ustack_page.begin());
 #endif
 }
-
 
 Task::~Task() {
 #ifdef DEBUG
@@ -99,36 +93,35 @@ Task::~Task() {
   kfree(_kstack_page.p_addr());
 }
 
-
-List<Task*> Task::get_active_tasks() {
-  List<Task*> ret;
+List<Task *> Task::get_active_tasks() {
+  List<Task *> ret;
   ret.push_back(Task::_init);
   ret.push_back(Task::_kthreadd);
 
   // Process tree BFS
-  List<Task*> q;
+  List<Task *> q;
   q.push_back(Task::_init);
 
   while (!q.empty()) {
     size_t size = q.size();
 
     for (size_t i = 0; i < size; i++) {
-      Task* task = q.front();
+      Task *task = q.front();
       q.pop_front();
 
       ret.push_back(task);
 
       // Push all children onto the queue.
-      for (const auto& child : task->_active_children) {
+      for (const auto &child : task->_active_children) {
         q.push_back(child);
       }
     }
   }
-  
+
   return ret;
 }
 
-Task* Task::get_by_pid(const pid_t pid) {
+Task *Task::get_by_pid(const pid_t pid) {
   if (pid == 1) {
     return Task::_init;
   } else if (pid == 2) {
@@ -136,34 +129,31 @@ Task* Task::get_by_pid(const pid_t pid) {
   }
 
   // Process tree BFS
-  List<Task*> q;
+  List<Task *> q;
   q.push_back(Task::_init);
 
   while (!q.empty()) {
     size_t size = q.size();
 
     for (size_t i = 0; i < size; i++) {
-      Task* task = q.front();
+      Task *task = q.front();
       q.pop_front();
 
-      auto it = task->_active_children.find_if([pid](auto t) {
-        return t->_pid == pid;
-      });
+      auto it = task->_active_children.find_if([pid](auto t) { return t->_pid == pid; });
 
       if (it != task->_active_children.end()) {
         return *it;
       }
 
       // Push all children onto the queue.
-      for (const auto& child : task->_active_children) {
+      for (const auto &child : task->_active_children) {
         q.push_back(child);
       }
     }
   }
-  
+
   return nullptr;
 }
-
 
 int Task::do_fork() {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
@@ -172,11 +162,10 @@ int Task::do_fork() {
 
   size_t ret = 0;
   size_t parent_usp;
-  asm volatile("mrs %0, sp_el0" : "=r" (parent_usp));
+  asm volatile("mrs %0, sp_el0" : "=r"(parent_usp));
 
   size_t kernel_sp_offset = _kstack_page.offset_of(_context.sp);
   size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
-
 
 #ifdef DEBUG
   printk("do_fork()...\n");
@@ -184,7 +173,7 @@ int Task::do_fork() {
 
   // Clone task.
   auto task = make_unique<Task>(_is_user_task, /*parent=*/this, _entry_point, _name);
-  Task* child = task.get();
+  Task *child = task.get();
 
   if (!task) {
     printk("do_fork: task class allocation failed (out of memory).\n");
@@ -210,7 +199,7 @@ int Task::do_fork() {
   // Clone kernel/user stack content
   child->_kstack_page.copy_from(_kstack_page);
   child->_ustack_page.copy_from(_ustack_page);
- 
+
   /* ------ You can safely modify the child now ------ */
 
   // Set parent's fork() return value to child's pid.
@@ -225,7 +214,7 @@ int Task::do_fork() {
   child->_vmmap.copy_from(_vmmap);
 
   // Remap user stack to the one we've just copied.
-  kfree(child->_vmmap.get_physical_address(reinterpret_cast<void*>(USER_STACK_PAGE)));
+  kfree(child->_vmmap.get_physical_address(reinterpret_cast<void *>(USER_STACK_PAGE)));
   child->_vmmap.unmap(USER_STACK_PAGE);
   child->_vmmap.map(USER_STACK_PAGE, child->_ustack_page.p_addr(), PAGE_RWX);
 
@@ -233,7 +222,7 @@ int Task::do_fork() {
   // When the child returns from kernel mode to user mode,
   // child->_trap_frame->sp_el0 will be restored to the child
   // and used as the user mode SP.
-  child->_trap_frame = child->_kstack_page.add_offset<TrapFrame*>(trap_frame_offset);
+  child->_trap_frame = child->_kstack_page.add_offset<TrapFrame *>(trap_frame_offset);
 
   // Clone current working directory vnode.
   child->_cwd_vnode = _cwd_vnode;
@@ -244,8 +233,7 @@ out:
   return ret;
 }
 
-
-int Task::do_exec(const char* name, const char* const _argv[]) {
+int Task::do_exec(const char *name, const char *const _argv[]) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Acquire a new page and use it as the user stack page.
@@ -268,24 +256,23 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
 
   // Load the specified file from the filesystem.
   SharedPtr<File> file = VFS::the().open(name, 0);
-  
+
   if (!file) {
     printk("exec failed: pid = %d [%s]. No such file or directory\n", _pid, _name);
     return -1;
   }
 
   // Map .text, .bss and .data
-  ELF elf({ file->vnode->get_content(), file->vnode->get_size() });
+  ELF elf({file->vnode->get_content(), file->vnode->get_size()});
 
   if (!elf.is_valid()) {
     goto failed;
   }
 
-
   // Release the vmmap, freeing the old _ustack_page.
   _vmmap.reset();
 
-  _ustack_page.set_v_addr(reinterpret_cast<void*>(USER_STACK_PAGE));
+  _ustack_page.set_v_addr(reinterpret_cast<void *>(USER_STACK_PAGE));
   _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), PAGE_RWX);
 
   elf.load(_vmmap);
@@ -293,8 +280,11 @@ int Task::do_exec(const char* name, const char* const _argv[]) {
   VFS::the().close(move(file));
 
 #ifdef DEBUG
-  printk("executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table = 0x%x\n",
-         _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(), _vmmap.get_pgd());
+  printk(
+      "executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table "
+      "= 0x%x\n",
+      _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(),
+      _vmmap.get_pgd());
 #endif
 
   // Jump to the entry point.
@@ -305,8 +295,7 @@ failed:
   return -1;
 }
 
-
-int Task::do_wait(int* wstatus) {
+int Task::do_wait(int *wstatus) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (!get_children_count()) {
@@ -318,7 +307,7 @@ int Task::do_wait(int* wstatus) {
     TaskScheduler::the().schedule();
   }
 
-  auto& child = _terminated_children.front();
+  auto &child = _terminated_children.front();
 
   if (wstatus) {
     *wstatus = child->_error_code;
@@ -328,7 +317,6 @@ int Task::do_wait(int* wstatus) {
   _terminated_children.pop_front();
   return ret;
 }
-
 
 [[noreturn]] void Task::do_exit(int error_code) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
@@ -344,14 +332,13 @@ int Task::do_wait(int* wstatus) {
     }
   }
 
-  auto& sched = TaskScheduler::the();
+  auto &sched = TaskScheduler::the();
   _parent->_active_children.remove(this);
   _parent->_terminated_children.push_back(sched.remove_task(*this));
 
   sched.schedule();
   Kernel::panic("sys_exit: returned from sched.\n");
 }
-
 
 long Task::do_kill(pid_t pid, Signal signal) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
@@ -366,7 +353,6 @@ long Task::do_kill(pid_t pid, Signal signal) {
   return -1;
 }
 
-
 int Task::do_signal(int signal, void (*handler)()) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
@@ -379,28 +365,28 @@ int Task::do_signal(int signal, void (*handler)()) {
   return 0;  // TODO: return previous handler's error code.
 }
 
-
-size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
+size_t Task::copy_arguments_to_user_stack(const char *const argv[]) {
   int argc = 0;
-  char** copied_argv = nullptr;
-  char** copied_argv_ptr = nullptr;
+  char **copied_argv = nullptr;
+  char **copied_argv_ptr = nullptr;
   size_t user_sp = _ustack_page.end();
   UniquePtr<String[]> strings;
-  UniquePtr<char*[]> copied_str_addrs;
+  UniquePtr<char *[]> copied_str_addrs;
 
   if (!argv) {
     goto out;
   }
 
   // Probe for argc from `_argv`.
-  for (const char* s = argv[0]; s; s = argv[++argc]);
+  for (const char *s = argv[0]; s; s = argv[++argc])
+    ;
 
   strings = make_unique<String[]>(argc);
-  copied_str_addrs = make_unique<char*[]>(argc);
+  copied_str_addrs = make_unique<char *[]>(argc);
 
   // Copy all `argv` to kernel heap.
   for (int i = 0; i < argc; i++) {
-    strings[i] = copy_from_user<const char*>(argv[i]);
+    strings[i] = copy_from_user<const char *>(argv[i]);
   }
 
   // Actually copy all C strings to user stack, at the meanwhile save the new
@@ -409,34 +395,34 @@ size_t Task::copy_arguments_to_user_stack(const char* const argv[]) {
     size_t len = round_up_to_multiple_of_n(strings[i].size() + sizeof('\0'), 16);
     user_sp -= len;
 
-    char* s = reinterpret_cast<char*>(user_sp);
-    strcpy(reinterpret_cast<char*>(user_sp), strings[i].c_str());
+    char *s = reinterpret_cast<char *>(user_sp);
+    strcpy(reinterpret_cast<char *>(user_sp), strings[i].c_str());
     copied_str_addrs[i] = s;
   }
 
   // Subtract user SP and make it align to a 16-byte boundary.
-  user_sp -= round_up_to_multiple_of_n(sizeof(char*) * (argc + 2), 16);
+  user_sp -= round_up_to_multiple_of_n(sizeof(char *) * (argc + 2), 16);
 
   // Now we will write the addrs in `copied_str_addrs` towards high address
   // starting from user SP.
-  copied_argv = reinterpret_cast<char**>(user_sp);
+  copied_argv = reinterpret_cast<char **>(user_sp);
 
   for (int i = 0; i < argc; i++) {
-    copied_argv[i] = reinterpret_cast<char*>(
+    copied_argv[i] = reinterpret_cast<char *>(
         USER_STACK_PAGE + (reinterpret_cast<size_t>(copied_str_addrs[i]) & 0xfff));
   }
 
   copied_argv[argc] = nullptr;
 
-  copied_argv_ptr = reinterpret_cast<char**>(
+  copied_argv_ptr = reinterpret_cast<char **>(
       USER_STACK_PAGE + (reinterpret_cast<size_t>(&copied_argv[0]) & 0xfff));
 
 out:
   user_sp -= 8;
-  *reinterpret_cast<char***>(user_sp) = copied_argv_ptr;
+  *reinterpret_cast<char ***>(user_sp) = copied_argv_ptr;
 
   user_sp -= 8;
-  *reinterpret_cast<int*>(user_sp) = argc;
+  *reinterpret_cast<int *>(user_sp) = argc;
 
   if (user_sp & 0xf) {
     Kernel::panic("sys_exec: user SP misaligned!\n");
@@ -444,7 +430,6 @@ out:
 
   return user_sp;
 }
-
 
 void Task::handle_pending_signals() {
   Signal signal;
@@ -464,7 +449,6 @@ void Task::handle_pending_signals() {
     }
   }
 }
-
 
 int Task::allocate_fd_for_file(SharedPtr<File> file) {
   for (int i = 0; i < NR_TASK_FD_LIMITS; i++) {

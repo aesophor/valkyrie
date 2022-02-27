@@ -3,8 +3,8 @@
 #define VALKYRIE_STRING_H_
 
 #include <CString.h>
-#include <Iterator.h>
 #include <Hash.h>
+#include <Iterator.h>
 #include <List.h>
 #include <Memory.h>
 
@@ -20,8 +20,7 @@ class String {
   String() : _s() {}
 
   // Constructor
-  String(const char* s)
-      : _s(make_unique<char[]>(strlen(s) + 1)) {
+  String(const char *s) : _s(make_unique<char[]>(strlen(s) + 1)) {
     strcpy(_s.get(), s);
   }
 
@@ -29,41 +28,39 @@ class String {
   ~String() = default;
 
   // Copy constructor
-  String(const String& r) {
+  String(const String &r) {
     *this = r;  // delegate to copy assignment operator
   }
 
   // Copy assignment operator
-  String& operator =(const String& r) {
+  String &operator=(const String &r) {
     _s = make_unique<char[]>(r.size() + 1);
     strcpy(_s.get(), r._s.get());
     return *this;
   }
-  
+
   // Move constructor
-  String(String&& r) noexcept
-      : _s(move(r._s)) {}
- 
+  String(String &&r) noexcept : _s(move(r._s)) {}
+
   // Move assignment operator
-  String& operator =(String&& r) noexcept {
+  String &operator=(String &&r) noexcept {
     _s = move(r._s);
     return *this;
   }
 
-
-  char& operator [](size_t i) {
-    return _s[i]; 
-  }
-
-  const char& operator [](size_t i) const {
+  char &operator[](size_t i) {
     return _s[i];
   }
 
-  bool operator ==(const String& r) const {
+  const char &operator[](size_t i) const {
+    return _s[i];
+  }
+
+  bool operator==(const String &r) const {
     return !strcmp(c_str(), r.c_str());
   }
 
-  String operator +(const String& r) const {
+  String operator+(const String &r) const {
     if (r.empty()) {
       return *this;
     }
@@ -75,7 +72,7 @@ class String {
     return ret;
   }
 
-  String& operator +=(const String& r) {
+  String &operator+=(const String &r) {
     return *this = move(*this + r);
   }
 
@@ -84,7 +81,6 @@ class String {
     return !empty();
   }
   */
-
 
   Iterator begin() {
     return Iterator::begin(*this);
@@ -101,7 +97,6 @@ class String {
   ConstIterator end() const {
     return ConstIterator::end(*this);
   }
-
 
   // Searches the string for the first character that matches any of
   // the characters specified in its arguments.
@@ -161,13 +156,12 @@ class String {
     return npos;
   }
 
-
   // FIXME: maybe we should conform to the STL version...
   // but I'm too busy this week @_@
   void remove(const char val) {
     size_t slow = 0;
     size_t fast = 0;
-    
+
     while (fast < size()) {
       if (_s[fast] == val) {
         fast++;
@@ -177,7 +171,7 @@ class String {
         fast++;
       }
     }
-    
+
     size_t new_size = size() - (fast - slow);
     if (new_size > 0) {
       _s[new_size - 1] = 0;
@@ -185,7 +179,6 @@ class String {
       _s[0] = 0;
     }
   }
-
 
   String substr(size_t begin, size_t len = npos) const {
     if (empty()) {
@@ -234,8 +227,7 @@ class String {
   // Returns a string in which the string elements of sequence `seq`
   // have been joined by *this.
   // FIXME: pass by const ref (currently the ConstIterator is broken)
-  [[nodiscard]]
-  String join(List<String>& seq) {
+  [[nodiscard]] String join(List<String> &seq) {
     const size_t len = seq.size();
     String ret;
 
@@ -253,7 +245,7 @@ class String {
   void to_upper() {
     constexpr int offset = 'a' - 'A';
 
-    for (auto& c : *this) {
+    for (auto &c : *this) {
       if (c >= 'a' && c <= 'z') {
         c -= offset;
       }
@@ -263,13 +255,12 @@ class String {
   void to_lower() {
     constexpr int offset = 'a' - 'A';
 
-    for (auto& c : *this) {
+    for (auto &c : *this) {
       if (c >= 'A' && c <= 'Z') {
         c += offset;
       }
     }
   }
-
 
   void clear() {
     _s.reset();
@@ -283,30 +274,29 @@ class String {
     return (_s) ? strlen(_s.get()) : 0;
   }
 
-  const char& at(size_t i) const {
+  const char &at(size_t i) const {
     return _s[i];
   }
 
-  const char* c_str() const {
+  const char *c_str() const {
     return _s.get();
   }
 
-  char& front() {
+  char &front() {
     return _s[0];
   }
 
-  char& back() {
+  char &back() {
     return _s[size() - 1];
   }
 
-  const char& front() const {
+  const char &front() const {
     return _s[0];
   }
 
-  const char& back() const {
+  const char &back() const {
     return _s[size() - 1];
   }
-
 
   // Until the end of the string.
   static const size_t npos = -1;
@@ -315,11 +305,10 @@ class String {
   UniquePtr<char[]> _s;
 };
 
-
 // Explicit (full) specialization of `struct Hash` for String.
 template <>
 struct Hash<String> final {
-  size_t operator ()(const String& s) const {
+  size_t operator()(const String &s) const {
     constexpr size_t prime = 19;
     size_t ret = 5;
 

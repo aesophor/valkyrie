@@ -9,7 +9,6 @@ namespace valkyrie::kernel {
 template <typename>
 class Function;
 
-
 // Partial specialization of class `Function`
 template <typename ReturnType, typename... Args>
 class Function<ReturnType(Args...)> {
@@ -23,37 +22,33 @@ class Function<ReturnType(Args...)> {
   // Constructor from aribtrary type T where
   // T::operator() is defined.
   template <typename T>
-  Function(T t)
-      : _callable(make_shared<CallableImpl<T>>(t)) {}
-  
+  Function(T t) : _callable(make_shared<CallableImpl<T>>(t)) {}
+
   template <typename T>
-  Function& operator =(T t) {
+  Function &operator=(T t) {
     _callable = make_shared<CallableImpl<T>>(t);
     return *this;
   }
 
   // Copy constructor
-  Function(const Function& r)
-      : _callable(r._callable) {}
+  Function(const Function &r) : _callable(r._callable) {}
 
   // Copy assignment operator
-  Function& operator =(const Function& r) {
+  Function &operator=(const Function &r) {
     _callable = r._callable;
     return *this;
   }
 
   // Move constructor
-  Function(Function&& r) noexcept
-      : _callable(move(r._callable)) {}
+  Function(Function &&r) noexcept : _callable(move(r._callable)) {}
 
   // Move assignment operator
-  Function& operator =(Function&& r) noexcept {
+  Function &operator=(Function &&r) noexcept {
     _callable = move(r._callable);
     return *this;
   }
 
-
-  ReturnType operator ()(Args... args) const {
+  ReturnType operator()(Args... args) const {
     // Check if `_callable` is nullptr.
     // If it is, then we'll print a warning message
     // and there should be a data abort exception, which
@@ -65,7 +60,6 @@ class Function<ReturnType(Args...)> {
     return _callable;
   }
 
-
  private:
   class CallableIface {
    public:
@@ -76,7 +70,7 @@ class Function<ReturnType(Args...)> {
   template <typename T>
   class CallableImpl final : public CallableIface {
    public:
-    explicit CallableImpl(const T& t) : _t(t) {}
+    explicit CallableImpl(const T &t) : _t(t) {}
     virtual ~CallableImpl() = default;
 
     virtual ReturnType call(Args... args) override {

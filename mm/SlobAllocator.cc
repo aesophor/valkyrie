@@ -7,7 +7,7 @@
 
 namespace valkyrie::kernel {
 
-SlobAllocator::SlobAllocator(BuddyAllocator* page_frame_allocator)
+SlobAllocator::SlobAllocator(BuddyAllocator *page_frame_allocator)
     : _buddy_allocator(page_frame_allocator),
       _page_frame_allocatable_begin(),
       _top_chunk(),
@@ -16,8 +16,7 @@ SlobAllocator::SlobAllocator(BuddyAllocator* page_frame_allocator)
       _bins(),
       _unsorted_bin() {}
 
-
-void* SlobAllocator::allocate(size_t requested_size) {
+void *SlobAllocator::allocate(size_t requested_size) {
   if (!requested_size) [[unlikely]] {
     return nullptr;
   }
@@ -25,7 +24,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
   requested_size = normalize_size(get_chunk_header_size() + requested_size);
   int idx = get_bin_index(requested_size);
 
-  ChunkHeader* victim = nullptr;
+  ChunkHeader *victim = nullptr;
 
   // Search for an exact-fit free chunk from the corresponding bin.
   if (idx < nr_bins && (victim = _bins[idx])) {
@@ -35,7 +34,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
   }
 
   // Search larger free chunks from the unsorted bin.
-  for (ChunkHeader* chunk = _unsorted_bin; chunk; chunk = chunk->next) {
+  for (ChunkHeader *chunk = _unsorted_bin; chunk; chunk = chunk->next) {
     if (chunk->get_size() >= requested_size) {
       victim = split_from_chunk(chunk, requested_size);
       goto out;
@@ -60,7 +59,7 @@ void* SlobAllocator::allocate(size_t requested_size) {
     // to satisfy current request, so we could put the remainder into
     // the corresponding bin (if possible), and finally request a new
     // page frame which we can split from.
-    ChunkHeader* chunk = split_from_top_chunk(get_top_chunk_size());
+    ChunkHeader *chunk = split_from_top_chunk(get_top_chunk_size());
 
     if (is_chunk_size_usable(chunk->get_size())) {
       bin_add_head(chunk);
@@ -71,32 +70,33 @@ void* SlobAllocator::allocate(size_t requested_size) {
     if (!request_new_page_frame()) {
       return nullptr;
     }
-  } 
+  }
 
   victim = split_from_top_chunk(requested_size);
 
 out:
   if (reinterpret_cast<size_t>(victim + 1) % PAGE_SIZE == 0) [[unlikely]] {
-    Kernel::panic("fatal error: _top_chunk = 0x%x, _page_frame_allocatable_begin = 0x%x, req_size = 0x%x, victim = 0x%x\n",
+    Kernel::panic(
+        "fatal error: _top_chunk = 0x%x, _page_frame_allocatable_begin = 0x%x, req_size = "
+        "0x%x, victim = 0x%x\n",
         _top_chunk, _page_frame_allocatable_begin, requested_size, victim);
   }
 
   return victim + 1;  // +1 to skip the header
 }
 
-void SlobAllocator::deallocate(void* p) {
+void SlobAllocator::deallocate(void *p) {
   if (!p) [[unlikely]] {
     return;
   }
 
-  ChunkHeader* mid_chunk = ChunkHeader::from_addr(p) - 1;  // -1 is for the header
-  ChunkHeader* prev_chunk = mid_chunk->get_prev_chunk();
-  ChunkHeader* next_chunk = mid_chunk->get_next_chunk();
+  ChunkHeader *mid_chunk = ChunkHeader::from_addr(p) - 1;  // -1 is for the header
+  ChunkHeader *prev_chunk = mid_chunk->get_prev_chunk();
+  ChunkHeader *next_chunk = mid_chunk->get_next_chunk();
 
   // The final chunk pointer and size (after being merged)
-  ChunkHeader* chunk = mid_chunk;
+  ChunkHeader *chunk = mid_chunk;
   size_t chunk_size = mid_chunk->get_size();
-
 
   // Mark current chunk as unallocated.
   mid_chunk->set_allocated(false);
@@ -131,13 +131,13 @@ void SlobAllocator::deallocate(void* p) {
   }
 }
 
-
 String SlobAllocator::to_string() const {
-  String ret = "slobinfo\n"
-               "--------\n";
+  String ret =
+      "slobinfo\n"
+      "--------\n";
   char linebuf[64] = {};
 
-  ChunkHeader* ptr = nullptr;
+  ChunkHeader *ptr = nullptr;
 
   for (int i = 0; i < nr_bins; i++) {
     sprintf(linebuf, "_bins[%d] (%d): ", i, smallest_chunk_size + chunk_size_gap * i);
@@ -180,29 +180,26 @@ void SlobAllocator::dump() const {
   printf("--- end dumping slob bins ---\n");
 }
 
-
-SlobAllocator::ChunkHeader* SlobAllocator::split_from_top_chunk(size_t requested_size) {
+SlobAllocator::ChunkHeader *SlobAllocator::split_from_top_chunk(size_t requested_size) {
   if (requested_size > get_top_chunk_size()) [[unlikely]] {
     Kernel::panic("kernel heap corrupted (unable to split %d bytes from the top chunk)",
                   requested_size);
   }
 
-  ChunkHeader* chunk = ChunkHeader::from_addr(_top_chunk);
+  ChunkHeader *chunk = ChunkHeader::from_addr(_top_chunk);
   chunk->next = nullptr;
   chunk->index = get_bin_index(requested_size);
   chunk->prev_chunk_size = _top_chunk_prev_chunk_size;
   chunk->set_allocated(true);
 
-  _top_chunk = reinterpret_cast<uint8_t*>(_top_chunk) + requested_size;
+  _top_chunk = reinterpret_cast<uint8_t *>(_top_chunk) + requested_size;
   _top_chunk_prev_chunk_size = requested_size;
 
   return chunk;
 }
 
-
-SlobAllocator::ChunkHeader*
-SlobAllocator::split_from_chunk(SlobAllocator::ChunkHeader* chunk,
-                                const size_t requested_size) {
+SlobAllocator::ChunkHeader *SlobAllocator::split_from_chunk(SlobAllocator::ChunkHeader *chunk,
+                                                            const size_t requested_size) {
   if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted (chunk == nullptr)\n");
   }
@@ -216,15 +213,16 @@ SlobAllocator::split_from_chunk(SlobAllocator::ChunkHeader* chunk,
   }
 
   if (requested_size > chunk->get_size()) [[unlikely]] {
-    Kernel::panic("kernel heap corrupted"
-                  "(unable to split %d bytes from a %d byte chunk)",
-                  requested_size, chunk->get_size());
+    Kernel::panic(
+        "kernel heap corrupted"
+        "(unable to split %d bytes from a %d byte chunk)",
+        requested_size, chunk->get_size());
   }
 
   size_t remainder_size = chunk->get_size() - requested_size;
   bool is_remainder_usable = is_chunk_size_usable(remainder_size);
 
-  ChunkHeader* remainder = ChunkHeader::from_addr(chunk->addr() + requested_size);
+  ChunkHeader *remainder = ChunkHeader::from_addr(chunk->addr() + requested_size);
   remainder->next = nullptr;
   remainder->index = get_bin_index(remainder_size);
   remainder->prev_chunk_size = requested_size;
@@ -240,7 +238,7 @@ SlobAllocator::split_from_chunk(SlobAllocator::ChunkHeader* chunk,
 
   // If the chunk after `chunk` isn't the top chunk, then we need to
   // update that chunk's prev_size.
-  ChunkHeader* next_chunk = chunk->get_next_chunk();
+  ChunkHeader *next_chunk = chunk->get_next_chunk();
 
   if (next_chunk != _top_chunk) {
     next_chunk->set_prev_chunk_size(remainder_size);
@@ -253,7 +251,7 @@ SlobAllocator::split_from_chunk(SlobAllocator::ChunkHeader* chunk,
 }
 
 bool SlobAllocator::request_new_page_frame() {
-  void* page_frame = _buddy_allocator->allocate_one_page_frame();
+  void *page_frame = _buddy_allocator->allocate_one_page_frame();
 
   if (!page_frame) [[unlikely]] {
     return false;
@@ -261,12 +259,11 @@ bool SlobAllocator::request_new_page_frame() {
 
   _page_frame_allocatable_begin = page_frame;
   _top_chunk = _page_frame_allocatable_begin;
-  _page_frame_allocatable_end = reinterpret_cast<char*>(_top_chunk) + PAGE_SIZE;
+  _page_frame_allocatable_end = reinterpret_cast<char *>(_top_chunk) + PAGE_SIZE;
   return true;
 }
 
-
-void SlobAllocator::bin_del_head(SlobAllocator::ChunkHeader* chunk) {
+void SlobAllocator::bin_del_head(SlobAllocator::ChunkHeader *chunk) {
   if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: bin_del_head(nullptr)\n");
   }
@@ -287,12 +284,12 @@ void SlobAllocator::bin_del_head(SlobAllocator::ChunkHeader* chunk) {
   chunk->next = nullptr;
 }
 
-void SlobAllocator::bin_add_head(SlobAllocator::ChunkHeader* chunk) {
+void SlobAllocator::bin_add_head(SlobAllocator::ChunkHeader *chunk) {
   if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: bin_add_head(nullptr)\n");
   }
 
-  ChunkHeader** bin_first_chunk = bin_get_head(chunk);
+  ChunkHeader **bin_first_chunk = bin_get_head(chunk);
 
   if (*bin_first_chunk == chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: repeated bin_add_head()\n");
@@ -308,12 +305,12 @@ void SlobAllocator::bin_add_head(SlobAllocator::ChunkHeader* chunk) {
   }
 }
 
-void SlobAllocator::bin_del_entry(SlobAllocator::ChunkHeader* chunk) {
+void SlobAllocator::bin_del_entry(SlobAllocator::ChunkHeader *chunk) {
   if (!chunk) [[unlikely]] {
     Kernel::panic("kernel heap corrupted: bin_del_entry(nullptr)\n");
   }
 
-  ChunkHeader** bin_first_chunk = bin_get_head(chunk);
+  ChunkHeader **bin_first_chunk = bin_get_head(chunk);
 
   if (*bin_first_chunk == chunk) {
     *bin_first_chunk = (*bin_first_chunk)->next;
@@ -321,8 +318,8 @@ void SlobAllocator::bin_del_entry(SlobAllocator::ChunkHeader* chunk) {
     return;
   }
 
-  ChunkHeader* prev = nullptr;
-  ChunkHeader* ptr = *bin_first_chunk;
+  ChunkHeader *prev = nullptr;
+  ChunkHeader *ptr = *bin_first_chunk;
 
   while (ptr) {
     if (ptr == chunk) {

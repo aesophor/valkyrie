@@ -7,26 +7,27 @@
 #include <dev/Console.h>
 #include <mm/MemoryManager.h>
 
-#define ELF_MAGIC     "\x7f" "ELF"
+#define ELF_MAGIC \
+  "\x7f"          \
+  "ELF"
 #define ELF_MAGIC_LEN 4
 
 namespace valkyrie::kernel {
 
-ELF::ELF(Pair<const char*, size_t> addr_size)
-    : _header(reinterpret_cast<const ELF::FileHeader*>(addr_size.first)),
+ELF::ELF(Pair<const char *, size_t> addr_size)
+    : _header(reinterpret_cast<const ELF::FileHeader *>(addr_size.first)),
       _size(addr_size.second) {}
-
 
 bool ELF::is_valid() const {
   return !memcmp(_header->ident, ELF_MAGIC, ELF_MAGIC_LEN);
 }
 
-const char* ELF::get_raw_content() const {
-  return reinterpret_cast<const char*>(_header);
+const char *ELF::get_raw_content() const {
+  return reinterpret_cast<const char *>(_header);
 }
 
-void ELF::load(const VMMap& vmmap) const {
-  auto p = reinterpret_cast<const char*>(_header);
+void ELF::load(const VMMap &vmmap) const {
+  auto p = reinterpret_cast<const char *>(_header);
 
   /*
   printk("loaded ELF at 0x%x\n", _header);
@@ -38,7 +39,7 @@ void ELF::load(const VMMap& vmmap) const {
   p += _header->phoff;
 
   for (int i = 0; i < _header->phnum; i++, p += _header->phentsize) {
-    auto ph = reinterpret_cast<const ELF::ProgramHeader*>(p);
+    auto ph = reinterpret_cast<const ELF::ProgramHeader *>(p);
 
     if (ph->type != PT_LOAD) {
       continue;
@@ -60,16 +61,16 @@ void ELF::load(const VMMap& vmmap) const {
     // source: https://wiki.osdev.org/ELF
     bool is_copying_first_page = true;
     size_t nr_pages = ph->filesz / PAGE_SIZE + static_cast<bool>(ph->filesz % PAGE_SIZE);
-    //printk("this segment needs %d pages\n", nr_pages);
+    // printk("this segment needs %d pages\n", nr_pages);
 
     for (size_t j = 0; j < nr_pages; j++) {
       size_t base = reinterpret_cast<size_t>(_header);
       size_t src = base + ph->offset + j * PAGE_SIZE;
-      //printk("src = base 0x%x + ph->offset 0x%x + %x\n", base, ph->offset, j * PAGE_SIZE);
-      void* src_p = reinterpret_cast<void*>(src);
+      // printk("src = base 0x%x + ph->offset 0x%x + %x\n", base, ph->offset, j * PAGE_SIZE);
+      void *src_p = reinterpret_cast<void *>(src);
       size_t len = PAGE_SIZE;
 
-      void* page = get_free_page(/*physical=*/true);
+      void *page = get_free_page(/*physical=*/true);
       size_t dest = reinterpret_cast<size_t>(page);
 
       if (is_copying_first_page) {
@@ -78,25 +79,22 @@ void ELF::load(const VMMap& vmmap) const {
         is_copying_first_page = false;
       }
 
-      void* dest_p = reinterpret_cast<void*>(dest);
-      //printk("memcpy(0x%x, 0x%x, 0x%x)\n", dest_p, src_p, len);
+      void *dest_p = reinterpret_cast<void *>(dest);
+      // printk("memcpy(0x%x, 0x%x, 0x%x)\n", dest_p, src_p, len);
       memcpy(dest_p, src_p, len);
 
-      //printk("mapping page v: 0x%x <- p: 0x%x\n",
-      //    ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE,
-      //    page);
+      // printk("mapping page v: 0x%x <- p: 0x%x\n",
+      //     ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE,
+      //     page);
 
-      vmmap.map(ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE,
-                page,
-                PAGE_RWX);
+      vmmap.map(ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE, page, PAGE_RWX);
     }
   }
 }
 
-void* ELF::get_entry_point() const {
-  return reinterpret_cast<void*>(ELF_DEFAULT_BASE + _header->entry);
+void *ELF::get_entry_point() const {
+  return reinterpret_cast<void *>(ELF_DEFAULT_BASE + _header->entry);
 }
-
 
 size_t ELF::get_size() const {
   return _size;

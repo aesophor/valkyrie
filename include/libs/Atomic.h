@@ -10,7 +10,6 @@ namespace valkyrie::kernel {
 template <typename>
 class Atomic;
 
-
 // Partial specialization of class `Atomic`
 template <>
 class Atomic<bool> {
@@ -19,28 +18,29 @@ class Atomic<bool> {
   Atomic() : _v() {}
 
   // Constructor
-  explicit
-  Atomic(bool v) : _v(v) {}
+  explicit Atomic(bool v) : _v(v) {}
 
   // Destructor
   ~Atomic() = default;
 
   // Copy constructor
-  Atomic(const Atomic& r) = delete;
+  Atomic(const Atomic &r) = delete;
 
   // Copy assignment operator
-  Atomic& operator= (const Atomic& r) = delete;
+  Atomic &operator=(const Atomic &r) = delete;
 
   // Move constructor
-  Atomic(Atomic&& r) noexcept { *this = move(r); }
+  Atomic(Atomic &&r) noexcept {
+    *this = move(r);
+  }
 
   // Move assignment operator
-  Atomic& operator= (Atomic&& r) noexcept {
+  Atomic &operator=(Atomic &&r) noexcept {
     static_cast<void>(__sync_lock_test_and_set(&_v, r._v));
     return *this;
   }
 
-  Atomic& operator= (bool v) {
+  Atomic &operator=(bool v) {
     static_cast<void>(__sync_lock_test_and_set(&_v, v));
     return *this;
   }
