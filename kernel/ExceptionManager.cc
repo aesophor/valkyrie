@@ -108,7 +108,7 @@ void ExceptionManager::handle_irq(TrapFrame *trap_frame) {
 
   // A timer IRQ can come from either kernel or user mode, so
   // we only need to restore ttbr0_el1 if we're returning to user mode.
-  if (ex.ret_addr < KERNEL_BASE) {
+  if (ex.ret_addr < KERNEL_VA_BASE) {
     switch_user_va_space(Task::current()->get_ttbr0_el1());
   }
 }

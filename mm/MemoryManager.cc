@@ -20,7 +20,7 @@ void *MemoryManager::get_free_page(bool physical) {
   _kasan.mark_allocated(ret);
 
   return physical ? ret
-                  : reinterpret_cast<void *>(KERNEL_BASE + reinterpret_cast<size_t>(ret));
+                  : reinterpret_cast<void *>(KERNEL_VA_BASE + reinterpret_cast<size_t>(ret));
 }
 
 void *MemoryManager::kmalloc(size_t size) {
@@ -40,8 +40,8 @@ void *MemoryManager::kmalloc(size_t size) {
 void MemoryManager::kfree(void *p) {
   // If `p` is a virtual kernel address, convert it to physical.
   size_t addr = reinterpret_cast<size_t>(p);
-  if (addr >= KERNEL_BASE) {
-    addr -= KERNEL_BASE;
+  if (addr >= KERNEL_VA_BASE) {
+    addr -= KERNEL_VA_BASE;
   }
   p = reinterpret_cast<void *>(addr);
 
