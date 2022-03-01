@@ -10,7 +10,9 @@ using ctor_func_t = void (*)();
 extern ctor_func_t start_ctors;
 extern ctor_func_t end_ctors;
 
-extern "C" [[noreturn]] void kmain(void) {
+using namespace valkyrie::kernel;
+
+extern "C" void kmain(void) {
   // Initialize .bss
   memset(_bss_start, 0, _bss_end - _bss_start);
 
@@ -19,6 +21,6 @@ extern "C" [[noreturn]] void kmain(void) {
     (*ctor)();
   }
 
-  // Valkyrie Kernel C++ entry point  ヽ(○´∀`○)ﾉ
-  valkyrie::kernel::Kernel::the().run();
+  // C++ entry point.
+  Kernel::the().run();
 }

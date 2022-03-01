@@ -27,8 +27,8 @@ class Singleton {
   static T &the() {
     // A wrapper struct inheriting from T
     // which grants access to T's protected constructor.
-    static struct 🐱 : public T {
-      [[gnu::always_inline]] 🐱() : T() {}
+    static struct _ : public T {
+      [[gnu::always_inline]] inline _() : T() {}
     } instance;
 
     return instance;

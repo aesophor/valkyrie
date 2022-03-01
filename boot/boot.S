@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+// Copyright (c) 2021-2022 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 //
 // boot.S - Valkyrie Kernel Entry Point
 //
@@ -33,32 +33,32 @@ _start:
   // have to disable the trap of accessing floating-point and Advanced SIMD
   // registers to make va_list use SIMD&FP registers properly.
   // See: https://lists.xen.org/archives/html/minios-devel/2018-07/msg00038.html
-  mrs x0, CPACR_EL1
+  mrs x0, cpacr_el1
   orr x0, x0, #(0b11 << 20)
-  msr CPACR_EL1, x0
+  msr cpacr_el1, x0
 
   // Configure HCR_EL2 (Hypervisor Configuration Register - EL2)
   // by setting HCR_EL2.RW to 1 (which means EL1 is AArch64)
-  mrs x0, HCR_EL2
+  mrs x0, hcr_el2
   orr x0, x0, #(1 << 31)
-  msr HCR_EL2, x0
+  msr hcr_el2, x0
 
 __switch_to_EL1:
+  // Install exception vector table.
   ldr x0, = evt
-  msr VBAR_EL1, x0
+  msr vbar_el1, x0
 
+  // eret to `__mmu_init()` which branches back to `__boot_rest()` later.
   mov x0, 0
   orr x0, x0, #(1 << 0)
   orr x0, x0, #(1 << 2)
   orr x0, x0, #(0b1111 << 6)
   msr spsr_el2, x0
-
   adr x0, __mmu_init
   msr elr_el2, x0
-
-  ldr x0, = _start - 0x10  // sets SP to 0xffff000000080000 - 0x10
+  adr x0, _start
   msr sp_el1, x0
-  eret  // eret to `__mmu_init()`, which will branch back to `__boot_rest()`
+  eret
 
 .global __boot_rest
 __boot_rest:

@@ -66,9 +66,11 @@ void Console::clear_color() {
 using valkyrie::kernel::Console;
 
 extern "C" {
+
 char getchar() {
   return Console::the().read_char();
 }
+
 void putchar(const char c) {
   Console::the().write_char(c);
 }

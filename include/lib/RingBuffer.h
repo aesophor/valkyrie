@@ -70,12 +70,15 @@ class RingBuffer {
   Iterator begin() {
     return Iterator::begin(*this);
   }
+
   Iterator end() {
     return Iterator::end(*this);
   }
+
   ConstIterator begin() const {
     return ConstIterator::begin(*this);
   }
+
   ConstIterator end() const {
     return ConstIterator::end(*this);
   }
@@ -83,12 +86,15 @@ class RingBuffer {
   size_t size() const {
     return _size;
   }
+
   size_t capacity() const {
     return _capacity;
   }
+
   bool empty() const {
     return _tail == _head;
   }
+
   bool full() const {
     return (_tail + 1) % static_cast<int>(_capacity) == _head;
   }
@@ -96,6 +102,7 @@ class RingBuffer {
   T &front() {
     return _data[_head];
   }
+
   T &back() {
     return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1];
   }
@@ -103,6 +110,7 @@ class RingBuffer {
   const T &front() const {
     return _data[_head];
   }
+
   const T &back() const {
     return _data[(_tail - 1 < 0) ? _capacity - 1 : _tail - 1];
   }

@@ -47,12 +47,15 @@ class Page {
   size_t begin() const {
     return reinterpret_cast<size_t>(_p_addr);
   }
+
   size_t end() const {
     return begin() + PAGE_SIZE;
   }
+
   void *p_addr() const {
     return _p_addr;
   }
+
   void *v_addr() const {
     return _v_addr;
   }
@@ -60,6 +63,7 @@ class Page {
   void set_v_addr(void *v_addr) {
     _v_addr = v_addr;
   }
+
   void set_p_addr(void *p_addr) {
     _p_addr = p_addr;
   }

@@ -41,21 +41,27 @@ class Vnode {
   bool is_directory() const {
     return Vnode::is_directory(_mode);
   }
+
   bool is_regular_file() const {
     return Vnode::is_regular_file(_mode);
   }
+
   bool is_character_device() const {
     return Vnode::is_character_device(_mode);
   }
+
   bool is_block_device() const {
     return Vnode::is_block_device(_mode);
   }
+
   bool is_fifo() const {
     return Vnode::is_fifo(_mode);
   }
+
   bool is_symlink() const {
     return Vnode::is_symlink(_mode);
   }
+
   bool is_socket() const {
     return Vnode::is_socket(_mode);
   }
@@ -63,9 +69,11 @@ class Vnode {
   bool is_sticky() const {
     return _mode & S_ISVTX;
   }
+
   bool is_setuid() const {
     return _mode & S_ISUID;
   }
+
   bool is_setgid() const {
     return _mode & S_ISGID;
   }
@@ -73,27 +81,35 @@ class Vnode {
   uint32_t get_index() const {
     return _index;
   }
+
   off_t get_size() const {
     return _size;
   }
+
   mode_t get_mode() const {
     return _mode;
   }
+
   time_t get_ctime() const {
     return _ctime;
   }
+
   time_t get_atime() const {
     return _atime;
   }
+
   time_t get_mtime() const {
     return _mtime;
   }
+
   dev_t get_dev() const {
     return _dev;
   }
+
   uint32_t get_dev_major() const {
     return Device::major(_dev);
   }
+
   uint32_t get_dev_minor() const {
     return Device::minor(_dev);
   }
@@ -101,15 +117,19 @@ class Vnode {
   void set_size(off_t size) {
     _size = size;
   }
+
   void set_ctime(time_t ctime) {
     _ctime = ctime;
   }
+
   void set_atime(time_t atime) {
     _atime = atime;
   }
+
   void set_mtime(time_t mtime) {
     _mtime = mtime;
   }
+
   void set_dev(dev_t dev) {
     _dev = dev;
   }
@@ -117,21 +137,27 @@ class Vnode {
   static inline bool is_directory(mode_t mode) {
     return (mode & S_IFMT) == S_IFDIR;
   }
+
   static inline bool is_regular_file(mode_t mode) {
     return (mode & S_IFMT) == S_IFREG;
   }
+
   static inline bool is_character_device(mode_t mode) {
     return (mode & S_IFMT) == S_IFCHR;
   }
+
   static inline bool is_block_device(mode_t mode) {
     return (mode & S_IFMT) == S_IFBLK;
   }
+
   static inline bool is_fifo(mode_t mode) {
     return (mode & S_IFMT) == S_IFIFO;
   }
+
   static inline bool is_symlink(mode_t mode) {
     return (mode & S_IFMT) == S_IFLNK;
   }
+
   static inline bool is_socket(mode_t mode) {
     return (mode & S_IFMT) == S_IFSOCK;
   }

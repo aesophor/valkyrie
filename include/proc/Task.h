@@ -28,12 +28,12 @@ class TrapFrame;
 extern "C" void switch_to(Task *prev, Task *next);
 
 class Task {
-  // Friend declaration
-  friend class TaskScheduler;
-
   // To copy (duplicate) a task, use Task::do_fork().
   MAKE_NONCOPYABLE(Task);
   MAKE_NONMOVABLE(Task);
+
+  // Friend declaration
+  friend class TaskScheduler;
 
  public:
   enum class State { CREATED, RUNNING, SLEEPING, TERMINATED, SIZE };
@@ -74,15 +74,19 @@ class Task {
   bool is_user_task() const {
     return _is_user_task;
   }
+
   Task::State get_state() const {
     return _state;
   }
+
   pid_t get_pid() const {
     return _pid;
   }
+
   TrapFrame *get_trap_frame() const {
     return _trap_frame;
   }
+
   const char *get_name() const {
     return _name;
   }
@@ -90,6 +94,7 @@ class Task {
   void set_state(Task::State state) {
     _state = state;
   }
+
   void set_trap_frame(TrapFrame *trap_frame) {
     _trap_frame = trap_frame;
   }
@@ -97,6 +102,7 @@ class Task {
   int get_time_slice() const {
     return _time_slice;
   }
+
   void set_time_slice(int time_slice) {
     _time_slice = time_slice;
   }
@@ -130,6 +136,7 @@ class Task {
   const VMMap &get_vmmap() const {
     return _vmmap;
   }
+
   size_t *get_ttbr0_el1() const {
     return _vmmap.get_pgd();
   }

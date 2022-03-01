@@ -17,6 +17,7 @@ class MiniUART : public Singleton<MiniUART>, public CharacterDevice::Driver {
   virtual char read_char() override {
     return getchar();
   }
+
   virtual void write_char(const char c) override {
     putchar(c);
   }
@@ -24,12 +25,15 @@ class MiniUART : public Singleton<MiniUART>, public CharacterDevice::Driver {
   char getchar() {
     return getchar_sync();
   }
+
   void gets(char *s) {
     gets_sync(s);
   }
+
   void putchar(const char c) {
     putchar_sync(c);
   }
+
   void puts(const char *s, bool newline = true) {
     puts_sync(s, newline);
   }

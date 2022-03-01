@@ -50,6 +50,7 @@ class LockGuard {
   LockGuard(T &t) : _t(t) {
     _t.lock();
   }
+
   ~LockGuard() {
     _t.unlock();
   }

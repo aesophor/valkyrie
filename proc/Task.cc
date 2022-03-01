@@ -210,7 +210,7 @@ int Task::do_fork() {
   child->_context.lr = reinterpret_cast<uint64_t>(&&out);
   child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
-  // Deep clone vmmap (page table)
+  // Deep copy vmmap (page table)
   child->_vmmap.copy_from(_vmmap);
 
   // Remap user stack to the one we've just copied.

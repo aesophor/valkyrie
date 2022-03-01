@@ -36,7 +36,7 @@ class Mailbox : public Singleton<Mailbox> {
 
   // Because only upper 28 bits of message address could be passed,
   // the message array should be correctly aligned.
-  [[gnu::packed, gnu::aligned(16)]] struct Message {
+  struct [[gnu::packed]] Message {
     uint32_t buf_size;               // buffer size (in bytes)
     uint32_t buf_req_resp_code;      // request/response code
     uint32_t tag_identifier;         // tag identifier

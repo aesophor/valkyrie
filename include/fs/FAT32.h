@@ -192,9 +192,11 @@ class FAT32Inode final : public Vnode {
   virtual SharedPtr<Vnode> create_child(const String &name, const char *content, off_t size,
                                         mode_t mode, uid_t uid, gid_t gid) override;
   virtual void add_child(SharedPtr<Vnode> child) override {}
+
   virtual SharedPtr<Vnode> remove_child(const String &name) override {
     return nullptr;
   }
+
   virtual SharedPtr<Vnode> get_child(const String &name) override;
   virtual SharedPtr<Vnode> get_ith_child(size_t i) override;
   virtual size_t get_children_count() const override;
@@ -204,6 +206,7 @@ class FAT32Inode final : public Vnode {
   virtual int chmod(const mode_t) override {
     return 0;
   }
+
   virtual int chown(const uid_t, const gid_t) override {
     return 0;
   }

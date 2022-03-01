@@ -58,9 +58,11 @@ struct _IntegralConstant {
   static constexpr T value = v;
   using value_type = T;
   using type = _IntegralConstant;  // using injected-class-name
+
   constexpr operator value_type() const noexcept {
     return value;
   }
+
   constexpr value_type operator()() const noexcept {
     return value;
   }

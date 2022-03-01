@@ -26,11 +26,9 @@ class VMMap final {
   VMMap &operator=(VMMap &&) = delete;
 
   // Maps a single page.
-  // Returns `paddr` to the caller.
-  //
-  // * `v_addr`: specifies the base virtual address of the target page.
-  // * `p_addr`: specifies the base physical address of the page frame.
-  // * `attr`:   page attribute; see include/mm/mmu.h
+  // @v_addr: specifies the base virtual address of the target page.
+  // @p_addr: specifies the base physical address of the page frame.
+  // @attr:   page attribute; see include/mm/mmu.h
   void map(const size_t v_addr, const void *p_addr, const size_t attr = PAGE_RWX) const;
 
   // Unmaps a single page.

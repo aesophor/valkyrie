@@ -1,7 +1,7 @@
 <div align="center">
 
 <h3>VALKYRIE</h3>
-<p>A unix-like hobby kernel built from scratch in C++20</p>
+<p>A UNIX-like hobby kernel built from scratch in C++20</p>
 
 <img src="/Documentation/cover.png">
 </div>
@@ -19,7 +19,7 @@
 
 #### Build requirements
 
-Platform: macOS or (preferably Arch) Linux
+Platform: macOS or (preferably Arch) Linux running on Intel CPU
 
 * GNU make
 * aarch64 cross compiler toolchain
@@ -28,11 +28,11 @@ Platform: macOS or (preferably Arch) Linux
 #### Installing ARMv8 cross compiler toolchain and QEMU
 
 ```sh
-# macOS
+# macOS (Intel)
 brew tap messense/macos-cross-toolchains
 brew install aarch64-unknown-linux-gnu qemu
 
-# Arch Linux
+# Arch Linux (Intel)
 sudo pacman -S aarch64-linux-gnu-gcc aarch64-linux-gnu-gdb qemu-arch-extra
 ```
 
@@ -47,29 +47,28 @@ make && make run
 ## Syscalls
 
 ```cpp
-int sys_read(int fd, void __user* buf, size_t count);
-int sys_write(int fd, const void __user* buf, size_t count);
-int sys_open(const char __user* pathname, int options);
+int sys_read(int fd, void __user *buf, size_t count);
+int sys_write(int fd, const void __user *buf, size_t count);
+int sys_open(const char __user *pathname, int options);
 int sys_close(int fd);
 int sys_fork();
-int sys_exec(const char __user* name, const char __user* argv[]);
+int sys_exec(const char __user *name, const char __user *argv[]);
 [[noreturn]] void sys_exit(int error_code);
 int sys_getpid();
-int sys_wait(int __user* wstatus);
+int sys_wait(int __user *wstatus);
 int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
-int sys_signal(int signal, void (__user* handler)());
-int sys_access(const char __user* pathname, int options);
-int sys_chdir(const char __user* pathname);
-int sys_mkdir(const char __user* pathname);
-int sys_rmdir(const char __user* pathname);
-int sys_unlink(const char __user* pathname);
-int sys_mount(const char __user* device_name,
-              const char __user* mountpoint,
-              const char __user* fs_name);
-int sys_umount(const char __user* mountpoint);
-int sys_mknod(const char __user* pathname, mode_t mode, dev_t dev);
-int sys_getcwd(char __user* buf);
+int sys_signal(int signal, void(__user *handler)());
+int sys_access(const char __user *pathname, int options);
+int sys_chdir(const char __user *pathname);
+int sys_mkdir(const char __user *pathname);
+int sys_rmdir(const char __user *pathname);
+int sys_unlink(const char __user *pathname);
+int sys_mount(const char __user *device_name, const char __user *mountpoint,
+              const char __user *fs_name);
+int sys_umount(const char __user *mountpoint);
+int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev);
+int sys_getcwd(char __user *buf);
 ```
 
 ## User Programs
