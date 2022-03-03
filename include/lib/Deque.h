@@ -90,7 +90,7 @@ class Deque {
   }
 
   void erase(int index) {
-    for (int i = index; i < (int)_size - 1; i++) {
+    for (int i = index; i < (int) _size - 1; i++) {
       _data[i] = move(_data[i + 1]);
     }
     _size--;

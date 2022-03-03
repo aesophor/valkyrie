@@ -178,7 +178,7 @@ void tfp_format(void *putp, putcf putf, char *fmt, va_list va) {
           putchw(putp, putf, w, lz, bf);
           break;
         case 'c':
-          putf(putp, (char)(va_arg(va, int)));
+          putf(putp, (char) (va_arg(va, int)));
           break;
         case 's':
           putchw(putp, putf, w, 0, va_arg(va, char *));
@@ -203,7 +203,7 @@ void tfp_printf(char *fmt, ...) {
 }
 
 static void putcp(void *p, char c) {
-  *(*((char **)p))++ = c;
+  *(*((char **) p))++ = c;
 }
 
 void tfp_sprintf(char *s, char *fmt, ...) {

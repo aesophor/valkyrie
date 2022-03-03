@@ -175,7 +175,7 @@ int atoi(const char *str, const int base) {
       break;
   }
 
-  for (; ptr < (int)len && is_valid(str[ptr]); ptr++) {
+  for (; ptr < (int) len && is_valid(str[ptr]); ptr++) {
     if (result > INT_MAX / base) {
       return (is_negative) ? INT_MIN : INT_MAX;
     }

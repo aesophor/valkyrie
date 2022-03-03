@@ -48,7 +48,7 @@ static void uli2a(unsigned long int num, unsigned int base, int uc, char *bf) {
     num %= d;
     d /= base;
     if (n || dgt > 0 || d == 0) {
-      *bf++ = (char)(dgt + (dgt < 10 ? '0' : (uc ? 'A' : 'a') - 10));
+      *bf++ = (char) (dgt + (dgt < 10 ? '0' : (uc ? 'A' : 'a') - 10));
       ++n;
     }
   }
@@ -75,7 +75,7 @@ static void ui2a(unsigned int num, unsigned int base, int uc, char *bf) {
     num %= d;
     d /= base;
     if (n || dgt > 0 || d == 0) {
-      *bf++ = (char)(dgt + (dgt < 10 ? '0' : (uc ? 'A' : 'a') - 10));
+      *bf++ = (char) (dgt + (dgt < 10 ? '0' : (uc ? 'A' : 'a') - 10));
       ++n;
     }
   }
@@ -189,19 +189,19 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va) {
           putchw(putp, putf, w, lz, bf);
           break;
         case 'p': { /* Print one or two lots of %x depending on sizeof(size_t) */
-          size_t pointer = (size_t)va_arg(va, void *);
+          size_t pointer = (size_t) va_arg(va, void *);
           lz = 1;
           w = 8;
           if (sizeof(size_t) > 4) {
-            ui2a((unsigned int)((pointer >> 32) & 0xffffffff), 16, 0, bf);
+            ui2a((unsigned int) ((pointer >> 32) & 0xffffffff), 16, 0, bf);
             putchw(putp, putf, w, lz, bf);
           }
-          ui2a((unsigned int)(pointer & 0xffffffff), 16, 0, bf);
+          ui2a((unsigned int) (pointer & 0xffffffff), 16, 0, bf);
           putchw(putp, putf, w, lz, bf);
           break;
         }
         case 'c':
-          putf(putp, (char)(va_arg(va, int)));
+          putf(putp, (char) (va_arg(va, int)));
           break;
         case 's':
           putchw(putp, putf, w, 0, va_arg(va, char *));
@@ -229,7 +229,7 @@ void tfp_printf(const char *fmt, ...) {
 }
 
 static void putcp(void *p, char c) {
-  *(*((char **)p))++ = c;
+  *(*((char **) p))++ = c;
 }
 
 void tfp_sprintf(char *s, const char *fmt, ...) {

@@ -49,16 +49,16 @@ utf8_char_t *ucs2utf(utf8_char_t *dst, const ucs2_char_t *src) {
       next = 2;
       dst[j] = 0;
       dst[j + 1] = 0;
-      dst[j + 1] = (utf8_char_t)((src[i] & 0x3F) | 0x80);
-      dst[j] = (utf8_char_t)(((src[i] & 0x3F) & 0x1F) | 0xC0);
+      dst[j + 1] = (utf8_char_t) ((src[i] & 0x3F) | 0x80);
+      dst[j] = (utf8_char_t) (((src[i] & 0x3F) & 0x1F) | 0xC0);
     } else {
       next = 3;
       dst[j] = 0;
       dst[j + 1] = 0;
       dst[j + 2] = 0;
-      dst[j] |= ((((utf8_char_t)(src[i] >> 12)) & 0xF) | 0xE0);
-      dst[j + 1] |= (((utf8_char_t)(src[i] >> 6) & 0x3F) | 0x80);
-      dst[j + 2] |= (((utf8_char_t)(src[i] >> 0) & 0x3F) | 0x80);
+      dst[j] |= ((((utf8_char_t) (src[i] >> 12)) & 0xF) | 0xE0);
+      dst[j + 1] |= (((utf8_char_t) (src[i] >> 6) & 0x3F) | 0x80);
+      dst[j + 2] |= (((utf8_char_t) (src[i] >> 0) & 0x3F) | 0x80);
     }
 
     j += next;

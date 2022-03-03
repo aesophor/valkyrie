@@ -9,7 +9,7 @@
 #define MAIR_IDX_NORMAL_NOCACHE 1
 
 // Page Directory Attributes
-#define PD_INVALID(x) (((x)&1) == 0)
+#define PD_INVALID(x) (((x) &1) == 0)
 #define PD_BLOCK 0b01
 #define PD_TABLE 0b11
 #define PD_PAGE 0b11
@@ -22,7 +22,7 @@
 #define PUD_INDEX(x) (((x) >> 30) & 0x1ff)  // PUD index
 #define PMD_INDEX(x) (((x) >> 21) & 0x1ff)  // PMD index
 #define PTE_INDEX(x) (((x) >> 12) & 0x1ff)  // PTE index
-#define PAGE_OFFSET(x) ((x)&0xfff)          // offset within page
+#define PAGE_OFFSET(x) ((x) &0xfff)         // offset within page
 
 // Page Table Entry Mask
 #define PAGE_MASK 0x00007ffffffff000  // [47:12] physical address

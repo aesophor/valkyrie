@@ -34,7 +34,7 @@ class Page {
   ReturnType offset_of(T addr) const {
     // Use C-style typecasting here since we are not sure
     // whether we should use static_cast or reinterpret_cast.
-    size_t ret = ((size_t)addr) - begin();
+    size_t ret = ((size_t) addr) - begin();
     return reinterpret_cast<ReturnType>(ret);
   }
 
