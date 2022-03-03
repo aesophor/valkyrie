@@ -15,9 +15,6 @@
 #define USER_BINARY_PAGE 0x400000
 #define USER_STACK_PAGE 0x00007ffffffff000
 
-extern "C" void switch_to_user_mode(void *entry_point, size_t user_sp, size_t kernel_sp,
-                                    void *page_table);
-
 namespace valkyrie::kernel {
 
 // The pointer to the init and kthreadd task.

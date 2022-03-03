@@ -12,6 +12,9 @@
 
 #define PAGE_RWX ((MAIR_IDX_NORMAL_NOCACHE << 2) | PD_ACCESS | PD_KERNEL_USER | PD_PAGE)
 
+extern "C" void switch_to_user_mode(void *entry_point, size_t user_sp, size_t kernel_sp,
+                                    void *page_table);
+
 namespace valkyrie::kernel {
 
 class VMMap final {
