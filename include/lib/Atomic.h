@@ -3,6 +3,7 @@
 #ifndef VALKYRIE_ATOMIC_H_
 #define VALKYRIE_ATOMIC_H_
 
+#include <TypeTraits.h>
 #include <Utility.h>
 
 namespace valkyrie::kernel {
@@ -13,6 +14,8 @@ class Atomic;
 // Partial specialization of class `Atomic`
 template <>
 class Atomic<bool> {
+  MAKE_NONCOPYABLE(Atomic);
+
  public:
   // Default constructor
   Atomic() : _v() {}
@@ -22,12 +25,6 @@ class Atomic<bool> {
 
   // Destructor
   ~Atomic() = default;
-
-  // Copy constructor
-  Atomic(const Atomic &r) = delete;
-
-  // Copy assignment operator
-  Atomic &operator=(const Atomic &r) = delete;
 
   // Move constructor
   Atomic(Atomic &&r) noexcept {

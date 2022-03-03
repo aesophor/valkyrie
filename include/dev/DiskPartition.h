@@ -4,6 +4,7 @@
 
 #include <Memory.h>
 #include <String.h>
+#include <TypeTraits.h>
 
 #include <fs/FileSystem.h>
 
@@ -13,18 +14,15 @@ namespace valkyrie::kernel {
 class StorageDevice;
 
 class DiskPartition final {
+  MAKE_NONCOPYABLE(DiskPartition);
+  MAKE_NONMOVABLE(DiskPartition);
+
  public:
   enum class Type { FAT32, SIZE };
 
-  // Constructor
   DiskPartition(StorageDevice &storage_device, uint32_t start_block_index,
                 uint32_t end_block_index, const String &name);
-
   ~DiskPartition() = default;
-  DiskPartition(const DiskPartition &) = delete;
-  DiskPartition(DiskPartition &&) = delete;
-  DiskPartition &operator=(const DiskPartition &) = delete;
-  DiskPartition &operator=(DiskPartition &&) = delete;
 
   void read_block(int block_index, void *buf) const;
   void write_block(int block_index, const void *buf) const;

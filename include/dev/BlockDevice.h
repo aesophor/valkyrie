@@ -3,7 +3,7 @@
 #define VALKYRIE_BLOCK_DEVICE_H_
 
 #include <Memory.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 #include <dev/Device.h>
 #include <mm/Page.h>
@@ -11,6 +11,9 @@
 namespace valkyrie::kernel {
 
 class BlockDevice : public Device {
+  MAKE_NONCOPYABLE(BlockDevice);
+  MAKE_NONMOVABLE(BlockDevice);
+
  public:
   class Driver {
    public:
@@ -21,12 +24,7 @@ class BlockDevice : public Device {
   };
 
   BlockDevice(const String &name, BlockDevice::Driver &driver, size_t block_size = PAGE_SIZE);
-
   virtual ~BlockDevice() = default;
-  BlockDevice(const BlockDevice &) = delete;
-  BlockDevice(BlockDevice &&) = delete;
-  BlockDevice &operator=(const BlockDevice &) = delete;
-  BlockDevice &operator=(BlockDevice &&) = delete;
 
   virtual bool is_character_device() const override;
   virtual bool is_block_device() const override;

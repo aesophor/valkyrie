@@ -3,7 +3,7 @@
 #define VALKYRIE_BUDDY_ALLOCATOR_H_
 
 #include <String.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 #define MAX_ORDER 10
 #define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
@@ -14,14 +14,12 @@
 namespace valkyrie::kernel {
 
 class BuddyAllocator {
+  MAKE_NONCOPYABLE(BuddyAllocator);
+  MAKE_NONMOVABLE(BuddyAllocator);
+
  public:
   explicit BuddyAllocator(const size_t zone_begin);
-
   ~BuddyAllocator() = default;
-  BuddyAllocator(const BuddyAllocator &) = delete;
-  BuddyAllocator(BuddyAllocator &&) = delete;
-  BuddyAllocator &operator=(const BuddyAllocator &) = delete;
-  BuddyAllocator &operator=(BuddyAllocator &&) = delete;
 
   void *allocate_one_page_frame();
   void *allocate(size_t requested_size);

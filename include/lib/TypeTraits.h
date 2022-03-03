@@ -5,12 +5,10 @@
 #include <Types.h>
 
 #define MAKE_NONCOPYABLE(C) \
- private:                   \
   C(const C &) = delete;    \
   C &operator=(const C &) = delete
 
 #define MAKE_NONMOVABLE(C) \
- private:                  \
   C(C &&) = delete;        \
   C &operator=(C &&) = delete
 

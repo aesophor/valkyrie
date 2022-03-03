@@ -26,6 +26,8 @@ class Task;
 class TrapFrame;
 
 extern "C" void switch_to(Task *prev, Task *next);
+extern "C" void switch_to_user_mode(void *entry_point, size_t user_sp, size_t kernel_sp,
+                                    void *page_table);
 
 class Task {
   // To copy (duplicate) a task, use Task::do_fork().

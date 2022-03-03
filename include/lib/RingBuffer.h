@@ -4,7 +4,7 @@
 
 #include <Iterator.h>
 #include <Memory.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 #define DEFAULT_CAPACITY 32
 
@@ -12,29 +12,18 @@ namespace valkyrie::kernel {
 
 template <typename T>
 class RingBuffer {
+  MAKE_NONCOPYABLE(RingBuffer);
+  MAKE_NONMOVABLE(RingBuffer);
+
  public:
   using ValueType = T;
   using ConstIterator = ContiguousIterator<const RingBuffer, const ValueType>;
   using Iterator = ContiguousIterator<RingBuffer, ValueType>;
 
-  // Constructor
   explicit RingBuffer(int capacity = DEFAULT_CAPACITY)
       : _data(make_unique<T[]>(capacity)), _head(), _tail(), _size(), _capacity(capacity) {}
 
-  // Destructor
   ~RingBuffer() = default;
-
-  // Copy constructor
-  RingBuffer(const RingBuffer &r) = delete;
-
-  // Copy assignment operator
-  RingBuffer &operator=(const RingBuffer &r) = delete;
-
-  // Move constructor
-  RingBuffer(RingBuffer &&r) = delete;
-
-  // Move assignment operator
-  RingBuffer &operator=(RingBuffer &&r) = delete;
 
   T &operator[](size_t i) {
     return _data[i];

@@ -3,19 +3,17 @@
 #define VALKYRIE_DEVICE_H_
 
 #include <String.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 namespace valkyrie::kernel {
 
 class Device {
+  MAKE_NONCOPYABLE(Device);
+  MAKE_NONMOVABLE(Device);
+
  public:
   Device(const String &name);
-
   virtual ~Device() = default;
-  Device(const Device &) = delete;
-  Device(Device &&) = delete;
-  Device &operator=(const Device &) = delete;
-  Device &operator=(Device &&) = delete;
 
   virtual bool is_character_device() const = 0;
   virtual bool is_block_device() const = 0;

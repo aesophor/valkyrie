@@ -3,7 +3,7 @@
 #define VALKYRIE_CHARACTER_DEVICE_H_
 
 #include <Memory.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 #include <dev/Device.h>
 #include <mm/Page.h>
@@ -11,6 +11,9 @@
 namespace valkyrie::kernel {
 
 class CharacterDevice : public Device {
+  MAKE_NONCOPYABLE(CharacterDevice);
+  MAKE_NONMOVABLE(CharacterDevice);
+
  public:
   class Driver {
    public:
@@ -21,12 +24,7 @@ class CharacterDevice : public Device {
   };
 
   CharacterDevice(const String &name, CharacterDevice::Driver &driver);
-
   virtual ~CharacterDevice() = default;
-  CharacterDevice(const CharacterDevice &) = delete;
-  CharacterDevice(CharacterDevice &&) = delete;
-  CharacterDevice &operator=(const CharacterDevice &) = delete;
-  CharacterDevice &operator=(CharacterDevice &&) = delete;
 
   virtual bool is_character_device() const override;
   virtual bool is_block_device() const override;

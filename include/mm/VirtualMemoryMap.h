@@ -6,27 +6,24 @@
 #define VALKYRIE_VIRTUAL_MEMORY_MAP_H_
 
 #include <List.h>
+#include <TypeTraits.h>
 
 #include <mm/Page.h>
 #include <mm/mmu.h>
 
 #define PAGE_RWX ((MAIR_IDX_NORMAL_NOCACHE << 2) | PD_ACCESS | PD_KERNEL_USER | PD_PAGE)
 
-extern "C" void switch_to_user_mode(void *entry_point, size_t user_sp, size_t kernel_sp,
-                                    void *page_table);
-
 namespace valkyrie::kernel {
 
 class VMMap final {
+  MAKE_NONCOPYABLE(VMMap);
+  MAKE_NONMOVABLE(VMMap);
+
   using page_table_t = size_t;
 
  public:
   VMMap();
   ~VMMap();
-  VMMap(const VMMap &) = delete;
-  VMMap(VMMap &&) = delete;
-  VMMap &operator=(const VMMap &) = delete;
-  VMMap &operator=(VMMap &&) = delete;
 
   // Maps a single page.
   // @v_addr: specifies the base virtual address of the target page.

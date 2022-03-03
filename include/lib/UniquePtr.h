@@ -3,12 +3,16 @@
 #define VALKYRIE_UNIQUE_PTR_H_
 
 #include <Hash.h>
+#include <TypeTraits.h>
 #include <Utility.h>
 
 namespace valkyrie::kernel {
 
 template <typename T>
 class UniquePtr {
+ protected:
+  MAKE_NONCOPYABLE(UniquePtr);
+
   // Friend declaration
   friend struct Hash<UniquePtr<T>>;
 
@@ -26,12 +30,6 @@ class UniquePtr {
   ~UniquePtr() {
     reset();
   }
-
-  // Copy constructor
-  UniquePtr(const UniquePtr &) = delete;
-
-  // Copy assignment operator
-  UniquePtr &operator=(const UniquePtr &) = delete;
 
   // Move constructor
   UniquePtr(UniquePtr &&r) noexcept : _p(r.release()) {}
@@ -100,10 +98,10 @@ class UniquePtr {
 
 template <typename T>
 class UniquePtr<T[]> : private UniquePtr<T> {
- public:
   using UniquePtr<T>::UniquePtr;
   using UniquePtr<T>::operator=;
 
+ public:
   // Move constructor
   UniquePtr(UniquePtr &&other) noexcept {
     *this = move(other);
