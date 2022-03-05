@@ -13,7 +13,7 @@
 * Virtual filesystem (VFS)
 * FAT32 filesystem (supports long filenames)
 * /dev, /proc, /tmp filesystem
-* [Self-made C++ standard library](https://github.com/aesophor/valkyrie/tree/master/include/libs)
+* [Self-made C++ standard library](https://github.com/aesophor/valkyrie/tree/master/include/lib)
 
 ## Build and Run
 
