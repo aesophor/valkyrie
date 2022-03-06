@@ -83,17 +83,11 @@ void ExceptionManager::handle_exception(TrapFrame *trap_frame) {
       size_t fault_address;
       asm volatile("mrs %0, far_el1" : "=r"(fault_address));
 
-      void *v_addr = reinterpret_cast<void *>(fault_address & PAGE_MASK);
-      void *p_addr = Task::current()->get_vmmap().get_physical_address(v_addr);
-
-      printf("current task: %s (pid = %d)\n", Task::current()->get_name(), Task::current()->get_pid());
-      printf("fault_address: 0x%p\n", v_addr);
-      printf("physical address: 0x%p\n", p_addr);
+      const size_t v_addr = fault_address & PAGE_MASK;
 
       if (Task::current()->get_vmmap().is_cow_page(v_addr)) {
         // Writing to a Copy-on-Write page, copy page frame and update PTE for current task.
         Task::current()->get_vmmap().copy_page_frame(v_addr);
-        printk("cow done. returning to user mode...\n");
       } else {
         // Permission fault (trying to write to a read-only page)
         printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
@@ -101,7 +95,8 @@ void ExceptionManager::handle_exception(TrapFrame *trap_frame) {
       }
 
       switch_user_va_space(Task::current()->get_ttbr0_el1());
-      break; }
+      break;
+    }
 
     case 0b100101:
       Kernel::panic(

@@ -20,7 +20,7 @@
 #define PD_ACCESS (1UL << 10)
 #define PD_RDONLY (1UL << 7)
 #define PD_KERNEL_USER (1UL << 6)
-#define PD_INVALID(x) (((x) & 1) == 0)
+#define PD_INVALID(x) (((x) &1) == 0)
 #define PD_BLOCK 0b01
 #define PD_TABLE 0b11
 #define PD_PAGE 0b11
