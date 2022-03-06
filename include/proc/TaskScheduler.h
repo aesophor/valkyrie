@@ -20,7 +20,7 @@ class TaskScheduler : public Singleton<TaskScheduler> {
   UniquePtr<Task> remove_task(const Task &task);
 
   void schedule();
-  void maybe_reschedule();
+  void maybe_schedule();
   void tick();
 
  protected:

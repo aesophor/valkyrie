@@ -66,7 +66,7 @@
 handle_exception:
   save_cpu_context
   set_x0_to_trapframe_addr
-  bl _ZN8valkyrie6kernel16ExceptionManager16handle_exceptionEPNS0_9TrapFrameE
+  bl _ZN8valkyrie6kernel9exception16handle_exceptionEPNS0_9TrapFrameE
   restore_cpu_context
   eret
 
@@ -74,6 +74,6 @@ handle_exception:
 handle_irq:
   save_cpu_context
   set_x0_to_trapframe_addr
-  bl _ZN8valkyrie6kernel16ExceptionManager10handle_irqEPNS0_9TrapFrameE
+  bl _ZN8valkyrie6kernel9exception10handle_irqEPNS0_9TrapFrameE
   restore_cpu_context
   eret

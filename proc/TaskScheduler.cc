@@ -4,7 +4,6 @@
 #include <Mutex.h>
 
 #include <dev/Console.h>
-#include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 
 namespace valkyrie::kernel {
@@ -80,7 +79,7 @@ void TaskScheduler::schedule() {
   switch_to(Task::current(), _runqueue.front().get());
 }
 
-void TaskScheduler::maybe_reschedule() {
+void TaskScheduler::maybe_schedule() {
   if (!_need_reschedule) {
     return;
   }

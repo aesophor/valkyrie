@@ -28,7 +28,6 @@ _start:
   orr x0, x0, #(1 << 31)
   msr hcr_el2, x0
 
-__switch_to_EL1:
   // Install exception vector table.
   ldr x0, = evt
   msr vbar_el1, x0

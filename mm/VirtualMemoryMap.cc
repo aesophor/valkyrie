@@ -128,7 +128,7 @@ void *VMMap::get_physical_address(const void *const __v_addr) const {
   pagetable_t *pte = walk(v_addr);
 
   if (!pte) [[unlikely]] {
-    printk("warning: cannot get physical address for virtual address: 0x%p\n", v_addr);
+    //printk("warning: cannot get physical address for virtual address: 0x%p\n", v_addr);
     return nullptr;
   }
 

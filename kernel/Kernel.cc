@@ -1,6 +1,7 @@
 // Copyright (c) 2021-2022 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
+#include <kernel/Exception.h>
 #include <proc/idle.h>
 #include <proc/start_init.h>
 #include <proc/start_kthreadd.h>
@@ -13,7 +14,6 @@ Kernel::Kernel()
     : _mailbox(Mailbox::the()),
       _mini_uart(MiniUART::the()),
       _console(Console::the()),
-      _exception_manager(ExceptionManager::the()),
       _timer_multiplexer(TimerMultiplexer::the()),
       _memory_manager(MemoryManager::the()),
       _task_scheduler(TaskScheduler::the()),
@@ -38,7 +38,7 @@ void Kernel::run() {
   _timer_multiplexer.get_arm_core_timer().enable();
 
   printk("Activating exception manager\n");
-  _exception_manager.activate();
+  exception::activate();
 
   printk("Starting task scheduler\n\n");
   _task_scheduler.run();

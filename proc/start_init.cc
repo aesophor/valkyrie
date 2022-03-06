@@ -2,7 +2,7 @@
 #include <proc/start_init.h>
 
 #include <kernel/Kernel.h>
-#include <kernel/Syscall.h>
+#include <proc/Task.h>
 
 #define INIT_PATH "/sbin/init"
 

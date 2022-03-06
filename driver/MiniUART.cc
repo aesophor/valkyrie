@@ -52,7 +52,7 @@
 
 #include <dev/Console.h>
 #include <driver/IO.h>
-#include <kernel/ExceptionManager.h>
+#include <kernel/Exception.h>
 
 // Quoting from BCM2837-ARM-Peripherals.pdf (pg. 6)
 // ------------------------------------------------

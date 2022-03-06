@@ -5,7 +5,7 @@
 #ifndef VALKYRIE_MUTEX_H_
 #define VALKYRIE_MUTEX_H_
 
-#include <kernel/ExceptionManager.h>
+#include <kernel/Exception.h>
 
 namespace valkyrie::kernel {
 
@@ -16,8 +16,8 @@ class RecursiveMutex {
 
   // Locks the mutex, blocks if the mutex is not available
   void lock() {
-    if (ExceptionManager::is_activated()) [[likely]] {
-      ExceptionManager::disableIRQs();
+    if (exception::is_activated()) [[likely]] {
+      exception::disable_irqs();
       _is_locked = true;
       _depth++;
     }
@@ -25,10 +25,10 @@ class RecursiveMutex {
 
   // Unlocks the mutex.
   void unlock() {
-    if (ExceptionManager::is_activated()) [[likely]] {
+    if (exception::is_activated()) [[likely]] {
       if (!--_depth) {
         _is_locked = false;
-        ExceptionManager::enableIRQs();
+        exception::enable_irqs();
       }
     }
 

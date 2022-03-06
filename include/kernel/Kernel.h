@@ -10,7 +10,6 @@
 #include <driver/Mailbox.h>
 #include <driver/MiniUART.h>
 #include <fs/VirtualFileSystem.h>
-#include <kernel/ExceptionManager.h>
 #include <kernel/TimerMultiplexer.h>
 #include <mm/MemoryManager.h>
 #include <proc/Task.h>
@@ -32,7 +31,6 @@ class Kernel : public Singleton<Kernel> {
   }
 
   static constexpr const char *panic_msg = "Kernel panic - not syncing: ";
-
   static RecursiveMutex mutex;
 
  protected:
@@ -45,7 +43,6 @@ class Kernel : public Singleton<Kernel> {
   Mailbox &_mailbox;
   MiniUART &_mini_uart;
   Console &_console;
-  ExceptionManager &_exception_manager;
   TimerMultiplexer &_timer_multiplexer;
   MemoryManager &_memory_manager;
   TaskScheduler &_task_scheduler;
@@ -54,7 +51,7 @@ class Kernel : public Singleton<Kernel> {
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char *fmt, Args &&...args) {
-  ExceptionManager::disableIRQs();
+  exception::disable_irqs();
 
   uint64_t sp;
   asm volatile("mov %0, sp" : "=r"(sp));

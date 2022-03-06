@@ -7,7 +7,6 @@
 
 #include <fs/ELF.h>
 #include <fs/VirtualFileSystem.h>
-#include <kernel/ExceptionManager.h>
 #include <kernel/Kernel.h>
 #include <kernel/Syscall.h>
 #include <proc/TaskScheduler.h>
