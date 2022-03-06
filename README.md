@@ -9,7 +9,8 @@
 ## Kernel Features
 
 * AArch64 (64-bit) kernel with (user & kernel) preemptive multi-threading
-* Virtual memory support
+* Copy-on-write `fork()`
+* Virtual memory
 * Virtual filesystem (VFS)
 * FAT32 filesystem (supports long filenames)
 * /dev, /proc, /tmp filesystem
