@@ -46,9 +46,9 @@ __mmu_init:
   orr x2 , x2, 1
   msr sctlr_el1, x2
 
-  // Indirect branch to the virtual address of `__boot_rest`.
-  // This symbol is defined in boot/boot.S
-  ldr x2, = __boot_rest
+  // Indirect branch to the virtual address of `kmain()`.
+  // See kernel/kmain.cc
+  ldr x2, = kmain
   br x2
 
 

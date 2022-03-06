@@ -25,6 +25,12 @@ class Kernel : public Singleton<Kernel> {
   template <typename... Args>
   [[noreturn]] static void panic(const char *fmt, Args &&...args);
 
+  [[noreturn]] static void halt() {
+    for (;;) {
+      asm volatile("wfi");
+    }
+  }
+
   static constexpr const char *panic_msg = "Kernel panic - not syncing: ";
 
   static RecursiveMutex mutex;
@@ -45,8 +51,6 @@ class Kernel : public Singleton<Kernel> {
   TaskScheduler &_task_scheduler;
   VFS &_vfs;
 };
-
-extern "C" [[noreturn]] void _halt(void);
 
 template <typename... Args>
 [[noreturn]] void Kernel::panic(const char *fmt, Args &&...args) {
@@ -83,7 +87,7 @@ template <typename... Args>
   printf(fmt, forward<Args>(args)...);
   console.clear_color();
 
-  _halt();
+  Kernel::halt();
 }
 
 }  // namespace valkyrie::kernel

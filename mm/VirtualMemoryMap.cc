@@ -304,7 +304,6 @@ void VMMap::dfs_kfree_page(pagetable_t *pt, const size_t level) const {
       void *p_addr = reinterpret_cast<void *>(addr);
 
       if (MemoryManager::the().dec_page_ref_count(p_addr) == 0) {
-        printf("reclaiming page: 0x%p\n", p_addr);
         kfree(p_addr);
       }
     }
