@@ -11,6 +11,8 @@ namespace valkyrie::kernel {
 MemoryManager::MemoryManager()
     : _ram_size(Mailbox::the().get_arm_memory().second),
       _zones{Zone(0x10000000), Zone(0x10200000)},
+      _ref_counts(),
+      _page_writable(),
       _kasan() {}
 
 void *MemoryManager::get_free_page(bool physical) {
@@ -82,6 +84,41 @@ void MemoryManager::dump_kasan_info() const {
 
 size_t MemoryManager::get_ram_size() const {
   return _ram_size;
+}
+
+int MemoryManager::inc_page_ref_count(const void *p_addr) {
+  size_t idx = get_page_ref_idx(p_addr);
+
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+  return ++_ref_counts[idx];
+}
+
+int MemoryManager::dec_page_ref_count(const void *p_addr) {
+  size_t idx = get_page_ref_idx(p_addr);
+
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+  return --_ref_counts[idx];
+}
+
+int MemoryManager::get_page_ref_count(const void *p_addr) const {
+  size_t idx = get_page_ref_idx(p_addr);
+
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+  return _ref_counts[idx];
+}
+
+int MemoryManager::get_page_ref_idx(const void *p_addr) const {
+  size_t addr = reinterpret_cast<size_t>(p_addr);
+
+  if (addr < _zones[0].begin_addr || addr >= _zones[1].begin_addr) [[unlikely]] {
+    Kernel::panic("get_page_ref_idx(): p_addr (0x%p) out of bound\n", p_addr);
+  }
+
+  if (addr % PAGE_SIZE) [[unlikely]] {
+    Kernel::panic("get_page_ref_idx(): p_addr (0x%p) is not a valid page address\n", p_addr);
+  }
+
+  return (addr - _zones[0].begin_addr) >> 12;
 }
 
 }  // namespace valkyrie::kernel

@@ -78,14 +78,30 @@ void ExceptionManager::handle_exception(TrapFrame *trap_frame) {
     case 0b100001:
       Kernel::panic("Instruction Abort taken without a change in Exception level\n");
 
-    case 0b100100:
+    case 0b100100: {
       switch_user_va_space(nullptr);
       size_t fault_address;
       asm volatile("mrs %0, far_el1" : "=r"(fault_address));
-      printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
-      Task::current()->do_exit(4);
+
+      void *v_addr = reinterpret_cast<void *>(fault_address & PAGE_MASK);
+      void *p_addr = Task::current()->get_vmmap().get_physical_address(v_addr);
+
+      printf("current task: %s (pid = %d)\n", Task::current()->get_name(), Task::current()->get_pid());
+      printf("fault_address: 0x%p\n", v_addr);
+      printf("physical address: 0x%p\n", p_addr);
+
+      if (Task::current()->get_vmmap().is_cow_page(v_addr)) {
+        // Writing to a Copy-on-Write page, copy page frame and update PTE for current task.
+        Task::current()->get_vmmap().copy_page_frame(v_addr);
+        printk("cow done. returning to user mode...\n");
+      } else {
+        // Permission fault (trying to write to a read-only page)
+        printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
+        Task::current()->do_exit(4);
+      }
+
       switch_user_va_space(Task::current()->get_ttbr0_el1());
-      break;
+      break; }
 
     case 0b100101:
       Kernel::panic(

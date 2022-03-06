@@ -36,8 +36,8 @@ Task::Task(bool is_user_task, Task *parent, void (*entry_point)(), const char *n
       _time_slice(TASK_TIME_SLICE),
       _vmmap(),
       _entry_point(entry_point),
-      _kstack_page(get_free_page()),
-      _ustack_page(get_free_page()),  // freed by VMMap FIXME: fucking ownership
+      _kstack_page(get_free_page(/*physical=*/true)),
+      _ustack_page(get_free_page(/*physical=*/true)),
       _name(),
       _pending_signals(),
       _custom_signal_handlers(),
@@ -67,8 +67,8 @@ Task::Task(bool is_user_task, Task *parent, void (*entry_point)(), const char *n
 
 #ifdef DEBUG
   printk(
-      "constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%x, "
-      "_ustack_page = 0x%x\n",
+      "constructed thread 0x%x [%s] (pid = %d): entry: 0x%x, _kstack_page = 0x%p, "
+      "_ustack_page = 0x%p\n",
       this, _name, _pid, _entry_point, _kstack_page.begin(), _ustack_page.begin());
 #endif
 }
@@ -153,6 +153,10 @@ Task *Task::get_by_pid(const pid_t pid) {
 }
 
 int Task::do_fork() {
+#ifdef DEBUG
+  printk("do_fork(): Forking from: %s (pid = %d)\n", get_name(), get_pid());
+#endif
+
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   save_context();
@@ -164,16 +168,12 @@ int Task::do_fork() {
   size_t kernel_sp_offset = _kstack_page.offset_of(_context.sp);
   size_t trap_frame_offset = _kstack_page.offset_of(_trap_frame);
 
-#ifdef DEBUG
-  printk("do_fork()...\n");
-#endif
-
   // Clone task.
   auto task = make_unique<Task>(_is_user_task, /*parent=*/this, _entry_point, _name);
   Task *child = task.get();
 
   if (!task) {
-    printk("do_fork: task class allocation failed (out of memory).\n");
+    printk("do_fork: task object allocation failed (out of memory).\n");
     ret = -1;
     goto out;
   }
@@ -197,7 +197,7 @@ int Task::do_fork() {
   child->_kstack_page.copy_from(_kstack_page);
   child->_ustack_page.copy_from(_ustack_page);
 
-  /* ------ You can safely modify the child now ------ */
+  // ------ You can safely modify the child now ------
 
   // Set parent's fork() return value to child's pid.
   ret = child->_pid;
@@ -207,13 +207,8 @@ int Task::do_fork() {
   child->_context.lr = reinterpret_cast<uint64_t>(&&out);
   child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
-  // Deep copy vmmap (page table)
+  // Clone the page table using copy-on-write.
   child->_vmmap.copy_from(_vmmap);
-
-  // Remap user stack to the one we've just copied.
-  kfree(child->_vmmap.get_physical_address(reinterpret_cast<void *>(USER_STACK_PAGE)));
-  child->_vmmap.unmap(USER_STACK_PAGE);
-  child->_vmmap.map(USER_STACK_PAGE, child->_ustack_page.p_addr(), PAGE_RWX);
 
   // Calculate child's trap frame.
   // When the child returns from kernel mode to user mode,
@@ -233,16 +228,16 @@ out:
 int Task::do_exec(const char *name, const char *const _argv[]) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
-  // Acquire a new page and use it as the user stack page.
-  _ustack_page = get_free_page();
-
   // Update task name
   strncpy(_name, name, TASK_NAME_MAX_LEN - 1);
+
+  // Acquire a new page and use it as the user stack page.
+  _ustack_page = get_free_page(/*physical=*/true);
 
   // Construct the argv chain on the user stack.
   // Currently `_ustack_page` and `user_sp` contains physical addresses.
   size_t user_sp = copy_arguments_to_user_stack(_argv);
-  size_t kernel_sp = _kstack_page.end();
+  size_t kernel_sp = KERNEL_VA_BASE + _kstack_page.end();
 
   // Convert `user_sp` to virtual addresses.
   size_t offset = _ustack_page.offset_of(user_sp);
@@ -270,7 +265,7 @@ int Task::do_exec(const char *name, const char *const _argv[]) {
   _vmmap.reset();
 
   _ustack_page.set_v_addr(reinterpret_cast<void *>(USER_STACK_PAGE));
-  _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), PAGE_RWX);
+  _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), USER_PAGE_RWX);
 
   elf.load(_vmmap);
 
@@ -316,11 +311,15 @@ int Task::do_wait(int *wstatus) {
 }
 
 [[noreturn]] void Task::do_exit(int error_code) {
-  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+  if (!_parent) [[unlikely]] {
+    Kernel::panic("Attempted to kill %s! exit code=0x%08x\n", _name, error_code);
+  }
 
   // Terminate the current task.
   _state = Task::State::TERMINATED;
   _error_code = error_code;
+
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Close unclosed fds
   for (int i = 3; i < NR_TASK_FD_LIMITS; i++) {

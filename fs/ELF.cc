@@ -87,7 +87,7 @@ void ELF::load(const VMMap &vmmap) const {
       //     ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE,
       //     page);
 
-      vmmap.map(ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE, page, PAGE_RWX);
+      vmmap.map(ELF_DEFAULT_BASE + ph->vaddr + j * PAGE_SIZE, page, USER_PAGE_RWX);
     }
   }
 }

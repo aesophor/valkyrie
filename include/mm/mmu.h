@@ -1,6 +1,10 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+//
+// https://developer.arm.com/documentation/102376/0100/Describing-memory-in-AArch64
 #ifndef VALKYRIE_MMU_H_
 #define VALKYRIE_MMU_H_
+
+#define KERNEL_VA_BASE 0xffff000000000000
 
 // Memory Attribute Indirection Register (MAIR)
 #define MAIR_DEVICE_nGnRnE 0b00000000
@@ -8,14 +12,25 @@
 #define MAIR_IDX_DEVICE_nGnRnE 0
 #define MAIR_IDX_NORMAL_NOCACHE 1
 
-// Page Directory Attributes
-#define PD_INVALID(x) (((x) &1) == 0)
+// Page descriptor's attributes
+// [58:55] are reserved for software use.
+#define PD_COW_PAGE (1UL << 55)
+#define PD_EL0_EXEC_NEVER (1UL << 54)
+#define PD_EL1_EXEC_NEVER (1UL << 53)
+#define PD_ACCESS (1UL << 10)
+#define PD_RDONLY (1UL << 7)
+#define PD_KERNEL_USER (1UL << 6)
+#define PD_INVALID(x) (((x) & 1) == 0)
 #define PD_BLOCK 0b01
 #define PD_TABLE 0b11
 #define PD_PAGE 0b11
-#define PD_KERNEL_USER (1 << 6)
-#define PD_RDONLY (1 << 7)
-#define PD_ACCESS (1 << 10)
+
+// Page permissions
+#define __USER_PAGE ((MAIR_IDX_NORMAL_NOCACHE << 2) | PD_ACCESS | PD_KERNEL_USER | PD_PAGE)
+#define USER_PAGE_RWX (__USER_PAGE)
+#define USER_PAGE_RX (__USER_PAGE | PD_RDONLY)
+#define USER_PAGE_RW (__USER_PAGE | PD_EL0_EXEC_NEVER)
+#define USER_PAGE_R (__USER_PAGE | PD_ONLY | PD_EL0_EXEC_NEVER)
 
 // Helper macros for extracting indices/offset from a virtual address.
 #define PGD_INDEX(x) (((x) >> 39) & 0x1ff)  // PGD index
@@ -27,7 +42,5 @@
 // Page Table Entry Mask
 #define PAGE_MASK 0x00007ffffffff000  // [47:12] physical address
 #define ATTR_MASK 0x0000000000000fff  // [11: 2] attributes
-
-#define KERNEL_VA_BASE 0xffff000000000000
 
 #endif  // VALKYRIE_MMU_H_

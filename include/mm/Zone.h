@@ -15,11 +15,18 @@
 namespace valkyrie::kernel {
 
 struct Zone final {
-  explicit Zone(const size_t begin_addr);
+  explicit Zone(const size_t begin_addr)
+      : begin_addr(begin_addr),
+        buddy_allocator(begin_addr),
+        slob_allocator(&buddy_allocator) {}
 
   // Returns the number of pages in each zone.
-  static size_t get_pages_count();
+  static constexpr size_t get_pages_count() {
+    // Defined in include/mm/BuddyAllocator.h
+    return MAX_ORDER_NR_PAGES;
+  }
 
+  const size_t begin_addr;
   BuddyAllocator buddy_allocator;
   SlobAllocator slob_allocator;
 };

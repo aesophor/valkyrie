@@ -29,12 +29,23 @@ class MemoryManager : public Singleton<MemoryManager> {
 
   size_t get_ram_size() const;
 
+  int inc_page_ref_count(const void *p_addr);
+  int dec_page_ref_count(const void *p_addr);
+  int get_page_ref_count(const void *p_addr) const;
+
  protected:
   MemoryManager();
 
  private:
+  int get_page_ref_idx(const void *p_addr) const;
+
   const size_t _ram_size;
   Zone _zones[2];
+
+  // XXX: Copy on write, refactor this
+  int _ref_counts[MAX_ORDER_NR_PAGES];
+  bool _page_writable[MAX_ORDER_NR_PAGES];
+
   AddressSanitizer _kasan;
 };
 
