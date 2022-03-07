@@ -19,7 +19,6 @@ struct Exception {
   uint64_t spsr_el1;
 };
 
-
 Exception get_current_exception() {
   Exception ex;
   uint32_t esr_el1;
@@ -39,7 +38,13 @@ Exception get_current_exception() {
   return ex;
 }
 
-void handle_system_call(TrapFrame *trap_frame) {
+uint64_t get_fault_page_addr() {
+  size_t fault_address;
+  asm volatile("mrs %0, far_el1" : "=r"(fault_address));
+  return fault_address & PAGE_MASK;
+}
+
+void handle_syscall(TrapFrame *trap_frame) {
   switch_user_va_space(nullptr);
 
   Task::current()->set_trap_frame(trap_frame);
@@ -72,16 +77,14 @@ void handle_system_call(TrapFrame *trap_frame) {
   }
 }
 
-void handle_permission_fault() {
+void handle_page_fault() {
   switch_user_va_space(nullptr);
-  size_t fault_address;
-  asm volatile("mrs %0, far_el1" : "=r"(fault_address));
 
-  size_t page_frame_addr = fault_address & PAGE_MASK;
+  size_t fault_page_addr = get_fault_page_addr();
 
-  if (Task::current()->get_vmmap().is_cow_page(page_frame_addr)) {
+  if (Task::current()->get_vmmap().is_cow_page(fault_page_addr)) {
     // Writing to a Copy-on-Write page, copy page frame and update PTE for current task.
-    Task::current()->get_vmmap().copy_page_frame(page_frame_addr);
+    Task::current()->get_vmmap().copy_page_frame(fault_page_addr);
   } else {
     // Permission fault (trying to write to a read-only page)
     printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
@@ -122,9 +125,9 @@ void handle_exception(TrapFrame *trap_frame) {
   // Issuing `svc #0` will trigger a switch from user mode to kernel mode,
   // where x8 is the system call id, and x0 ~ x5 are the arguments.
   if (ex.ec == 0b10101 && ex.iss == 0) {
-    handle_system_call(trap_frame);
+    handle_syscall(trap_frame);
   } else if (ex.ec == 0b100100) {
-    handle_permission_fault();
+    handle_page_fault();
   } else {
     unhandled_exception(ex);
   }
