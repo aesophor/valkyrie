@@ -11,6 +11,8 @@
 #include <kernel/Syscall.h>
 #include <proc/TaskScheduler.h>
 
+#define INIT_PATH "/sbin/init"
+
 #define USER_BINARY_PAGE 0x400000
 #define USER_STACK_PAGE 0x00007ffffffff000
 
@@ -471,6 +473,30 @@ SharedPtr<File> Task::get_file_by_fd(const int fd) const {
 
 bool Task::is_fd_valid(const int fd) const {
   return fd >= 0 && fd < NR_TASK_FD_LIMITS;
+}
+
+
+// Built-in tasks entry points.
+[[noreturn]] void idle() {
+  while (true) {
+    TaskScheduler::the().schedule();
+  }
+}
+
+[[noreturn]] void start_init() {
+  const char *argv[] = {INIT_PATH, nullptr};
+  Task::current()->do_exec(INIT_PATH, argv);
+
+  // sys_exec() shouldn't have returned.
+  Kernel::panic("no working init found.\n");
+}
+
+[[noreturn]] void start_kthreadd() {
+  while (true) {
+    // Wait for any kthread to terminate.
+    Task::current()->do_wait(nullptr);
+    TaskScheduler::the().schedule();
+  }
 }
 
 }  // namespace valkyrie::kernel

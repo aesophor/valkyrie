@@ -1,11 +1,6 @@
 // Copyright (c) 2021-2022 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <kernel/Kernel.h>
 
-#include <kernel/Exception.h>
-#include <proc/idle.h>
-#include <proc/start_init.h>
-#include <proc/start_kthreadd.h>
-
 namespace valkyrie::kernel {
 
 RecursiveMutex Kernel::mutex;

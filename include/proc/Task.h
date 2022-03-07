@@ -204,6 +204,11 @@ static UniquePtr<Task> make_user_task(Args &&...args) {
   return make_unique<Task>(true, forward<Args>(args)...);
 }
 
+// Built-in tasks entry points.
+[[noreturn]] void idle();
+[[noreturn]] void start_init();
+[[noreturn]] void start_kthreadd();
+
 }  // namespace valkyrie::kernel
 
 #endif  // VALKYRIE_TASK_H_

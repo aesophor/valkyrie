@@ -10,6 +10,7 @@
 #include <driver/Mailbox.h>
 #include <driver/MiniUART.h>
 #include <fs/VirtualFileSystem.h>
+#include <kernel/Exception.h>
 #include <kernel/TimerMultiplexer.h>
 #include <mm/MemoryManager.h>
 #include <proc/Task.h>
