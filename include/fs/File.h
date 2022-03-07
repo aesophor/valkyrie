@@ -19,7 +19,8 @@ namespace valkyrie::kernel {
 class FileSystem;
 
 struct File final {
-  File(FileSystem &fs, SharedPtr<Vnode> vnode, int options);
+  File(FileSystem &fs, SharedPtr<Vnode> vnode, int options)
+      : fs(fs), vnode(move(vnode)), pos(), options(options) {}
 
   FileSystem &fs;  // the filesystem to which this file belong.
   SharedPtr<Vnode> vnode;
