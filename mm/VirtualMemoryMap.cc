@@ -73,7 +73,7 @@ VMMap::pagetable_t *VMMap::walk(const size_t v_addr, bool create_pte) const {
   return &pt[pt_index];
 }
 
-void VMMap::map(const size_t v_addr, const void *p_addr, const size_t attr) const {
+void VMMap::map(const size_t v_addr, const void *p_addr, size_t attr) const {
 #ifdef DEBUG
   printk("[%s] VMMap::map: v_addr = 0x%p, p_addr = 0x%p\n", Task::current()->get_name(),
          v_addr, p_addr);
@@ -86,8 +86,13 @@ void VMMap::map(const size_t v_addr, const void *p_addr, const size_t attr) cons
                   p_addr);
   }
 
+  // Has write permission, so make it copy-on-write.
+  if (!(attr & PD_RDONLY)) {
+    attr |= PD_COW_PAGE;
+  }
+
+  *pte = reinterpret_cast<size_t>(p_addr) | attr;
   MemoryManager::the().inc_page_ref_count(p_addr);
-  *pte = reinterpret_cast<size_t>(p_addr) | attr | PD_COW_PAGE;
 }
 
 void VMMap::unmap(const size_t v_addr) const {
@@ -104,8 +109,8 @@ void VMMap::unmap(const size_t v_addr) const {
   size_t page_frame_addr = reinterpret_cast<size_t>(*pte & PD_PAGE_MASK);
   void *p_addr = reinterpret_cast<void *>(page_frame_addr);
 
-  MemoryManager::the().dec_page_ref_count(p_addr);
   *pte = 0;
+  MemoryManager::the().dec_page_ref_count(p_addr);
 }
 
 bool VMMap::is_cow_page(const size_t v_addr) const {
@@ -135,6 +140,11 @@ void *VMMap::get_physical_address(const void *const __v_addr) const {
   return reinterpret_cast<void *>((*pte & PD_PAGE_MASK) + PAGE_OFFSET(v_addr));
 }
 
+size_t VMMap::get_unmapped_area(size_t len) const {
+  // XXX: We should keep track of mapped areas using a tree map.
+  return 0;
+}
+
 void VMMap::copy_page_frame(const size_t v_addr) const {
   pagetable_t *pte = walk(v_addr);
 
@@ -156,8 +166,8 @@ void VMMap::copy_page_frame(const size_t v_addr) const {
 
     *pte = reinterpret_cast<size_t>(new_page_frame) | USER_PAGE_RWX;
 
-    MemoryManager::the().dec_page_ref_count(old_page_frame);
-    MemoryManager::the().inc_page_ref_count(new_page_frame);
+    mm.dec_page_ref_count(old_page_frame);
+    mm.inc_page_ref_count(new_page_frame);
   }
 }
 

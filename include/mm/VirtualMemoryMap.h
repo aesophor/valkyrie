@@ -29,15 +29,11 @@ class VMMap final {
   // Deep copy the entire page table and the underlying page frames.
   void copy_from(const VMMap &r) const;
 
-  // Walks the page table and returns the PTE of the given `v_addr`.
-  // If `create_pte` is true, then the missing PTEs will be created as necessary.
-  pagetable_t *walk(const size_t v_addr, bool create_pte = false) const;
-
   // Maps a single page.
   // @v_addr: specifies the base virtual address of the target page.
   // @p_addr: specifies the base physical address of the page frame.
   // @attr:   page attribute; see include/mm/mmu.h
-  void map(const size_t v_addr, const void *p_addr, const size_t attr = USER_PAGE_RWX) const;
+  void map(const size_t v_addr, const void *p_addr, size_t attr) const;
 
   // Unmaps a single page.
   void unmap(const size_t v_addr) const;
@@ -48,6 +44,11 @@ class VMMap final {
   // Gets the physical address from a virtual address by parsing the page table.
   void *get_physical_address(const void *const v_addr) const;
 
+  // Gets an unmapped area whose gap is greater or equal to len.
+  size_t get_unmapped_area(size_t len) const;
+
+  // Duplicates the page frame and update relevant PTEs.
+  // This is the CoW handler, see kernel/Exception.cc
   void copy_page_frame(const size_t v_addr) const;
 
   [[nodiscard]] size_t *get_pgd() const {
@@ -55,6 +56,10 @@ class VMMap final {
   }
 
  private:
+  // Walks the page table and returns the PTE of the given `v_addr`.
+  // If `create_pte` is true, then the missing PTEs will be created as necessary.
+  pagetable_t *walk(const size_t v_addr, bool create_pte = false) const;
+
   // TODO: maybe refactor this with STL Function<>
   void dfs_kfree_page(pagetable_t *pt, const size_t level) const;
 
