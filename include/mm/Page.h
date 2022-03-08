@@ -2,12 +2,11 @@
 #ifndef VALKYRIE_PAGE_H_
 #define VALKYRIE_PAGE_H_
 
+#include <Concepts.h>
 #include <CString.h>
-#include <TypeTraits.h>
 
+#include <mm/mmu.h>
 #include <mm/BuddyAllocator.h>
-
-#define PAGE_SIZE 4096
 
 namespace valkyrie::kernel {
 
@@ -68,19 +67,38 @@ class Page {
     _p_addr = p_addr;
   }
 
+  // Is the given address aligned to a page boundary?
   template <typename T>
   requires IsIntegral<T> || IsPointer<T>
-  static bool is_aligned(T __addr) {
-    uint64_t addr;
-    if constexpr (IsPointer<T>) {
-      addr = reinterpret_cast<uint64_t>(__addr);
-    } else {
-      addr = __addr;
-    }
-    return addr % PAGE_SIZE == 0;
+  static bool is_aligned(T addr) {
+    return to_size_t(addr) % PAGE_SIZE == 0;
   }
 
- protected:
+  // Rounds down `addr` to the current page boundary.
+  template <typename T>
+  requires IsIntegral<T> || IsPointer<T>
+  static T align_down(T addr) {
+    return to_size_t(addr) & PAGE_MASK;
+  }
+
+  // Rounds up `addr` to the next page boundary.
+  template <typename T>
+  requires IsIntegral<T> || IsPointer<T>
+  static constexpr T align_up(T addr) {
+    return (to_size_t(addr) + (PAGE_SIZE - 1)) & PAGE_MASK;
+  }
+
+ private:
+  template <Integral T>
+  static size_t to_size_t(T addr) {
+    return addr;
+  }
+
+  template <Pointer T>
+  static size_t to_size_t(T addr) {
+    return reinterpret_cast<size_t>(addr);
+  }
+
   void *_p_addr;
   void *_v_addr;
 };
