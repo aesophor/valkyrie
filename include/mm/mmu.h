@@ -29,7 +29,7 @@
 #define USER_PAGE_RWX (__USER_PAGE)
 #define USER_PAGE_RX (__USER_PAGE | PD_RDONLY)
 #define USER_PAGE_RW (__USER_PAGE | PD_EL0_EXEC_NEVER)
-#define USER_PAGE_R (__USER_PAGE | PD_ONLY | PD_EL0_EXEC_NEVER)
+#define USER_PAGE_R (__USER_PAGE | PD_RDONLY | PD_EL0_EXEC_NEVER)
 
 // Helper macros for extracting indices/offset from a virtual address.
 #define PGD_INDEX(x) (((x) >> 39) & 0x1ff)  // PGD index
