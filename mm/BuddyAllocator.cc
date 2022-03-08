@@ -146,11 +146,8 @@ void BuddyAllocator::dump() const {
 }
 
 BuddyAllocator::BlockHeader *BuddyAllocator::get_block_header(const void *p) {
-  if (reinterpret_cast<size_t>(p) % PAGE_SIZE != 0) [[unlikely]] {
-    Kernel::panic(
-        "kernel heap corrupted: "
-        "get_block_header(0x%x) misaligned\n",
-        p);
+  if (!Page::is_aligned(p)) [[unlikely]] {
+    Kernel::panic("kernel heap corrupted: get_block_header(0x%x) misaligned\n", p);
   }
 
   const int idx = (reinterpret_cast<size_t>(p) - _zone_begin) / PAGE_SIZE;

@@ -60,7 +60,7 @@ void ELF::load(const VMMap &vmmap) const {
     // so we need to loop until all contents are loaded.
     // source: https://wiki.osdev.org/ELF
     bool is_copying_first_page = true;
-    size_t nr_pages = ph->filesz / PAGE_SIZE + static_cast<bool>(ph->filesz % PAGE_SIZE);
+    size_t nr_pages = ph->filesz / PAGE_SIZE + !Page::is_aligned(ph->filesz);
     // printk("this segment needs %d pages\n", nr_pages);
 
     for (size_t j = 0; j < nr_pages; j++) {

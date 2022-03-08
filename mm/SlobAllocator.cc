@@ -75,7 +75,7 @@ void *SlobAllocator::allocate(size_t requested_size) {
   victim = split_from_top_chunk(requested_size);
 
 out:
-  if (reinterpret_cast<size_t>(victim + 1) % PAGE_SIZE == 0) [[unlikely]] {
+  if (Page::is_aligned(victim + 1)) [[unlikely]] {
     Kernel::panic(
         "fatal error: _top_chunk = 0x%x, _page_frame_allocatable_begin = 0x%x, req_size = "
         "0x%x, victim = 0x%x\n",
@@ -102,7 +102,7 @@ void SlobAllocator::deallocate(void *p) {
   mid_chunk->set_allocated(false);
 
   // Maybe merge this chunk with its previous one.
-  if (!prev_chunk->is_allocated() && mid_chunk->addr() % PAGE_SIZE) {
+  if (!prev_chunk->is_allocated() && !Page::is_aligned(mid_chunk->addr())) {
     bin_del_entry(prev_chunk);
     chunk_size += prev_chunk->get_size();
     prev_chunk->next = next_chunk;
@@ -112,7 +112,7 @@ void SlobAllocator::deallocate(void *p) {
   }
 
   // Maybe merge this chunk with its next one.
-  if (next_chunk->addr() % PAGE_SIZE == 0) {
+  if (Page::is_aligned(next_chunk->addr())) {
     // The next chunk belongs to another page frame, dont' merge!
   } else if (next_chunk == _top_chunk) {
     // The next one is the top chunk, merge `chunk` into the top chunk.

@@ -109,7 +109,7 @@ void VMMap::unmap(const size_t v_addr) const {
 }
 
 bool VMMap::is_cow_page(const size_t v_addr) const {
-  if (v_addr % PAGE_SIZE) [[unlikely]] {
+  if (!Page::is_aligned(v_addr)) [[unlikely]] {
     Kernel::panic("VMMap::walk(): v_addr unaligned to page boundary: 0x%p\n", v_addr);
   }
 
@@ -128,7 +128,7 @@ void *VMMap::get_physical_address(const void *const __v_addr) const {
   pagetable_t *pte = walk(v_addr);
 
   if (!pte) [[unlikely]] {
-    //printk("warning: cannot get physical address for virtual address: 0x%p\n", v_addr);
+    // printk("warning: cannot get physical address for virtual address: 0x%p\n", v_addr);
     return nullptr;
   }
 

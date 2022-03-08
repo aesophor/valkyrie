@@ -3,7 +3,7 @@
 #define VALKYRIE_PAGE_H_
 
 #include <CString.h>
-#include <Types.h>
+#include <TypeTraits.h>
 
 #include <mm/BuddyAllocator.h>
 
@@ -66,6 +66,18 @@ class Page {
 
   void set_p_addr(void *p_addr) {
     _p_addr = p_addr;
+  }
+
+  template <typename T>
+  requires IsIntegral<T> || IsPointer<T>
+  static bool is_aligned(T __addr) {
+    uint64_t addr;
+    if constexpr (IsPointer<T>) {
+      addr = reinterpret_cast<uint64_t>(__addr);
+    } else {
+      addr = __addr;
+    }
+    return addr % PAGE_SIZE == 0;
   }
 
  protected:

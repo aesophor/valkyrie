@@ -50,7 +50,7 @@ void MemoryManager::kfree(void *p) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
   _kasan.mark_free_chk(p);
 
-  if (reinterpret_cast<size_t>(p) % PAGE_SIZE == 0) {
+  if (Page::is_aligned(p)) {
     _zones[0].buddy_allocator.deallocate(p);
   } else {
     _zones[1].slob_allocator.deallocate(p);
@@ -114,7 +114,7 @@ int MemoryManager::get_page_ref_idx(const void *p_addr) const {
     Kernel::panic("get_page_ref_idx(): p_addr (0x%p) out of bound\n", p_addr);
   }
 
-  if (addr % PAGE_SIZE) [[unlikely]] {
+  if (!Page::is_aligned(addr)) [[unlikely]] {
     Kernel::panic("get_page_ref_idx(): p_addr (0x%p) is not a valid page address\n", p_addr);
   }
 
