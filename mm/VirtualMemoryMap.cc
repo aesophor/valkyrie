@@ -54,7 +54,7 @@ VMMap::pagetable_t *VMMap::walk(const size_t v_addr, bool create_pte) const {
     // If this page descriptor is invalid, then it indicates that the next-level
     // page table is not present yet.
     if (!PD_INVALID(pt[pt_index])) {
-      next_level_pt_addr = pt[pt_index] & PAGE_MASK;
+      next_level_pt_addr = pt[pt_index] & PD_PAGE_MASK;
     } else if (!create_pte) {
       return nullptr;
     } else {
@@ -101,7 +101,7 @@ void VMMap::unmap(const size_t v_addr) const {
     Kernel::panic("VMMap::map: v_addr: 0x%p has not been mapped yet...\n", v_addr);
   }
 
-  size_t page_frame_addr = reinterpret_cast<size_t>(*pte & PAGE_MASK);
+  size_t page_frame_addr = reinterpret_cast<size_t>(*pte & PD_PAGE_MASK);
   void *p_addr = reinterpret_cast<void *>(page_frame_addr);
 
   MemoryManager::the().dec_page_ref_count(p_addr);
@@ -132,7 +132,7 @@ void *VMMap::get_physical_address(const void *const __v_addr) const {
     return nullptr;
   }
 
-  return reinterpret_cast<void *>((*pte & PAGE_MASK) + PAGE_OFFSET(v_addr));
+  return reinterpret_cast<void *>((*pte & PD_PAGE_MASK) + PAGE_OFFSET(v_addr));
 }
 
 void VMMap::copy_page_frame(const size_t v_addr) const {
@@ -142,13 +142,13 @@ void VMMap::copy_page_frame(const size_t v_addr) const {
     Kernel::panic("copy_page_frame(): page directory / entry doesn't exist?");
   }
 
-  void *old_page_frame = reinterpret_cast<void *>(*pte & PAGE_MASK);
+  void *old_page_frame = reinterpret_cast<void *>(*pte & PD_PAGE_MASK);
   auto &mm = MemoryManager::the();
 
   if (mm.get_page_ref_count(old_page_frame) == 1) {
     // *pte &= ~PD_COW_PAGE;
     // *pte |= USER_PAGE_RWX;
-    size_t addr = *pte & PAGE_MASK;
+    size_t addr = *pte & PD_PAGE_MASK;
     *pte = addr | USER_PAGE_RWX;
   } else {
     void *new_page_frame = get_free_page(true);
@@ -171,15 +171,15 @@ void VMMap::dfs_kfree_page(pagetable_t *pt, const size_t level) const {
     }
 
     if (level == 3) {
-      size_t addr = pt[i] & PAGE_MASK;
+      size_t addr = pt[i] & PD_PAGE_MASK;
       void *p_addr = reinterpret_cast<void *>(addr);
 
       if (MemoryManager::the().dec_page_ref_count(p_addr) == 0) {
         kfree(p_addr);
       }
     } else {
-      dfs_kfree_page(reinterpret_cast<pagetable_t *>(pt[i] & PAGE_MASK), level + 1);
-      kfree(reinterpret_cast<void *>(pt[i] & PAGE_MASK));
+      dfs_kfree_page(reinterpret_cast<pagetable_t *>(pt[i] & PD_PAGE_MASK), level + 1);
+      kfree(reinterpret_cast<void *>(pt[i] & PD_PAGE_MASK));
     }
   }
 }
@@ -196,7 +196,7 @@ void VMMap::dfs_copy_page_tables(pagetable_t *pt_old, pagetable_t *pt_new,
 
     if (level == 3) {
       // Let both parent and child share this page frame for now.
-      size_t page_frame_addr = pt_old[i] & PAGE_MASK;
+      size_t page_frame_addr = pt_old[i] & PD_PAGE_MASK;
       pt_old[i] = pt_new[i] = page_frame_addr | USER_PAGE_RX | PD_COW_PAGE;
 
       void *p_addr = reinterpret_cast<void *>(page_frame_addr);
@@ -204,7 +204,7 @@ void VMMap::dfs_copy_page_tables(pagetable_t *pt_old, pagetable_t *pt_new,
 
     } else {
       // Duplicate the page frame used by this page table.
-      auto old_page_frame = reinterpret_cast<pagetable_t *>(pt_old[i] & PAGE_MASK);
+      auto old_page_frame = reinterpret_cast<pagetable_t *>(pt_old[i] & PD_PAGE_MASK);
       auto new_page_frame = reinterpret_cast<pagetable_t *>(get_free_page(true));
       memset(new_page_frame, 0, PAGE_SIZE);
 

@@ -13,7 +13,6 @@
 #define MAIR_IDX_NORMAL_NOCACHE 1
 
 // Page descriptor's attributes
-// [58:55] are reserved for software use.
 #define PD_COW_PAGE (1UL << 55)
 #define PD_EL0_EXEC_NEVER (1UL << 54)
 #define PD_EL1_EXEC_NEVER (1UL << 53)
@@ -39,8 +38,16 @@
 #define PTE_INDEX(x) (((x) >> 12) & 0x1ff)  // PTE index
 #define PAGE_OFFSET(x) ((x) &0xfff)         // offset within page
 
-// Page Table Entry Mask
-#define PAGE_MASK 0x00007ffffffff000  // [47:12] physical address
-#define ATTR_MASK 0x0000000000000fff  // [11: 2] attributes
+// Page size and Page Table Entry (PTE) masks.
+#define PAGE_SHIFT 12
+#define PAGE_SIZE	(1 << PAGE_SHIFT)
+#define PAGE_MASK	(~(PAGE_SIZE - 1))
+
+// When we are manipulating a page descriptor, the bits [58:55] are reserved for
+// software use, so we shouldn't use the regular PAGE_MASK. Instead, we define a
+// special "physical" page mask which extracts the physical address from the bits
+// [47:12] of a page descriptor.
+#define PD_PAGE_MASK 0x00007ffffffff000
+#define PD_ATTR_MASK (PAGE_SIZE - 1)
 
 #endif  // VALKYRIE_MMU_H_
