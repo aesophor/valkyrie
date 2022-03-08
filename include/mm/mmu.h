@@ -40,8 +40,8 @@
 
 // Page size and Page Table Entry (PTE) masks.
 #define PAGE_SHIFT 12
-#define PAGE_SIZE	(1 << PAGE_SHIFT)
-#define PAGE_MASK	(~(PAGE_SIZE - 1))
+#define PAGE_SIZE (1 << PAGE_SHIFT)
+#define PAGE_MASK (~(PAGE_SIZE - 1))
 
 // When we are manipulating a page descriptor, the bits [58:55] are reserved for
 // software use, so we shouldn't use the regular PAGE_MASK. Instead, we define a

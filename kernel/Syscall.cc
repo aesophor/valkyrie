@@ -11,15 +11,33 @@ namespace valkyrie::kernel {
 
 #define SYSCALL_DECL(func) reinterpret_cast<const size_t>(func)
 
+// clang-format off
 const size_t __syscall_table[Syscall::__NR_syscall] = {
-    SYSCALL_DECL(sys_read),        SYSCALL_DECL(sys_write),  SYSCALL_DECL(sys_open),
-    SYSCALL_DECL(sys_close),       SYSCALL_DECL(sys_fork),   SYSCALL_DECL(sys_exec),
-    SYSCALL_DECL(sys_exit),        SYSCALL_DECL(sys_getpid), SYSCALL_DECL(sys_wait),
-    SYSCALL_DECL(sys_sched_yield), SYSCALL_DECL(sys_kill),   SYSCALL_DECL(sys_signal),
-    SYSCALL_DECL(sys_access),      SYSCALL_DECL(sys_chdir),  SYSCALL_DECL(sys_mkdir),
-    SYSCALL_DECL(sys_rmdir),       SYSCALL_DECL(sys_unlink), SYSCALL_DECL(sys_mount),
-    SYSCALL_DECL(sys_umount),      SYSCALL_DECL(sys_mknod),  SYSCALL_DECL(sys_getcwd),
+    SYSCALL_DECL(sys_read),
+    SYSCALL_DECL(sys_write),
+    SYSCALL_DECL(sys_open),
+    SYSCALL_DECL(sys_close),
+    SYSCALL_DECL(sys_fork),
+    SYSCALL_DECL(sys_exec),
+    SYSCALL_DECL(sys_exit),
+    SYSCALL_DECL(sys_getpid),
+    SYSCALL_DECL(sys_wait),
+    SYSCALL_DECL(sys_sched_yield),
+    SYSCALL_DECL(sys_kill),
+    SYSCALL_DECL(sys_signal),
+    SYSCALL_DECL(sys_access),
+    SYSCALL_DECL(sys_chdir),
+    SYSCALL_DECL(sys_mkdir),
+    SYSCALL_DECL(sys_rmdir),
+    SYSCALL_DECL(sys_unlink),
+    SYSCALL_DECL(sys_mount),
+    SYSCALL_DECL(sys_umount),
+    SYSCALL_DECL(sys_mknod),
+    SYSCALL_DECL(sys_getcwd),
+    SYSCALL_DECL(sys_mmap),
+    SYSCALL_DECL(sys_munmap),
 };
+// clang-format on
 
 int sys_read(int fd, void __user *buf, size_t count) {
   buf = copy_from_user<void *>(buf);
@@ -181,7 +199,15 @@ int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev) {
 }
 
 int sys_getcwd(char __user *buf) {
-  return 0;
+  return -1;
+}
+
+void *sys_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset) {
+  return Task::current()->do_mmap(addr, len, prot, flags, fd, file_offset);
+}
+
+int sys_munmap(void *addr, size_t len) {
+  return Task::current()->do_munmap(addr, len);
 }
 
 }  // namespace valkyrie::kernel

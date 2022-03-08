@@ -362,6 +362,69 @@ int Task::do_signal(int signal, void (*handler)()) {
   return 0;  // TODO: return previous handler's error code.
 }
 
+void *Task::do_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
+  size_t v_addr = reinterpret_cast<size_t>(addr);
+
+  // XXX: Check whether the new region overlaps with existing regions.
+  if (v_addr && !Page::is_aligned(v_addr) && !(flags & MAP_FIXED)) {
+    return nullptr;
+  }
+
+  // If `len` is not a multiple of the page size, rounds it up.
+  len = Page::align_up(len);
+
+  if (!v_addr) {
+    printk("Warning: do_mmap() addr == nullptr, not implemented yet!\n");
+    v_addr = _vmmap.get_unmapped_area(len);
+  } else {
+    v_addr = Page::align_down(v_addr);
+  }
+
+  // XXX: What if another mapping already exists at `v_addr`?
+
+  // Build permission according to `prot`.
+  // XXX: Current implementation makes all user pages readable...
+  size_t attr = USER_PAGE_R;
+  if (prot & PROT_WRITE) {
+    attr &= ~PD_RDONLY;
+  }
+  if (prot & PROT_EXEC) {
+    attr &= ~PD_EL0_EXEC_NEVER;
+  }
+
+  // Allocate page frames and map them to the va_space of current user task.
+  void *begin = nullptr;
+  for (size_t i = 0; len; i++, len -= PAGE_SIZE) {
+    void *page_frame_addr = get_free_page(/*physical=*/true);
+    if (!begin) {
+      begin = page_frame_addr;
+    }
+    _vmmap.map(v_addr + i * PAGE_SIZE, page_frame_addr, attr);
+  }
+
+  // If the region is mapped to a file, Copy the file’s content to the memory region.
+  if (!(flags & MAP_ANONYMOUS)) {
+    SharedPtr<File> file = get_file_by_fd(fd);
+
+    if (!file) [[unlikely]] {
+      return nullptr;
+    }
+
+    size_t old_pos = file->pos;
+    VFS::the().read(file, begin, PAGE_SIZE);
+    file->pos = old_pos;
+  }
+
+  return reinterpret_cast<void *>(v_addr);
+}
+
+int Task::do_munmap(void *addr, size_t len) {
+  // XXX: Not implemented yet.
+  return -1;
+}
+
 size_t Task::copy_arguments_to_user_stack(const char *const argv[]) {
   int argc = 0;
   char **copied_argv = nullptr;
@@ -448,13 +511,13 @@ void Task::handle_pending_signals() {
 }
 
 int Task::allocate_fd_for_file(SharedPtr<File> file) {
+  if (!file) [[unlikely]] {
+    Kernel::panic("Task::allocate_fd_for_file(): file is nullptr\n");
+  }
+
   for (int i = 0; i < NR_TASK_FD_LIMITS; i++) {
     if (!_fd_table[i]) {
       _fd_table[i] = move(file);
-
-      if (!_fd_table[i]) {
-        Kernel::panic("wtf\n");
-      }
       return i;
     }
   }
@@ -474,7 +537,6 @@ SharedPtr<File> Task::get_file_by_fd(const int fd) const {
 bool Task::is_fd_valid(const int fd) const {
   return fd >= 0 && fd < NR_TASK_FD_LIMITS;
 }
-
 
 // Built-in tasks entry points.
 [[noreturn]] void idle() {

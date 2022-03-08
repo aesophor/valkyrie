@@ -70,6 +70,8 @@ int sys_mount(const char __user *device_name, const char __user *mountpoint,
 int sys_umount(const char __user *mountpoint);
 int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev);
 int sys_getcwd(char __user *buf);
+void *sys_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset);
+int sys_munmap(void *addr, size_t len);
 ```
 
 ## User Programs
@@ -87,6 +89,8 @@ int sys_getcwd(char __user *buf);
 * vfs_test_dev
 * vfs_test_mnt
 * vfs_test_orw 
+* mmap_illegal_read
+* mmap_illegal_write
 
 ## References
 

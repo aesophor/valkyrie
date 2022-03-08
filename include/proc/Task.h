@@ -19,6 +19,22 @@
 #define TASK_NAME_MAX_LEN 16
 #define NR_TASK_FD_LIMITS 16
 
+// mmap() prots
+#define PROT_NONE 0x0  /* Page can not be accessed. */
+#define PROT_READ 0x1  /* Page can be read. */
+#define PROT_WRITE 0x2 /* Page can be written. */
+#define PROT_EXEC 0x4  /* Page can be executed. */
+
+// mmap() sharing types (must choose one and only one of these).
+#define MAP_SHARED 0x01  /* Share changes. */
+#define MAP_PRIVATE 0x02 /* Changes are private. */
+#define MAP_TYPE 0x0f    /* Mask for type of mapping. */
+
+// mmap() flags
+#define MAP_FIXED 0x10       /* Interpret addr exactly. */
+#define MAP_ANONYMOUS 0x20   /* Don't use a file. */
+#define MAP_POPULATE 0x08000 /* Populate (prefault) pagetables. */
+
 namespace valkyrie::kernel {
 
 // Forward declaration.
@@ -65,6 +81,8 @@ class Task {
   [[noreturn]] void do_exit(int error_code);
   long do_kill(pid_t pid, Signal signal);
   int do_signal(int signal, void (*handler)());
+  void *do_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset);
+  int do_munmap(void *addr, size_t len);
 
   void handle_pending_signals();
 
