@@ -9,11 +9,15 @@
 #include <Types.h>
 #include <Utility.h>
 
+#include <fs/ELF.h>
 #include <fs/File.h>
 #include <fs/Vnode.h>
 #include <mm/Page.h>
 #include <mm/VirtualMemoryMap.h>
 #include <proc/Signal.h>
+
+// XXX: Oh no...
+#define __user
 
 #define TASK_TIME_SLICE 64
 #define TASK_NAME_MAX_LEN 16
@@ -81,7 +85,14 @@ class Task {
   [[noreturn]] void do_exit(int error_code);
   long do_kill(pid_t pid, Signal signal);
   int do_signal(int signal, void (*handler)());
-  void *do_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset);
+  void __user *do_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset);
+  void __user *do_mmap_internal(void __user *addr,
+                                size_t len,
+                                int prot,
+                                int flags,
+                                SharedPtr<File> file,
+                                int file_offset,
+                                size_t zero_page_file_offset = -1);
   int do_munmap(void *addr, size_t len);
 
   void handle_pending_signals();
@@ -162,6 +173,12 @@ class Task {
   }
 
  private:
+  // Loads the specified ELF file into the virtual address space of this task.
+  // XXX: We should take `elf` by const reference...
+  bool load_elf_binary(SharedPtr<File> file, ELF &elf);
+  void map_elf_segment(SharedPtr<File> file, const ELF &elf, const ELF::Segment &segment);
+
+  // Copies the arguments into the bottom of the user stack of this task.
   size_t copy_arguments_to_user_stack(const char *const _argv[]);
 
   static Task *_init;

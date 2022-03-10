@@ -229,11 +229,15 @@ out:
 int Task::do_exec(const char *name, const char *const _argv[]) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
+  void *entry_point = nullptr;
+  const char *reason = nullptr;
+
   // Update task name
   strncpy(_name, name, TASK_NAME_MAX_LEN - 1);
 
   // Acquire a new page and use it as the user stack page.
   _ustack_page = get_free_page(/*physical=*/true);
+  _ustack_page.set_v_addr(reinterpret_cast<void *>(USER_STACK_PAGE));
 
   // Construct the argv chain on the user stack.
   // Currently `_ustack_page` and `user_sp` contains physical addresses.
@@ -249,42 +253,41 @@ int Task::do_exec(const char *name, const char *const _argv[]) {
 
   // Load the specified file from the filesystem.
   SharedPtr<File> file = VFS::the().open(name, 0);
+  ELF elf = ELF(file);
 
-  if (!file) {
-    printk("exec failed: pid = %d [%s]. No such file or directory\n", _pid, _name);
-    return -1;
+  if (!elf.exists()) {
+    reason = "No such file or directory";
+    goto failed;
   }
 
-  // Map .text, .bss and .data
-  ELF elf({file->vnode->get_content(), file->vnode->get_size()});
-
   if (!elf.is_valid()) {
+    reason = "Exec format error";
     goto failed;
   }
 
   // Release the vmmap, freeing the old _ustack_page.
   _vmmap.reset();
+  _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), USER_PAGE_RW);
 
-  _ustack_page.set_v_addr(reinterpret_cast<void *>(USER_STACK_PAGE));
-  _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), USER_PAGE_RWX);
-
-  elf.load(_vmmap);
+  // Invoke the kernel's ELF loader.
+  entry_point = elf.get_entry_point();
+  load_elf_binary(file, elf);
 
   VFS::the().close(move(file));
 
 #ifdef DEBUG
   printk(
-      "executing new program: %s <0x%x>, _kstack_page = 0x%x, _ustack_page = 0x%x, page_table "
-      "= 0x%x\n",
-      _name, elf.get_entry_point(), _kstack_page.begin(), _ustack_page.begin(),
+      "executing new program: %s <0x%p>, "
+      "_kstack_page = 0x%p, _ustack_page = 0x%p, page_table = 0x%p\n",
+      _name, entry_point, _kstack_page.begin(), _ustack_page.begin(),
       _vmmap.get_pgd());
 #endif
 
   // Jump to the entry point.
-  switch_to_user_mode(elf.get_entry_point(), user_sp, kernel_sp, _vmmap.get_pgd());
+  switch_to_user_mode(entry_point, user_sp, kernel_sp, _vmmap.get_pgd());
 
 failed:
-  printk("exec failed: pid = %d [%s]\n", _pid, _name);
+  printk("exec failed: pid = %d [%s]. %s\n", _pid, _name, reason);
   return -1;
 }
 
@@ -362,21 +365,38 @@ int Task::do_signal(int signal, void (*handler)()) {
   return 0;  // TODO: return previous handler's error code.
 }
 
-void *Task::do_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset) {
-  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+void __user *Task::do_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset) {
+  return do_mmap_internal(addr, len, prot, flags, get_file_by_fd(fd), file_offset);
+}
 
+void __user* Task::do_mmap_internal(void __user *addr,
+                                    size_t len,
+                                    int prot,
+                                    int flags,
+                                    SharedPtr<File> file,
+                                    int file_offset,
+                                    size_t zero_page_file_offset) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+  void __user* ret_err = reinterpret_cast<void *>(-1UL);
   size_t v_addr = reinterpret_cast<size_t>(addr);
+  size_t old_file_pos = 0;
+
+  // The user wants to create a file-backed memory mapping,
+  // but the specified `file` is invalid.
+  if (!(flags & MAP_ANONYMOUS) && !file) [[unlikely]] {
+    return ret_err;
+  }
 
   // XXX: Check whether the new region overlaps with existing regions.
-  if (v_addr && !Page::is_aligned(v_addr) && !(flags & MAP_FIXED)) {
-    return nullptr;
+  if (!(flags & MAP_FIXED) && v_addr && !Page::is_aligned(v_addr)) [[unlikely]] {
+    return ret_err;
   }
 
   // If `len` is not a multiple of the page size, rounds it up.
   len = Page::align_up(len);
 
   if (!v_addr) {
-    printk("Warning: do_mmap() addr == nullptr, not implemented yet!\n");
+    printk("Warning: do_mmap_internal(): addr == nullptr, not implemented yet!\n");
     v_addr = _vmmap.get_unmapped_area(len);
   } else {
     v_addr = Page::align_down(v_addr);
@@ -394,36 +414,120 @@ void *Task::do_mmap(void *addr, size_t len, int prot, int flags, int fd, int fil
     attr &= ~PD_EL0_EXEC_NEVER;
   }
 
+  if (!(flags & MAP_ANONYMOUS)) {
+    old_file_pos = file->pos;
+    file->pos = file_offset;
+  }
+
   // Allocate page frames and map them to the va_space of current user task.
-  void *begin = nullptr;
+  bool is_first_time_zeroing = true;
   for (size_t i = 0; len; i++, len -= PAGE_SIZE) {
     void *page_frame_addr = get_free_page(/*physical=*/true);
-    if (!begin) {
-      begin = page_frame_addr;
-    }
     _vmmap.map(v_addr + i * PAGE_SIZE, page_frame_addr, attr);
-  }
 
-  // If the region is mapped to a file, Copy the file’s content to the memory region.
-  if (!(flags & MAP_ANONYMOUS)) {
-    SharedPtr<File> file = get_file_by_fd(fd);
-
-    if (!file) [[unlikely]] {
-      return nullptr;
+    // If the region is mapped to a file, copy the file's content to the page frame.
+    if (!(flags & MAP_ANONYMOUS)) {
+      VFS::the().read(file, page_frame_addr, PAGE_SIZE);
     }
 
-    size_t old_pos = file->pos;
-    VFS::the().read(file, begin, PAGE_SIZE);
-    file->pos = old_pos;
+    if (zero_page_file_offset != static_cast<size_t>(-1) &&
+        file->pos + PAGE_SIZE >= zero_page_file_offset) {
+      char *dest = reinterpret_cast<char *>(page_frame_addr);
+      size_t size = PAGE_SIZE;
+
+      if (is_first_time_zeroing) {
+        dest += zero_page_file_offset & PAGE_MASK;
+        size -= zero_page_file_offset & PAGE_MASK;
+        is_first_time_zeroing = false;
+      }
+
+      memset(dest, 0, size);
+    }
   }
 
-  return reinterpret_cast<void *>(v_addr);
+  if (!(flags & MAP_ANONYMOUS)) {
+    file->pos = old_file_pos;
+  }
+
+  return reinterpret_cast<void __user *>(v_addr);
 }
 
-int Task::do_munmap(void *addr, size_t len) {
+int Task::do_munmap(void __user *addr, size_t len) {
   // XXX: Not implemented yet.
   return -1;
 }
+
+
+bool Task::load_elf_binary(SharedPtr<File> file, ELF &elf) {
+  if (!elf.is_valid()) [[unlikely]] {
+    return false;
+  }
+
+  for (auto &segment : elf.get_segments()) {
+    // We only need to load segments of the type PT_LOAD.
+    if (segment.type != ELF::SegmentType::LOAD) {
+      continue;
+    }
+
+#ifdef DEBUG
+    printk(" program header\n");
+    printk("   * type: 0x%x\n", segment.type);
+    printk("   * flags: 0x%x\n", segment.flags);
+    printk("   * file_offset: 0x%p\n", segment.file_offset);
+    printk("   * vaddr: 0x%p\n", segment.virtual_address);
+    printk("   * paddr: 0x%p\n", segment.physical_address);
+    printk("   * filesz: 0x%p\n", segment.physical_size);
+    printk("   * memsz: 0x%p\n", segment.virtual_size);
+    printk("   * align: 0x%p\n", segment.alignment);
+    printk("   * content: 0x%p\n", segment.get_content(elf.get_base()));
+#endif
+
+    map_elf_segment(file, elf, segment);
+  }
+
+  return true;
+}
+
+void Task::map_elf_segment(SharedPtr<File> file, const ELF &elf, const ELF::Segment &segment) {
+  if (segment.type != ELF::SegmentType::LOAD) [[unlikely]] {
+    printk("Warning: Task::map_elf_segment(): segment type is not PT_LOAD\n");
+    return;
+  }
+
+  // Note:
+  // 1. `addr` must be virtual due to the specification of mmap().
+  // 2. `bss_start` must be physical because we may manually zero out the .bss section later.
+  size_t v_addr = segment.virtual_address % PAGE_MASK;
+  size_t file_offset = segment.file_offset % PAGE_MASK;
+  size_t len = segment.file_offset % PAGE_SIZE + segment.physical_size;
+  int prot = 0;
+  int flags = MAP_PRIVATE;
+  size_t bss_file_offset = -1;
+
+  // Build mmap()'s prot.
+  prot |= (segment.flags & ELF::Segment::r) ? PROT_READ : 0;
+  prot |= (segment.flags & ELF::Segment::w) ? PROT_WRITE : 0;
+  prot |= (segment.flags & ELF::Segment::x) ? PROT_EXEC : 0;
+
+  // This usually happens when .bss and .data are in one LOAD segment, or .bss has
+  // its own LOAD segment. In this case, .data should still map to the ELF file
+  // but .bss should map to anonymous page frames by setting MAP_ANONYMOUS because
+  // it’s not backed by the ELF file.
+  if (segment.physical_size < segment.virtual_size) {
+    // This entire segment only contains .bss
+    if (segment.physical_size == 0) {
+      bss_file_offset = 0;
+      flags |= MAP_ANONYMOUS;
+    } else {
+      bss_file_offset = segment.physical_size;
+    }
+  }
+
+  // TODO: Handle non-PIE ELF as well.
+  void __user *addr = reinterpret_cast<void __user *>(ELF_DEFAULT_BASE + v_addr);
+  do_mmap_internal(addr, len, prot, flags, file, file_offset, bss_file_offset);
+}
+
 
 size_t Task::copy_arguments_to_user_stack(const char *const argv[]) {
   int argc = 0;

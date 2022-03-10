@@ -202,11 +202,11 @@ int sys_getcwd(char __user *buf) {
   return -1;
 }
 
-void *sys_mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset) {
+void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset) {
   return Task::current()->do_mmap(addr, len, prot, flags, fd, file_offset);
 }
 
-int sys_munmap(void *addr, size_t len) {
+int sys_munmap(void __user *addr, size_t len) {
   return Task::current()->do_munmap(addr, len);
 }
 

@@ -84,7 +84,7 @@ class Page {
   // Rounds up `addr` to the next page boundary.
   template <typename T>
   requires IsIntegral<T> || IsPointer<T>
-  static constexpr T align_up(T addr) {
+  static T align_up(T addr) {
     return (to_size_t(addr) + (PAGE_SIZE - 1)) & PAGE_MASK;
   }
 
