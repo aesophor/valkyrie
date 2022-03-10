@@ -107,7 +107,6 @@ class ELF {
     uint64_t entsize;    // Entry size if section holds table
   };
 
-
   ELF(SharedPtr<File> file)
       : _base(file ? file->vnode->get_content() : nullptr),
         _len(file ? file->vnode->get_size() : 0),
@@ -124,7 +123,6 @@ class ELF {
       ptr += _elf_header->phentsize;
     }
   }
-
 
   // TODO: Const correctness...
   List<Segment> &get_segments() {

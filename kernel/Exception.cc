@@ -88,7 +88,7 @@ void handle_page_fault() {
   } else {
     // Permission fault (trying to write to a read-only page)
     printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
-    Task::current()->do_exit(4);
+    Task::current()->exit(4);
   }
 
   switch_user_va_space(Task::current()->get_ttbr0_el1());

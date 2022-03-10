@@ -64,7 +64,8 @@ int sys_mount(const char __user *device_name, const char __user *mountpoint,
 int sys_umount(const char __user *mountpoint);
 int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev);
 int sys_getcwd(char __user *buf);
-void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset);
+void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd,
+                      int file_offset);
 int sys_munmap(void __user *addr, size_t len);
 
 inline bool is_syscall_id_valid(const uint64_t id) {

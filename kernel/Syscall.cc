@@ -104,22 +104,22 @@ int sys_close(int fd) {
 }
 
 int sys_fork() {
-  return Task::current()->do_fork();
+  return Task::current()->fork();
 }
 
 int sys_exec(const char __user *name, const char __user *argv[]) {
   name = copy_from_user<const char *>(name);
   argv = copy_from_user<const char **>(argv);
-  return Task::current()->do_exec(name, argv);
+  return Task::current()->exec(name, argv);
 }
 
 int sys_wait(int __user *wstatus) {
   wstatus = copy_from_user<int *>(wstatus);
-  return Task::current()->do_wait(wstatus);
+  return Task::current()->wait(wstatus);
 }
 
 [[noreturn]] void sys_exit(int error_code) {
-  Task::current()->do_exit(error_code);
+  Task::current()->exit(error_code);
 }
 
 int sys_getpid() {
@@ -132,11 +132,11 @@ int sys_sched_yield() {
 }
 
 long sys_kill(pid_t pid, int signal) {
-  return Task::current()->do_kill(pid, static_cast<Signal>(signal));
+  return Task::current()->kill(pid, static_cast<Signal>(signal));
 }
 
 int sys_signal(int signal, void(__user *handler)()) {
-  return Task::current()->do_signal(signal, handler);
+  return Task::current()->signal(signal, handler);
 }
 
 int sys_access(const char __user *pathname, int options) {
@@ -202,12 +202,13 @@ int sys_getcwd(char __user *buf) {
   return -1;
 }
 
-void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset) {
-  return Task::current()->do_mmap(addr, len, prot, flags, fd, file_offset);
+void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd,
+                      int file_offset) {
+  return Task::current()->mmap(addr, len, prot, flags, fd, file_offset);
 }
 
 int sys_munmap(void __user *addr, size_t len) {
-  return Task::current()->do_munmap(addr, len);
+  return Task::current()->munmap(addr, len);
 }
 
 }  // namespace valkyrie::kernel

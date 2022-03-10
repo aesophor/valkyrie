@@ -153,9 +153,9 @@ Task *Task::get_by_pid(const pid_t pid) {
   return nullptr;
 }
 
-int Task::do_fork() {
+int Task::fork() {
 #ifdef DEBUG
-  printk("do_fork(): Forking from: %s (pid = %d)\n", get_name(), get_pid());
+  printk("Task::fork(): Forking from: %s (pid = %d)\n", get_name(), get_pid());
 #endif
 
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
@@ -174,19 +174,19 @@ int Task::do_fork() {
   Task *child = task.get();
 
   if (!task) {
-    printk("do_fork: task object allocation failed (out of memory).\n");
+    printk("Task::fork(): task object allocation failed (out of memory).\n");
     ret = -1;
     goto out;
   }
 
   if (!task->_kstack_page.p_addr()) {
-    printk("do_fork: kernel stack allocation failed (out of memory).\n");
+    printk("Task::fork(): kernel stack allocation failed (out of memory).\n");
     ret = -1;
     goto out;
   }
 
   if (!task->_ustack_page.p_addr()) {
-    printk("do_fork: user stack allocation failed (out of memory).\n");
+    printk("Task::fork(): user stack allocation failed (out of memory).\n");
     ret = -1;
     goto out;
   }
@@ -226,7 +226,7 @@ out:
   return ret;
 }
 
-int Task::do_exec(const char *name, const char *const _argv[]) {
+int Task::exec(const char *name, const char *const _argv[]) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   void *entry_point = nullptr;
@@ -279,19 +279,18 @@ int Task::do_exec(const char *name, const char *const _argv[]) {
   printk(
       "executing new program: %s <0x%p>, "
       "_kstack_page = 0x%p, _ustack_page = 0x%p, page_table = 0x%p\n",
-      _name, entry_point, _kstack_page.begin(), _ustack_page.begin(),
-      _vmmap.get_pgd());
+      _name, entry_point, _kstack_page.begin(), _ustack_page.begin(), _vmmap.get_pgd());
 #endif
 
   // Jump to the entry point.
   switch_to_user_mode(entry_point, user_sp, kernel_sp, _vmmap.get_pgd());
 
 failed:
-  printk("exec failed: pid = %d [%s]. %s\n", _pid, _name, reason);
+  printk("Task::exec() failed: pid = %d [%s]. %s\n", _pid, _name, reason);
   return -1;
 }
 
-int Task::do_wait(int *wstatus) {
+int Task::wait(int *wstatus) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (!get_children_count()) {
@@ -314,7 +313,7 @@ int Task::do_wait(int *wstatus) {
   return ret;
 }
 
-[[noreturn]] void Task::do_exit(int error_code) {
+[[noreturn]] void Task::exit(int error_code) {
   if (!_parent) [[unlikely]] {
     Kernel::panic("Attempted to kill %s! exit code=0x%08x\n", _name, error_code);
   }
@@ -340,7 +339,7 @@ int Task::do_wait(int *wstatus) {
   Kernel::panic("sys_exit: returned from sched.\n");
 }
 
-long Task::do_kill(pid_t pid, Signal signal) {
+long Task::kill(pid_t pid, Signal signal) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Send a signal to `pid`.
@@ -353,7 +352,7 @@ long Task::do_kill(pid_t pid, Signal signal) {
   return -1;
 }
 
-int Task::do_signal(int signal, void (*handler)()) {
+int Task::signal(int signal, void (*handler)()) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (!is_signal_valid(signal)) [[unlikely]] {
@@ -365,19 +364,16 @@ int Task::do_signal(int signal, void (*handler)()) {
   return 0;  // TODO: return previous handler's error code.
 }
 
-void __user *Task::do_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset) {
-  return do_mmap_internal(addr, len, prot, flags, get_file_by_fd(fd), file_offset);
+void __user *Task::mmap(void __user *addr, size_t len, int prot, int flags, int fd,
+                        int file_offset) {
+  return do_mmap(addr, len, prot, flags, get_file_by_fd(fd), file_offset);
 }
 
-void __user* Task::do_mmap_internal(void __user *addr,
-                                    size_t len,
-                                    int prot,
-                                    int flags,
-                                    SharedPtr<File> file,
-                                    int file_offset,
-                                    size_t zero_page_file_offset) {
+void __user *Task::do_mmap(void __user *addr, size_t len, int prot, int flags,
+                           SharedPtr<File> file, int file_offset,
+                           size_t zero_page_file_offset) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
-  void __user* ret_err = reinterpret_cast<void *>(-1UL);
+  void __user *ret_err = reinterpret_cast<void *>(-1UL);
   size_t v_addr = reinterpret_cast<size_t>(addr);
   size_t old_file_pos = 0;
 
@@ -452,11 +448,10 @@ void __user* Task::do_mmap_internal(void __user *addr,
   return reinterpret_cast<void __user *>(v_addr);
 }
 
-int Task::do_munmap(void __user *addr, size_t len) {
+int Task::munmap(void __user *addr, size_t len) {
   // XXX: Not implemented yet.
   return -1;
 }
-
 
 bool Task::load_elf_binary(SharedPtr<File> file, ELF &elf) {
   if (!elf.is_valid()) [[unlikely]] {
@@ -525,9 +520,8 @@ void Task::map_elf_segment(SharedPtr<File> file, const ELF &elf, const ELF::Segm
 
   // TODO: Handle non-PIE ELF as well.
   void __user *addr = reinterpret_cast<void __user *>(ELF_DEFAULT_BASE + v_addr);
-  do_mmap_internal(addr, len, prot, flags, file, file_offset, bss_file_offset);
+  do_mmap(addr, len, prot, flags, file, file_offset, bss_file_offset);
 }
-
 
 size_t Task::copy_arguments_to_user_stack(const char *const argv[]) {
   int argc = 0;
@@ -651,7 +645,7 @@ bool Task::is_fd_valid(const int fd) const {
 
 [[noreturn]] void start_init() {
   const char *argv[] = {INIT_PATH, nullptr};
-  Task::current()->do_exec(INIT_PATH, argv);
+  Task::current()->exec(INIT_PATH, argv);
 
   // sys_exec() shouldn't have returned.
   Kernel::panic("no working init found.\n");
@@ -660,7 +654,7 @@ bool Task::is_fd_valid(const int fd) const {
 [[noreturn]] void start_kthreadd() {
   while (true) {
     // Wait for any kthread to terminate.
-    Task::current()->do_wait(nullptr);
+    Task::current()->wait(nullptr);
     TaskScheduler::the().schedule();
   }
 }

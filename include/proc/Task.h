@@ -79,21 +79,18 @@ class Task {
   static List<Task *> get_active_tasks();
   static Task *get_by_pid(const pid_t pid);
 
-  int do_fork();
-  int do_exec(const char *name, const char *const _argv[]);
-  int do_wait(int *wstatus);
-  [[noreturn]] void do_exit(int error_code);
-  long do_kill(pid_t pid, Signal signal);
-  int do_signal(int signal, void (*handler)());
-  void __user *do_mmap(void __user *addr, size_t len, int prot, int flags, int fd, int file_offset);
-  void __user *do_mmap_internal(void __user *addr,
-                                size_t len,
-                                int prot,
-                                int flags,
-                                SharedPtr<File> file,
-                                int file_offset,
-                                size_t zero_page_file_offset = -1);
-  int do_munmap(void *addr, size_t len);
+  int fork();
+  int exec(const char *name, const char *const _argv[]);
+  int wait(int *wstatus);
+  [[noreturn]] void exit(int error_code);
+  long kill(pid_t pid, Signal signal);
+  int signal(int signal, void (*handler)());
+  void __user *mmap(void __user *addr, size_t len, int prot, int flags, int fd,
+                    int file_offset);
+  void __user *do_mmap(void __user *addr, size_t len, int prot, int flags,
+                       SharedPtr<File> file, int file_offset,
+                       size_t zero_page_file_offset = -1);
+  int munmap(void *addr, size_t len);
 
   void handle_pending_signals();
 

@@ -36,6 +36,7 @@ class Mailbox : public Singleton<Mailbox> {
 
   // Because only upper 28 bits of message address could be passed,
   // the message array should be correctly aligned.
+  // clang-format off
   struct [[gnu::packed, gnu::aligned(0x10)]] Message {
     uint32_t buf_size;               // buffer size (in bytes)
     uint32_t buf_req_resp_code;      // request/response code
@@ -44,6 +45,7 @@ class Mailbox : public Singleton<Mailbox> {
     uint32_t tag_req_resp_code;
     uint32_t value_buf[VALUE_BUF_SIZE];  // value buffer
   } _msg;
+  // clang-format on
 };
 
 }  // namespace valkyrie::kernel
