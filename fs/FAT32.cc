@@ -25,7 +25,6 @@ FAT32::FAT32(DiskPartition &disk_partition)
     : _disk_partition(disk_partition),
       _metadata(disk_partition),
       _nr_fat_entries_per_sector(_metadata.bytes_per_sector / sizeof(uint32_t)),
-      _next_inode_index(0),
       _root_inode(make_shared<FAT32Inode>(*this, "/", _metadata.root_cluster, FAT32_EOC_MAX, 0,
                                           0, S_IFDIR, 0, 0)) {}
 
@@ -225,7 +224,7 @@ FAT32::BootSector::BootSector(DiskPartition &disk_partition) {
 FAT32Inode::FAT32Inode(FAT32 &fs, const String &name, uint32_t first_cluster_number,
                        uint32_t parent_cluster_number, uint32_t parent_cluster_offset,
                        off_t size, mode_t mode, uid_t uid, gid_t gid)
-    : Vnode(fs._next_inode_index++, size, mode, uid, gid),
+    : Vnode(VFS::the().get_next_inode_idx(), size, mode, uid, gid),
       _fs(fs),
       _name(name),
       _first_cluster_number(first_cluster_number),

@@ -173,7 +173,6 @@ class FAT32 final : public FileSystem {
   DiskPartition &_disk_partition;
   const BootSector _metadata;
   int _nr_fat_entries_per_sector;
-  int _next_inode_index;
   SharedPtr<FAT32Inode> _root_inode;
 };
 

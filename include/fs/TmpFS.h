@@ -26,7 +26,6 @@ class TmpFS final : public FileSystem {
   virtual SharedPtr<Vnode> get_root_vnode() override;
 
  private:
-  uint64_t _next_inode_index;
   SharedPtr<TmpFSInode> _root_inode;
 };
 

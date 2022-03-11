@@ -54,8 +54,18 @@ class VFS : public Singleton<VFS> {
   // The API for each device to register itself to the VFS.
   [[nodiscard]] dev_t register_device(Device &device);
 
-  [[nodiscard]] FileSystem &get_rootfs();
-  [[nodiscard]] List<SharedPtr<File>> &get_opened_files();
+  [[nodiscard]] uint64_t get_next_inode_idx() {
+    return _next_inode_idx++;
+  }
+
+  [[nodiscard]] FileSystem &get_rootfs() {
+    return *(_mounts.front()->guest_fs);
+  }
+
+  [[nodiscard]] List<SharedPtr<File>> &get_opened_files() {
+    return _opened_files;
+  }
+
   [[nodiscard]] SharedPtr<Vnode> get_host_vnode(SharedPtr<Vnode> vnode);
 
  protected:
@@ -72,7 +82,8 @@ class VFS : public Singleton<VFS> {
 
   [[nodiscard]] SharedPtr<Vnode> get_mounted_vnode_or_host_vnode(SharedPtr<Vnode> vnode);
 
-  static uint32_t _next_dev_major;
+  uint64_t _next_inode_idx;
+  uint64_t _next_dev_major;
 
   List<UniquePtr<Mount>> _mounts;
   List<SharedPtr<File>> _opened_files;  // FIXME: replace it with a HashMap (?)

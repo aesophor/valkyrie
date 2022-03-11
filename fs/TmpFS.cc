@@ -11,8 +11,7 @@
 namespace valkyrie::kernel {
 
 TmpFS::TmpFS()
-    : _next_inode_index(1),
-      _root_inode(make_shared<TmpFSInode>(*this, nullptr, "/", nullptr, 0, S_IFDIR, 0, 0)) {}
+    : _root_inode(make_shared<TmpFSInode>(*this, nullptr, "/", nullptr, 0, S_IFDIR, 0, 0)) {}
 
 SharedPtr<Vnode> TmpFS::get_root_vnode() {
   return _root_inode;
@@ -20,7 +19,7 @@ SharedPtr<Vnode> TmpFS::get_root_vnode() {
 
 TmpFSInode::TmpFSInode(TmpFS &fs, SharedPtr<TmpFSInode> parent, const String &name,
                        const char *content, off_t size, mode_t mode, uid_t uid, gid_t gid)
-    : Vnode(fs._next_inode_index++, size, mode, uid, gid),
+    : Vnode(VFS::the().get_next_inode_idx(), size, mode, uid, gid),
       _fs(fs),
       _name(name),
       _content(),

@@ -30,7 +30,6 @@ class ProcFS final : public FileSystem {
   void repopulate_task_directories();
 
  private:
-  uint64_t _next_inode_index;
   SharedPtr<ProcFSInode> _root_inode;
 };
 

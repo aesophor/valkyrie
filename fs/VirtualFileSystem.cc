@@ -19,9 +19,13 @@
 
 namespace valkyrie::kernel {
 
-uint32_t VFS::_next_dev_major = 1;
-
-VFS::VFS() : _mounts(), _opened_files(), _storage_devices(), _registered_devices() {}
+VFS::VFS()
+    : _next_inode_idx(),
+      _next_dev_major(1),
+      _mounts(),
+      _opened_files(),
+      _storage_devices(),
+      _registered_devices() {}
 
 void VFS::mount_rootfs() {
   // TODO: currently it only supports SD card.
@@ -495,14 +499,6 @@ Device *VFS::find_registered_device(dev_t dev) {
       [dev](const auto &entry) { return Device::major(dev) == Device::major(entry.first); });
 
   return (it != _registered_devices.end()) ? it->second : nullptr;
-}
-
-FileSystem &VFS::get_rootfs() {
-  return *(_mounts.front()->guest_fs);
-}
-
-List<SharedPtr<File>> &VFS::get_opened_files() {
-  return _opened_files;
 }
 
 SharedPtr<Vnode> VFS::get_host_vnode(SharedPtr<Vnode> guest_vnode) {

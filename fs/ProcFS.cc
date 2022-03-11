@@ -23,9 +23,7 @@ auto all_digits = [](const String &s) {
 
 }  // namespace
 
-ProcFS::ProcFS()
-    : _next_inode_index(1),
-      _root_inode(make_shared<ProcFSInode>(*this, nullptr, "/", S_IFDIR)) {
+ProcFS::ProcFS() : _root_inode(make_shared<ProcFSInode>(*this, nullptr, "/", S_IFDIR)) {
   // Lab 6: elective 3.1
   // The procfs creates switch and hello file in its root directory.
   // Users can access them by open, read, and write.
@@ -67,7 +65,7 @@ void ProcFS::repopulate_task_directories() {
 
 ProcFSInode::ProcFSInode(ProcFS &fs, SharedPtr<ProcFSInode> parent, const String &name,
                          mode_t mode)
-    : Vnode(fs._next_inode_index++, 0, mode, 0, 0),
+    : Vnode(VFS::the().get_next_inode_idx(), 0, mode, 0, 0),
       _fs(fs),
       _name(name),
       _content(),
