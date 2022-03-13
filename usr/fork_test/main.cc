@@ -3,18 +3,18 @@
 
 void fork_test() {
   printf("Fork Test, pid %d\n", getpid());
-  int cnt = 1;
-  int ret = 0;
+  size_t cnt = 1;
+  size_t ret = 0;
 
   int wstatus;
   int pid;
 
   if ((ret = fork()) == 0) {  // child
-    printf("pid: %d, cnt: %d, ptr: 0x%x\n", getpid(), cnt, &cnt);
+    printf("pid: %d, cnt: %d, ptr: 0x%p\n", getpid(), cnt, &cnt);
     ++cnt;
     fork();
     while (cnt < 5) {
-      printf("pid: %d, cnt: %d, ptr: 0x%x\n", getpid(), cnt, &cnt);
+      printf("pid: %d, cnt: %d, ptr: 0x%p\n", getpid(), cnt, &cnt);
       ++cnt;
     }
     printf("child terminating...\n");
@@ -27,7 +27,7 @@ void fork_test() {
   }
   asm volatile("mov %0, sp" : "=r"(cnt));
   asm volatile("mov %0, lr" : "=r"(ret));
-  printf("SP = 0x%x, LR = 0x%x\n", cnt, ret);
+  printf("SP = 0x%p, LR = 0x%p\n", cnt, ret);
 }
 
 int main(int argc, char **argv) {
