@@ -120,11 +120,7 @@ bool VMMap::is_cow_page(const size_t v_addr) const {
 
   pagetable_t *pte = walk(v_addr);
 
-  if (!pte) [[unlikely]] {
-    Kernel::panic("VMMap::map: v_addr: 0x%p has not been mapped yet...\n", v_addr);
-  }
-
-  return *pte & PD_COW_PAGE;
+  return pte && *pte & PD_COW_PAGE;
 }
 
 void *VMMap::get_physical_address(const void *const __v_addr) const {
