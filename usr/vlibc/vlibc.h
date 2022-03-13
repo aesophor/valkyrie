@@ -51,6 +51,7 @@ int umount(const char *mountpoint);
 int getcwd(char *buf);
 void *mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset);
 int munmap(void *addr, size_t len);
+
 }
 
 #endif  // VALKYRIE_LIBC_H_
