@@ -421,6 +421,9 @@ void __user *Task::do_mmap(void __user *addr, size_t len, int prot, int flags,
     void *page_frame_addr = get_free_page(/*physical=*/true);
     _vmmap.map(v_addr + i * PAGE_SIZE, page_frame_addr, attr);
 
+    // POSIX requires that mmap() zero any memory that it allocates.
+    memset(page_frame_addr, 0, PAGE_SIZE);
+
     // If the region is mapped to a file, copy the file's content to the page frame.
     if (!(flags & MAP_ANONYMOUS)) {
       VFS::the().read(file, page_frame_addr, PAGE_SIZE);
