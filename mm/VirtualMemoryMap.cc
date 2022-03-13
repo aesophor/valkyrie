@@ -148,19 +148,19 @@ void VMMap::copy_page_frame(const size_t v_addr) const {
     Kernel::panic("copy_page_frame(): page directory / entry doesn't exist?");
   }
 
-  void *old_page_frame = reinterpret_cast<void *>(*pte & PD_PAGE_MASK);
   auto &mm = MemoryManager::the();
+  void *old_page_frame = reinterpret_cast<void *>(*pte & PD_PAGE_MASK);
+  size_t old_attr = *pte & PD_ATTR_MASK;
 
   if (mm.get_page_ref_count(old_page_frame) == 1) {
-    // *pte &= ~PD_COW_PAGE;
-    // *pte |= USER_PAGE_RWX;
-    size_t addr = *pte & PD_PAGE_MASK;
-    *pte = addr | USER_PAGE_RWX;
+    *pte &= ~PD_COW_PAGE;
+    *pte &= ~PD_RDONLY;
   } else {
     void *new_page_frame = get_free_page(true);
     memcpy(new_page_frame, old_page_frame, PAGE_SIZE);
 
-    *pte = reinterpret_cast<size_t>(new_page_frame) | USER_PAGE_RWX;
+    *pte = reinterpret_cast<size_t>(new_page_frame) | old_attr;
+    *pte &= ~PD_RDONLY;
 
     mm.dec_page_ref_count(old_page_frame);
     mm.inc_page_ref_count(new_page_frame);
