@@ -341,7 +341,18 @@ int Task::wait(int *wstatus) {
   Kernel::panic("sys_exit: returned from sched.\n");
 }
 
+long Task::kill(Signal signal) {
+  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
+
+  _pending_signals.push_back(signal);
+  return 0;
+}
+
 long Task::kill(pid_t pid, Signal signal) {
+  if (pid == _pid) {
+    return kill(signal);
+  }
+
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Send a signal to `pid`.
@@ -606,8 +617,11 @@ void Task::handle_pending_signals() {
     }
 
     if (_custom_signal_handlers[signal]) {
+      // TODO: Custom signal handlers should be run in the user mode.
+      // Implement sys_sigreturn().
       _custom_signal_handlers[signal]();
     } else {
+      // The default signal handlers can be finished in kernel mode.
       invoke_default_signal_handler(signal);
     }
   }

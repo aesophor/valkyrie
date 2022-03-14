@@ -82,6 +82,7 @@ class Task {
   int exec(const char *name, const char *const _argv[]);
   int wait(int *wstatus);
   [[noreturn]] void exit(int error_code);
+  long kill(Signal signal);
   long kill(pid_t pid, Signal signal);
   int signal(int signal, void (*handler)());
   void __user *mmap(void __user *addr, size_t len, int prot, int flags, int fd,

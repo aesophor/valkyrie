@@ -80,15 +80,15 @@ void handle_syscall(TrapFrame *trap_frame) {
 void handle_page_fault() {
   switch_user_va_space(nullptr);
 
+  auto task = Task::current();
   size_t fault_page_addr = get_fault_page_addr();
 
-  if (Task::current()->get_vmmap().is_cow_page(fault_page_addr)) {
+  if (task->get_vmmap().is_cow_page(fault_page_addr)) {
     // Writing to a Copy-on-Write page, copy page frame and update PTE for current task.
-    Task::current()->get_vmmap().copy_page_frame(fault_page_addr);
+    task->get_vmmap().copy_page_frame(fault_page_addr);
   } else {
     // Permission fault (trying to write to a read-only page)
-    printf("segmentation fault (pid: %d)\n", Task::current()->get_pid());
-    Task::current()->exit(4);
+    task->kill(Signal::SIGSEGV);
   }
 
   switch_user_va_space(Task::current()->get_ttbr0_el1());
@@ -142,6 +142,9 @@ void handle_irq(TrapFrame *trap_frame) {
   TimerMultiplexer::the().tick();
   TaskScheduler::the().tick();
   TaskScheduler::the().maybe_schedule();
+
+  // Handle pending POSIX signals.
+  Task::current()->handle_pending_signals();
 
   // A timer IRQ can come from either kernel or user mode, so
   // we only need to restore ttbr0_el1 if we're returning to user mode.
