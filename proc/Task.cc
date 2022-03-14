@@ -341,31 +341,27 @@ int Task::wait(int *wstatus) {
   Kernel::panic("sys_exit: returned from sched.\n");
 }
 
-long Task::kill(Signal signal) {
-  const LockGuard<RecursiveMutex> lock(Kernel::mutex);
-
-  _pending_signals.push_back(signal);
-  return 0;
-}
-
 long Task::kill(pid_t pid, Signal signal) {
-  if (pid == _pid) {
-    return kill(signal);
+  if (!is_signal_valid(signal)) [[unlikely]] {
+    printk("Task::kill(): invalid signal: 0x%x\n", signal);
+    return -1;
   }
 
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   // Send a signal to `pid`.
-  if (auto task = Task::get_by_pid(pid)) {
-    task->_pending_signals.push_back(signal);
-    return 0;
+  Task *task = pid == _pid ? this : Task::get_by_pid(pid);
+
+  if (!task) [[unlikely]] {
+    printk("sys_kill: failed (pid %d not found)\n", pid);
+    return -1;
   }
 
-  printk("sys_kill: failed (pid %d not found)\n", pid);
-  return -1;
+  task->_pending_signals.push_back(signal);
+  return 0;
 }
 
-int Task::signal(int signal, void (*handler)()) {
+int Task::signal(int signal, void (*handler)(int)) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
   if (!is_signal_valid(signal)) [[unlikely]] {
@@ -616,15 +612,25 @@ void Task::handle_pending_signals() {
       Kernel::panic("invalid signal: 0x%x\n", signal);
     }
 
-    if (_custom_signal_handlers[signal]) {
-      // TODO: Custom signal handlers should be run in the user mode.
-      // Implement sys_sigreturn().
-      _custom_signal_handlers[signal]();
+    if (!_custom_signal_handlers[signal]) {
+      execute_default_signal_handler(signal);
     } else {
-      // The default signal handlers can be finished in kernel mode.
-      invoke_default_signal_handler(signal);
+      execute_custom_signal_handler(signal);
     }
   }
+}
+
+void Task::execute_default_signal_handler(const Signal signal) {
+  // The default signal handlers can be finished in kernel mode.
+  __default_signal_handler_table[signal](signal);
+}
+
+void Task::execute_custom_signal_handler(const Signal signal) {
+  // Custom signal handlers should be run in the user mode.
+  // TODO: pass `signal` to the user's custom signal handler.
+  Kernel::panic("not implemented yet!\n");
+  //void *signal_handler = reinterpret_cast<void *>(_custom_signal_handlers[signal]);
+  //switch_to_user_mode(signal_handler, 0, 0, _vmmap.get_pgd());
 }
 
 int Task::allocate_fd_for_file(SharedPtr<File> file) {

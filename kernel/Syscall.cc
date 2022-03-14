@@ -36,6 +36,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
     SYSCALL_DECL(sys_getcwd),
     SYSCALL_DECL(sys_mmap),
     SYSCALL_DECL(sys_munmap),
+    SYSCALL_DECL(sys_sigreturn),
 };
 // clang-format on
 
@@ -135,7 +136,7 @@ long sys_kill(pid_t pid, int signal) {
   return Task::current()->kill(pid, static_cast<Signal>(signal));
 }
 
-int sys_signal(int signal, void(__user *handler)()) {
+int sys_signal(int signal, void(__user *handler)(int)) {
   return Task::current()->signal(signal, handler);
 }
 
@@ -209,6 +210,10 @@ void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd
 
 int sys_munmap(void __user *addr, size_t len) {
   return Task::current()->munmap(addr, len);
+}
+
+int sys_sigreturn() {
+  return -1;
 }
 
 }  // namespace valkyrie::kernel

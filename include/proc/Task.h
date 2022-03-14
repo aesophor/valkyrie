@@ -82,9 +82,8 @@ class Task {
   int exec(const char *name, const char *const _argv[]);
   int wait(int *wstatus);
   [[noreturn]] void exit(int error_code);
-  long kill(Signal signal);
   long kill(pid_t pid, Signal signal);
-  int signal(int signal, void (*handler)());
+  int signal(int signal, void (*handler)(int));
   void __user *mmap(void __user *addr, size_t len, int prot, int flags, int fd,
                     int file_offset);
   void __user *do_mmap(void __user *addr, size_t len, int prot, int flags,
@@ -92,7 +91,10 @@ class Task {
                        size_t zero_page_file_offset = -1);
   int munmap(void *addr, size_t len);
 
+  // POSIX signals
   void handle_pending_signals();
+  void execute_default_signal_handler(const Signal signal);
+  void execute_custom_signal_handler(const Signal signal);
 
   int allocate_fd_for_file(SharedPtr<File> file);
   SharedPtr<File> release_fd_and_get_file(const int fd);
@@ -224,7 +226,7 @@ class Task {
 
   // POSIX signals
   List<Signal> _pending_signals;
-  void (*_custom_signal_handlers[Signal::__NR_signals])();
+  SignalHandler _custom_signal_handlers[Signal::__NR_signals];
 
   // Per-process file descriptors
   SharedPtr<File> _fd_table[NR_TASK_FD_LIMITS];

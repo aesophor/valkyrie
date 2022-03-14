@@ -35,6 +35,7 @@ enum Syscall {
   SYS_GETCWD,
   SYS_MMAP,
   SYS_MUNMAP,
+  SYS_SIGRETURN,
   __NR_syscall
 };
 
@@ -53,7 +54,7 @@ int sys_getpid();
 int sys_wait(int __user *wstatus);
 int sys_sched_yield();
 long sys_kill(pid_t pid, int signal);
-int sys_signal(int signal, void(__user *handler)());
+int sys_signal(int signal, void(__user *handler)(int));
 int sys_access(const char __user *pathname, int options);
 int sys_chdir(const char __user *pathname);
 int sys_mkdir(const char __user *pathname);
@@ -67,6 +68,7 @@ int sys_getcwd(char __user *buf);
 void __user *sys_mmap(void __user *addr, size_t len, int prot, int flags, int fd,
                       int file_offset);
 int sys_munmap(void __user *addr, size_t len);
+int sys_sigreturn();
 
 inline bool is_syscall_id_valid(const uint64_t id) {
   return id < Syscall::__NR_syscall;

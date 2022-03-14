@@ -8,10 +8,10 @@ namespace valkyrie::kernel {
 #define UNDEFINED sig_unsupported_handler
 
 // clang-format off
-void (*__default_signal_handler_table[Signal::__NR_signals])() = {
+void (*__default_signal_handler_table[Signal::__NR_signals])(int) = {
     UNDEFINED,
     UNDEFINED,
-    sigint_default_handler,
+    UNDEFINED,
     UNDEFINED,
     UNDEFINED,
     UNDEFINED,
@@ -24,23 +24,20 @@ void (*__default_signal_handler_table[Signal::__NR_signals])() = {
 };
 // clang-format on
 
-void sigint_default_handler() {
-  sig_unsupported_handler();
-}
 
-void sigkill_default_handler() {
-  printk("sigkill handler... suiciding\n");
+void sigkill_default_handler(int signal) {
+  printf("sigkill handler... suiciding\n");
   Task::current()->exit(Signal::SIGKILL);
 }
 
-void sigsegv_default_handler() {
+void sigsegv_default_handler(int signal) {
   auto task = Task::current();
 
-  printk("segmentation fault (pid: %d)\n", task->get_pid());
+  printf("segmentation fault (pid: %d)\n", task->get_pid());
   task->exit(139);
 }
 
-void sig_unsupported_handler() {
+void sig_unsupported_handler(int signal) {
   printk("this signal is not supported yet @_@\n");
 }
 

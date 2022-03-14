@@ -1,18 +1,18 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 //
-// va_space.S - switch virtual address space
+// do_exec.S - switch to user mode and continue execution there.
 
 .section ".text"
 .global switch_to_user_mode
 switch_to_user_mode:
-  msr ELR_EL1, x0
-  msr SP_EL0, x1
+  msr elr_el1, x0
+  msr sp_el0, x1
   mov x4, #0
-  msr SPSR_EL1, x4
+  msr spsr_el1, x4
   mov SP, x2
 
   dsb ish
-  msr TTBR0_EL1, x3
+  msr ttbr0_el1, x3
   tlbi vmalle1is
   dsb ish
   isb

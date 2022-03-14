@@ -88,7 +88,7 @@ void handle_page_fault() {
     task->get_vmmap().copy_page_frame(fault_page_addr);
   } else {
     // Permission fault (trying to write to a read-only page)
-    task->kill(Signal::SIGSEGV);
+    task->kill(task->get_pid(), Signal::SIGSEGV);
   }
 
   switch_user_va_space(Task::current()->get_ttbr0_el1());

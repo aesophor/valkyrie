@@ -18,6 +18,8 @@
 #define MAP_ANONYMOUS 0x20   /* Don't use a file. */
 #define MAP_POPULATE 0x08000 /* Populate (prefault) pagetables. */
 
+#define SIGSEGV 11
+
 #define assert(pred)                \
   do {                              \
     if (!(pred)) {                  \
@@ -40,7 +42,7 @@ int getpid();
 int wait(int *wstatus);
 int sched_yield();
 long kill(pid_t pid, int signal);
-int signal(int signal, void (*handler)());
+int signal(int signal, void (*handler)(int));
 int access(const char *pathname, int options);
 int chdir(const char *pathname);
 int mkdir(const char *pathname);
@@ -51,6 +53,9 @@ int umount(const char *mountpoint);
 int getcwd(char *buf);
 void *mmap(void *addr, size_t len, int prot, int flags, int fd, int file_offset);
 int munmap(void *addr, size_t len);
+int sigreturn();
+
+[[noreturn]] void __restore_rt();
 
 }
 

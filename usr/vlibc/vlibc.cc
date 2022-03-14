@@ -5,6 +5,10 @@ extern "C" [[noreturn]] void _start() {
   // Prepare argc and argv
   asm volatile(
       "ldp x0, x1, [sp] \n\
-                bl main          \n\
-                b  exit            ");
+                bl main \n\
+                b  exit ");
+}
+
+extern "C" [[noreturn]] void __restore_rt() {
+  sigreturn();
 }
