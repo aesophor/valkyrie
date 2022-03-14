@@ -229,27 +229,11 @@ out:
 int Task::exec(const char *name, const char *const _argv[]) {
   const LockGuard<RecursiveMutex> lock(Kernel::mutex);
 
+  size_t kernel_sp = 0;
+  size_t user_sp = 0;
   void *entry_point = nullptr;
   const char *reason = nullptr;
-
-  // Update task name
-  strncpy(_name, name, TASK_NAME_MAX_LEN - 1);
-
-  // Acquire a new page and use it as the user stack page.
-  _ustack_page = get_free_page(/*physical=*/true);
-  _ustack_page.set_v_addr(reinterpret_cast<void *>(USER_STACK_PAGE));
-
-  // Construct the argv chain on the user stack.
-  // Currently `_ustack_page` and `user_sp` contains physical addresses.
-  size_t user_sp = copy_arguments_to_user_stack(_argv);
-  size_t kernel_sp = KERNEL_VA_BASE + _kstack_page.end();
-
-  // Convert `user_sp` to virtual addresses.
-  size_t offset = _ustack_page.offset_of(user_sp);
-  user_sp = USER_STACK_PAGE + offset;
-
-  // Reset the stack pointer.
-  _context.sp = user_sp;
+  Page new_ustack_page = nullptr;
 
   // Load the specified file from the filesystem.
   SharedPtr<File> file = VFS::the().open(name, 0);
@@ -265,9 +249,27 @@ int Task::exec(const char *name, const char *const _argv[]) {
     goto failed;
   }
 
+  // Update task name
+  strncpy(_name, name, TASK_NAME_MAX_LEN - 1);
+
+  // Acquire a new page and use it as the user stack page.
+  new_ustack_page = get_free_page(/*physical=*/true);
+  new_ustack_page.set_v_addr(reinterpret_cast<void *>(USER_STACK_PAGE));
+
+  // Construct the argv chain on the user stack. `user_sp` is physical here.
+  user_sp = copy_arguments_to_user_stack(_argv);
+
+  // Convert both `kernel_sp` and `user_sp` to virtual addresses.
+  kernel_sp = KERNEL_VA_BASE + _kstack_page.end();
+  user_sp = USER_STACK_PAGE + _ustack_page.offset_of(user_sp);
+
+  // Reset the stack pointer.
+  _context.sp = user_sp;
+
   // Release the vmmap, freeing the old _ustack_page.
   _vmmap.reset();
   _vmmap.map(USER_STACK_PAGE, _ustack_page.p_addr(), USER_PAGE_RW);
+  _ustack_page = new_ustack_page;
 
   // Invoke the kernel's ELF loader.
   entry_point = elf.get_entry_point();
