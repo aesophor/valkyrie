@@ -2,7 +2,6 @@
 #ifndef VALKYRIE_CHARACTER_DEVICE_H_
 #define VALKYRIE_CHARACTER_DEVICE_H_
 
-#include <Memory.h>
 #include <TypeTraits.h>
 
 #include <dev/Device.h>

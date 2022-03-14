@@ -2,7 +2,6 @@
 #ifndef VALKYRIE_BLOCK_DEVICE_H_
 #define VALKYRIE_BLOCK_DEVICE_H_
 
-#include <Memory.h>
 #include <TypeTraits.h>
 
 #include <dev/Device.h>
