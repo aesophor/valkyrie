@@ -547,7 +547,7 @@ size_t Task::copy_arguments_to_user_stack(const char *const argv[]) {
 
   // Copy all `argv` to kernel heap.
   for (int i = 0; i < argc; i++) {
-    strings[i] = copy_from_user<const char *>(argv[i]);
+    strings[i] = v2p(argv[i]);
   }
 
   // Actually copy all C strings to user stack, at the meanwhile save the new

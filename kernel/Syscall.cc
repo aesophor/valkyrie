@@ -40,7 +40,7 @@ const size_t __syscall_table[Syscall::__NR_syscall] = {
 // clang-format on
 
 int sys_read(int fd, void __user *buf, size_t count) {
-  buf = copy_from_user<void *>(buf);
+  buf = Task::current()->v2p(buf);
 
   // TODO: define stdin...
   if (fd == 0) {
@@ -58,7 +58,7 @@ int sys_read(int fd, void __user *buf, size_t count) {
 }
 
 int sys_write(int fd, const void __user *buf, size_t count) {
-  buf = copy_from_user<const void *>(buf);
+  buf = Task::current()->v2p(buf);
 
   // TODO: define stdout and stderr...
   if (fd == 1 || fd == 2) {
@@ -76,7 +76,7 @@ int sys_write(int fd, const void __user *buf, size_t count) {
 }
 
 int sys_open(const char __user *pathname, int options) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
 
   SharedPtr<File> file = VFS::the().open(pathname, options);
 
@@ -108,13 +108,13 @@ int sys_fork() {
 }
 
 int sys_exec(const char __user *name, const char __user *argv[]) {
-  name = copy_from_user<const char *>(name);
-  argv = copy_from_user<const char **>(argv);
+  name = Task::current()->v2p(name);
+  argv = Task::current()->v2p(argv);
   return Task::current()->exec(name, argv);
 }
 
 int sys_wait(int __user *wstatus) {
-  wstatus = copy_from_user<int *>(wstatus);
+  wstatus = Task::current()->v2p(wstatus);
   return Task::current()->wait(wstatus);
 }
 
@@ -140,12 +140,12 @@ int sys_signal(int signal, void(__user *handler)()) {
 }
 
 int sys_access(const char __user *pathname, int options) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
   return VFS::the().access(pathname, options);
 }
 
 int sys_chdir(const char __user *pathname) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
 
   auto &vfs = VFS::the();
 
@@ -165,36 +165,36 @@ int sys_chdir(const char __user *pathname) {
 }
 
 int sys_mkdir(const char __user *pathname) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
   return VFS::the().mkdir(pathname);
 }
 
 int sys_rmdir(const char __user *pathname) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
   return VFS::the().rmdir(pathname);
 }
 
 int sys_unlink(const char __user *pathname) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
   return VFS::the().unlink(pathname);
 }
 
 int sys_mount(const char __user *device_name, const char __user *mountpoint,
               const char __user *fs_name) {
-  device_name = copy_from_user<const char *>(device_name);
-  mountpoint = copy_from_user<const char *>(mountpoint);
-  fs_name = copy_from_user<const char *>(fs_name);
+  device_name = Task::current()->v2p(device_name);
+  mountpoint = Task::current()->v2p(mountpoint);
+  fs_name = Task::current()->v2p(fs_name);
 
   return VFS::the().mount(device_name, mountpoint, fs_name);
 }
 
 int sys_umount(const char __user *mountpoint) {
-  mountpoint = copy_from_user<const char *>(mountpoint);
+  mountpoint = Task::current()->v2p(mountpoint);
   return VFS::the().umount(mountpoint);
 }
 
 int sys_mknod(const char __user *pathname, mode_t mode, dev_t dev) {
-  pathname = copy_from_user<const char *>(pathname);
+  pathname = Task::current()->v2p(pathname);
   return VFS::the().mknod(pathname, mode, dev);
 }
 

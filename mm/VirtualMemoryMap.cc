@@ -73,7 +73,7 @@ VMMap::pagetable_t *VMMap::walk(const size_t v_addr, bool create_pte) const {
   return &pt[pt_index];
 }
 
-void VMMap::map(const size_t v_addr, const void *p_addr, size_t attr) const {
+void VMMap::map(const size_t v_addr, const void *const p_addr, size_t attr) const {
 #ifdef DEBUG
   printk("[%s] VMMap::map: v_addr = 0x%p, p_addr = 0x%p\n", Task::current()->get_name(),
          v_addr, p_addr);
@@ -123,9 +123,7 @@ bool VMMap::is_cow_page(const size_t v_addr) const {
   return pte && *pte & PD_COW_PAGE;
 }
 
-void *VMMap::get_physical_address(const void *const __v_addr) const {
-  const size_t v_addr = reinterpret_cast<const size_t>(__v_addr);
-
+void *VMMap::get_physical_address(const size_t v_addr) const {
   pagetable_t *pte = walk(v_addr);
 
   if (!pte) [[unlikely]] {

@@ -2,6 +2,7 @@
 #ifndef VALKYRIE_TASK_H_
 #define VALKYRIE_TASK_H_
 
+#include <Concepts.h>
 #include <List.h>
 #include <Memory.h>
 #include <Mutex.h>
@@ -13,11 +14,9 @@
 #include <fs/File.h>
 #include <fs/Vnode.h>
 #include <mm/Page.h>
+#include <mm/UserspaceAccess.h>
 #include <mm/VirtualMemoryMap.h>
 #include <proc/Signal.h>
-
-// XXX: Oh no...
-#define __user
 
 #define TASK_TIME_SLICE 64
 #define TASK_NAME_MAX_LEN 16
@@ -169,6 +168,13 @@ class Task {
     return _vmmap.get_pgd();
   }
 
+  // Converts the virtual address to physical address by looking up the page table.
+  template <Pointer T>
+  T v2p(T v_addr) {
+    auto addr = reinterpret_cast<size_t>(v_addr);
+    return reinterpret_cast<T>(_vmmap.get_physical_address(addr));
+  }
+
  private:
   // Loads the specified ELF file into the virtual address space of this task.
   // XXX: We should take `elf` by const reference...
@@ -225,6 +231,7 @@ class Task {
   // Current working directory
   SharedPtr<Vnode> _cwd_vnode;
 };
+
 
 template <typename... Args>
 static UniquePtr<Task> make_kernel_task(Args &&...args) {

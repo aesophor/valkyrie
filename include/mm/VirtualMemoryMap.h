@@ -33,7 +33,7 @@ class VMMap final {
   // @v_addr: specifies the base virtual address of the target page.
   // @p_addr: specifies the base physical address of the page frame.
   // @attr:   page attribute; see include/mm/mmu.h
-  void map(const size_t v_addr, const void *p_addr, size_t attr) const;
+  void map(const size_t v_addr, const void *const p_addr, size_t attr) const;
 
   // Unmaps a single page.
   void unmap(const size_t v_addr) const;
@@ -42,7 +42,7 @@ class VMMap final {
   bool is_cow_page(const size_t v_addr) const;
 
   // Gets the physical address from a virtual address by parsing the page table.
-  void *get_physical_address(const void *const v_addr) const;
+  void *get_physical_address(const size_t v_addr) const;
 
   // Gets an unmapped area whose gap is greater or equal to len.
   size_t get_unmapped_area(size_t len) const;
