@@ -8,7 +8,7 @@
 
 ## Kernel Features
 
-* AArch64 (64-bit) kernel with (user & kernel) preemptive multi-threading
+* AArch64 kernel with (user & kernel) preemptive multi-threading
 * Copy-on-write `fork()`
 * Virtual memory
 * Virtual filesystem (VFS)
