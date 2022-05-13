@@ -1,7 +1,7 @@
 <div align="center">
 
 <h3>VALKYRIE</h3>
-<p>A UNIX-like hobby kernel built from scratch in C++20</p>
+<p>A UNIX-like toy operating system built from scratch in C++20</p>
 
 <img src="/Documentation/cover.png">
 </div>
