@@ -20,21 +20,22 @@
 
 #### Build requirements
 
-Platform: macOS or (preferably Arch) Linux running on Intel CPU
-
 * GNU make
-* aarch64 cross compiler toolchain
+* aarch64 (cross) compiler toolchain
 * qemu-system-aarch64
 
-#### Installing ARMv8 cross compiler toolchain and QEMU
+#### Installing ARMv8 (cross) compiler toolchain and QEMU
 
 ```sh
-# macOS (Intel)
+# Arch Linux (x86_64)
+sudo pacman -S aarch64-linux-gnu-gcc aarch64-linux-gnu-gdb qemu-arch-extra
+
+# macOS (x86_64)
 brew tap messense/macos-cross-toolchains
 brew install aarch64-unknown-linux-gnu qemu
 
-# Arch Linux (Intel)
-sudo pacman -S aarch64-linux-gnu-gcc aarch64-linux-gnu-gdb qemu-arch-extra
+# macOS (Apple Silicon)
+brew install aarch64-elf-gcc aarch64-elf-binutils qemu
 ```
 
 #### Building and running valkyrie
