@@ -18,13 +18,6 @@
 
 namespace valkyrie::kernel {
 
-// The pointer to the init and kthreadd task.
-Task *Task::_init = nullptr;
-Task *Task::_kthreadd = nullptr;
-
-// PID starts at 0 (idle task)
-uint32_t Task::_next_pid = 0;
-
 Task::Task(bool is_user_task, Task *parent, void (*entry_point)(), const char *name)
     : _context(),
       _is_user_task(is_user_task),

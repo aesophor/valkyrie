@@ -32,7 +32,7 @@ class Kernel : public Singleton<Kernel> {
   }
 
   static constexpr const char *panic_msg = "Kernel panic - not syncing: ";
-  static RecursiveMutex mutex;
+  static inline RecursiveMutex mutex;
 
  protected:
   Kernel();

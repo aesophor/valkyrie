@@ -9,8 +9,6 @@
 
 namespace valkyrie::kernel::exception {
 
-bool _is_activated = false;
-
 struct Exception {
   uint8_t ec;     // exception class
   uint8_t level;  // exception level

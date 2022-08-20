@@ -3,8 +3,6 @@
 
 namespace valkyrie::kernel {
 
-RecursiveMutex Kernel::mutex;
-
 Kernel::Kernel()
     : _mailbox(Mailbox::the()),
       _mini_uart(MiniUART::the()),

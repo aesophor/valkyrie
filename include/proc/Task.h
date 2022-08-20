@@ -187,9 +187,12 @@ class Task {
   // Copies the arguments into the bottom of the user stack of this task.
   size_t copy_arguments_to_user_stack(const char *const _argv[]);
 
-  static Task *_init;
-  static Task *_kthreadd;
-  static pid_t _next_pid;
+  // The pointers to the init and kthreadd task.
+  static inline Task *_init = nullptr;
+  static inline Task *_kthreadd = nullptr;
+
+  // PID starts at 0 (idle task).
+  static inline pid_t _next_pid = 0;
 
   // For now we keep this as the first member of Task, so that
   // proc/ctx_switch.S can access process context directly.

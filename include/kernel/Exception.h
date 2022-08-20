@@ -29,7 +29,7 @@
 
 namespace valkyrie::kernel::exception {
 
-extern bool _is_activated;
+inline bool _is_activated = false;
 
 [[gnu::always_inline]] inline void enable_irqs() {
   asm volatile("msr DAIFCLR, #0b1111");
