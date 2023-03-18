@@ -281,7 +281,7 @@ int Task::exec(const char *name, const char *const _argv[]) {
   switch_to_user_mode(entry_point, user_sp, kernel_sp, _vmmap.get_pgd());
 
 failed:
-  printk("Task::exec() failed: pid = %d [%s]. %s\n", _pid, _name, reason);
+  printk("Task::exec() failed: [%s], pid [%d], name [%s], err [%s].\n", name, _pid, _name, reason);
   return -1;
 }
 
