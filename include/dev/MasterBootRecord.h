@@ -1,12 +1,9 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
+
 #ifndef VALKYRIE_MASTER_BOOT_RECORD_H_
 #define VALKYRIE_MASTER_BOOT_RECORD_H_
 
-#include <List.h>
-#include <Memory.h>
-
-#include <fs/FileSystem.h>
-#include <fs/Vnode.h>
+#include <Types.h>
 
 #define NR_MAX_PARTITIONS 4
 
