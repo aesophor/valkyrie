@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Marco Wang <m.aesophor@gmail.com>. All rights reserved.
 #include <dev/StorageDevice.h>
 
+#include <dev/Console.h>
 #include <Memory.h>
 
 #include <dev/MasterBootRecord.h>
@@ -17,12 +18,11 @@ StorageDevice::StorageDevice(const String &name, BlockDevice::Driver &driver,
   read_block(0, buffer.get());
   const MBR *mbr = reinterpret_cast<MBR *>(buffer.get());
 
-  for (int i = 0; i < NR_MAX_PARTITIONS; i++) {
-    auto partition = reinterpret_cast<const MBR::PartitionMetadata *>(&mbr->partitions[i]);
+  for (int i = 1; i < NR_MAX_PARTITIONS; i++) {
+    const auto partition = reinterpret_cast<const MBR::PartitionMetadata *>(&mbr->partitions[i]);
 
     uint32_t start_block_index;
-    memcpy(&start_block_index, &partition->lba_addr_partition_start,
-           sizeof(start_block_index));
+    memcpy(&start_block_index, &partition->lba_addr_partition_start, sizeof(start_block_index));
 
     if (!start_block_index) {
       continue;
@@ -32,11 +32,8 @@ StorageDevice::StorageDevice(const String &name, BlockDevice::Driver &driver,
     memcpy(&end_block_index, &partition->nr_sectors, sizeof(end_block_index));
     end_block_index += start_block_index - 1;
 
-    _partitions.push_back(make_unique<DiskPartition>(*this, start_block_index, end_block_index,
-                                                     String("sda") + "1"));
-
-    // printk("partition [%d]: begin = 0x%x, size = 0x%x\n", i, start_block_index,
-    // mbr->partitions[i].nr_sectors);
+    _partitions.push_back(make_unique<DiskPartition>(*this, start_block_index, end_block_index, "sda"));
+    printk("partition [%d]: begin = 0x%x, size = 0x%x\n", i, start_block_index, mbr->partitions[i].nr_sectors);
   }
 }
 
@@ -48,7 +45,7 @@ void StorageDevice::write_block(int block_index, const void *buf) {
   _driver.write_block(block_index, buf);
 }
 
-DiskPartition &StorageDevice::get_first_partition() const {
+DiskPartition &StorageDevice::get_root_partition() const {
   return *_partitions.front();
 }
 

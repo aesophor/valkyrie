@@ -23,7 +23,7 @@ class StorageDevice : public BlockDevice {
   virtual void read_block(int block_index, void *buf) override;
   virtual void write_block(int block_index, const void *buf) override;
 
-  DiskPartition &get_first_partition() const;
+  DiskPartition &get_root_partition() const;
 
  protected:
   List<UniquePtr<DiskPartition>> _partitions;

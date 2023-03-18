@@ -32,7 +32,7 @@ void VFS::mount_rootfs() {
   auto sdcard = make_unique<StorageDevice>("sda", SDCardDriver::the());
   _storage_devices.push_back(move(sdcard));
 
-  mount_rootfs(_storage_devices.front()->get_first_partition().get_filesystem());
+  mount_rootfs(_storage_devices.front()->get_root_partition().get_filesystem());
 }
 
 void VFS::mount_rootfs(SharedPtr<FileSystem> fs) {
