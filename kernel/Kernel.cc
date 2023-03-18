@@ -16,6 +16,9 @@ void Kernel::run() {
   print_banner();
   print_hardware_info();
 
+  printk("Press any key to continue booting...\n");
+  _console.read_char();
+
   printk("VFS: initializing\n");
   _vfs.mount_rootfs();
   _vfs.mount_devtmpfs();
