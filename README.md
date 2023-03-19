@@ -63,13 +63,6 @@ int sys_munmap(void __user *addr, size_t len);  // unfinished
 * mmap_illegal_write
 
 ## Build valkyrie
-### Download `sd.img` from [here](https://drive.google.com/file/d/1oF4iG1EFJrHJnOFz9PepB5tiL2tyRfOY/view?usp=share_link).
-The `sd.img` file contains:
-* The boot partition (in which `kernel8.img` resides).
-* The root partition (consists of `/bin`, `/usr`, etc).
-* If you wish to run valkyrie in QEMU, then place `sd.img` under the project's root dir.
-* If you wish to run valkyrie on a real rpi3b+, then flash it to your SD card with `dd`.
-
 ### Build requirements
 * GNU make
 * aarch64 (cross) compiler toolchain
@@ -96,6 +89,13 @@ make
 ```
 
 ## Run valkyrie
+### Download `sd.img` from [here](https://drive.google.com/file/d/1oF4iG1EFJrHJnOFz9PepB5tiL2tyRfOY/view?usp=share_link).
+The `sd.img` file contains:
+* The boot partition (in which `kernel8.img` resides).
+* The root partition (consists of `/bin`, `/usr`, etc).
+* If you wish to run valkyrie in QEMU, then place `sd.img` under the project's root dir.
+* If you wish to run valkyrie on a real rpi3b+, then flash it to your SD card with `dd`.
+
 ### Running valkyrie in QEMU
 ```
 make run
