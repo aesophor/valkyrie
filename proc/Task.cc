@@ -201,6 +201,37 @@ int Task::fork() {
   child->_context.lr = reinterpret_cast<uint64_t>(&&out);
   child->_context.sp = child->_kstack_page.add_offset(kernel_sp_offset);
 
+  // The copied kernel stack still contains frame pointers that point into
+  // the parent's kernel stack. Compilers that address locals via fp (e.g. clang)
+  // would make the child read/write the parent's stack frames, so relocate
+  // the child's fp and every saved fp in the frame record chain.
+  {
+    // _kstack_page holds a physical address but fp/sp are kernel virtual
+    // addresses, so use each task's (virtual) sp to locate its kstack page.
+    const size_t parent_kstack = Page::align_down(_context.sp);
+    const size_t child_kstack = Page::align_down(child->_context.sp);
+
+    auto in_parent_kstack = [parent_kstack](size_t addr) {
+      return Page::align_down(addr) == parent_kstack;
+    };
+    auto to_child_kstack = [parent_kstack, child_kstack](size_t addr) {
+      return child_kstack + (addr - parent_kstack);
+    };
+
+    if (in_parent_kstack(_context.fp)) {
+      child->_context.fp = to_child_kstack(_context.fp);
+
+      for (size_t fp = _context.fp; in_parent_kstack(fp);) {
+        auto child_frame = reinterpret_cast<size_t *>(to_child_kstack(fp));
+        size_t saved_fp = *child_frame;
+        if (in_parent_kstack(saved_fp)) {
+          *child_frame = to_child_kstack(saved_fp);
+        }
+        fp = saved_fp;
+      }
+    }
+  }
+
   // Clone the page table using copy-on-write.
   child->_vmmap.copy_from(_vmmap);
 
