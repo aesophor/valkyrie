@@ -12,7 +12,7 @@ namespace valkyrie::kernel {
 
 class CPIOArchive final {
   // Forward declaration
-  class Entry;
+  struct Entry;
 
  public:
   explicit CPIOArchive(const size_t base_addr);
@@ -52,7 +52,6 @@ class CPIOArchive final {
   };
 
   const char *const _base_addr;
-  const char *_ptr;
 };
 
 }  // namespace valkyrie::kernel

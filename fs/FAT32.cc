@@ -191,7 +191,7 @@ SharedPtr<Vnode> FAT32::get_root_vnode() {
 }
 
 String FAT32::FilenameEntry::get_filename() const {
-  size_t len = sizeof(filename_part1) + sizeof(filename_part2) + sizeof(filename_part3);
+  constexpr size_t len = sizeof(filename_part1) + sizeof(filename_part2) + sizeof(filename_part3);
 
   ucs2_char_t filename[14];
   char out[len + 1];
@@ -246,13 +246,15 @@ SharedPtr<Vnode> FAT32Inode::create_child(const String &name, const char *conten
   // we'll first create a buffer which has sufficent space to hold
   // the longest string possible, and then recalculate the length later.
   size_t name_size = name.size();
-  ucs2_char_t filename_ucs[name_size + 1];
+  const size_t filename_ucs_len = name_size + 1;
+  auto filename_ucs_buf = make_unique<ucs2_char_t[]>(filename_ucs_len);
+  ucs2_char_t *filename_ucs = filename_ucs_buf.get();
   memset(filename_ucs, 0xff, name_size * 2);
   utf2ucs(filename_ucs, reinterpret_cast<const utf8_char_t *>(name.c_str()));
 
   name_size = 0;
-  for (auto c : filename_ucs) {
-    if (c == 0x0000) {
+  for (size_t i = 0; i < filename_ucs_len; i++) {
+    if (filename_ucs[i] == 0x0000) {
       break;
     }
     name_size++;

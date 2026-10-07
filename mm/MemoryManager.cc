@@ -12,7 +12,6 @@ MemoryManager::MemoryManager()
     : _ram_size(Mailbox::the().get_arm_memory().second),
       _zones{Zone(0x10000000), Zone(0x10200000)},
       _ref_counts(),
-      _page_writable(),
       _kasan() {}
 
 void *MemoryManager::get_free_page(bool physical) {

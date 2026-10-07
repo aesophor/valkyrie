@@ -42,7 +42,7 @@ namespace valkyrie::kernel {
 
 // Forward declaration.
 class Task;
-class TrapFrame;
+struct TrapFrame;
 
 extern "C" void switch_to(Task *prev, Task *next);
 extern "C" void switch_to_user_mode(void *entry_point, size_t user_sp, size_t kernel_sp,

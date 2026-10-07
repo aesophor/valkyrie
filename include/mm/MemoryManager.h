@@ -44,7 +44,6 @@ class MemoryManager : public Singleton<MemoryManager> {
 
   // XXX: Copy on write, refactor this
   int _ref_counts[MAX_ORDER_NR_PAGES];
-  bool _page_writable[MAX_ORDER_NR_PAGES];
 
   AddressSanitizer _kasan;
 };

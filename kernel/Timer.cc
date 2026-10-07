@@ -20,7 +20,7 @@
 
 #include <kernel/Timer.h>
 
-#define CORE0_TIMER_IRQ_CTRL 0x40000040
+#define CORE0_TIMER_IRQ_CTRL 0x40000040UL
 #define DEFAULT_TIMER_IRQ_INTERVAL 1 /* in seconds */
 
 namespace valkyrie::kernel {
@@ -38,9 +38,9 @@ void ARMCoreTimer::enable() {
   }
 
   // Enable ARM Core Timer.
-  asm volatile("msr CNTP_CTL_EL0, %0" ::"r"(1));
+  asm volatile("msr CNTP_CTL_EL0, %0" ::"r"(1UL));
   // Unmask timer interrupt.
-  asm volatile("str %0, [%1]" ::"r"(0b0010), "r"(CORE0_TIMER_IRQ_CTRL));
+  asm volatile("str %w0, [%1]" ::"r"(0b0010), "r"(CORE0_TIMER_IRQ_CTRL));
 
   arrange_next_timer_irq_after(_interval);
   _is_enabled = true;
@@ -52,9 +52,9 @@ void ARMCoreTimer::disable() {
   }
 
   // Disable ARM Core Timer.
-  asm volatile("msr CNTP_CTL_EL0, %0" ::"r"(0));
+  asm volatile("msr CNTP_CTL_EL0, %0" ::"r"(0UL));
   // Mask timer interrupt.
-  asm volatile("str %0, [%1]" ::"r"(0b0000), "r"(CORE0_TIMER_IRQ_CTRL));
+  asm volatile("str %w0, [%1]" ::"r"(0b0000), "r"(CORE0_TIMER_IRQ_CTRL));
 
   _is_enabled = false;
 }
@@ -68,7 +68,7 @@ void ARMCoreTimer::arrange_next_timer_irq_after(const uint32_t second) {
   uint64_t cntfrq_el0;
   asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(cntfrq_el0));
   // asm volatile("msr CNTP_TVAL_EL0, %0" :: "r"(cntfrq_el0 * second));
-  asm volatile("msr CNTP_TVAL_EL0, %0" ::"r"(0x0ffff));
+  asm volatile("msr CNTP_TVAL_EL0, %0" ::"r"(0x0ffffUL));
 }
 
 uint32_t ARMCoreTimer::get_jiffies() const {

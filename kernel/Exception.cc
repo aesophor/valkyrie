@@ -19,11 +19,12 @@ struct Exception {
 
 Exception get_current_exception() {
   Exception ex;
-  uint32_t esr_el1;
+  uint64_t current_el;
+  uint64_t esr_el1;
 
   asm volatile("mrs %0, ELR_EL1" : "=r"(ex.ret_addr));
   asm volatile("mrs %0, SPSR_EL1" : "=r"(ex.spsr_el1));
-  asm volatile("mrs %0, CurrentEL" : "=r"(ex.level));
+  asm volatile("mrs %0, CurrentEL" : "=r"(current_el));
   asm volatile("mrs %0, ESR_EL1" : "=r"(esr_el1));
 
   // ESR_EL1[31:26] = EC
@@ -31,7 +32,7 @@ Exception get_current_exception() {
   // ESR_EL1[24:0] = ISS
   ex.ec = esr_el1 >> 26;
   ex.iss = esr_el1 & 0x1ffffff;
-  ex.level >>= 2;
+  ex.level = current_el >> 2;
 
   return ex;
 }

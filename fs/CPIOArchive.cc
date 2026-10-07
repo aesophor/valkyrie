@@ -13,7 +13,7 @@
 namespace valkyrie::kernel {
 
 CPIOArchive::CPIOArchive(const size_t base_addr)
-    : _base_addr(reinterpret_cast<const char *>(base_addr)), _ptr(_base_addr) {}
+    : _base_addr(reinterpret_cast<const char *>(base_addr)) {}
 
 bool CPIOArchive::is_valid() const {
   return !strncmp(_base_addr, CPIO_MAGIC, sizeof(CPIO_MAGIC) - 1);
