@@ -129,6 +129,14 @@ void MiniUART::send(const uint8_t byte) {
 char MiniUART::getchar_sync() {
   char c = recv();
   c = (c == '\r') ? '\n' : c;
+
+  // Terminals send either DEL (0x7f) or ^H (0x08) for the backspace key
+  // (e.g., iTerm2's "Delete key sends ^H"), so treat both as BACKSPACE.
+  // Don't echo it, the caller erases the character with "\b \b".
+  if (c == BACKSPACE || c == '\b') {
+    return BACKSPACE;
+  }
+
   putchar_sync(c);
   return c;
 }
