@@ -52,7 +52,7 @@ SharedPtr<Vnode> TmpFSInode::remove_child(const String &name) {
   });
 
   if (!removed_child) [[unlikely]] {
-    printk("TmpFS: <warning> unable to remove %s from %s\n", name, _name);
+    printk("TmpFS: <warning> unable to remove %s from %s\n", name.c_str(), _name.c_str());
   }
 
   return removed_child;

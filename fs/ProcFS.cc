@@ -94,7 +94,7 @@ SharedPtr<Vnode> ProcFSInode::remove_child(const String &name) {
   });
 
   if (!removed_child) [[unlikely]] {
-    printk("ProcFS: <warning> unable to remove %s from %s\n", name, _name);
+    printk("ProcFS: <warning> unable to remove %s from %s\n", name.c_str(), _name.c_str());
   }
 
   return removed_child;

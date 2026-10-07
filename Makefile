@@ -7,7 +7,7 @@ UNAME_M := $(shell uname -m)
 $(info UNAME_M=$(UNAME_M))
 
 ifeq ($(UNAME_S)$(UNAME_M),Darwinarm64)
-	TOOLCHAIN_PREFIX = aarch64-elf-
+	TOOLCHAIN_PREFIX =
 else ifeq ($(UNAME_S)$(UNAME_M),Darwinx86_64)
 	TOOLCHAIN_PREFIX = aarch64-unknown-linux-gnu-
 else ifeq ($(UNAME_S)$(UNAME_M),Linuxx86_64)
@@ -33,6 +33,16 @@ LDFLAGS = -T scripts/linker.ld
 
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJCOPYFLAGS = -O binary
+
+# Apple clang emits Mach-O by default and macOS has no ELF linker,
+# so target bare-metal ELF and use lld/llvm-objcopy from Homebrew LLVM.
+ifeq ($(UNAME_S)$(UNAME_M),Darwinarm64)
+  LLVM_BIN = /opt/homebrew/opt/llvm@14/bin
+  CXX = clang++
+  CXXFLAGS += --target=aarch64-none-elf
+  LD = $(LLVM_BIN)/ld.lld
+  OBJCOPY = $(LLVM_BIN)/llvm-objcopy
+endif
 
 GDB = $(TOOLCHAIN_PREFIX)gdb
 GDBFLAGS = -x scripts/debug.gdb

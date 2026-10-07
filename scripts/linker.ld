@@ -3,7 +3,12 @@ SECTIONS {
   . += 0x80000;             /* kernel load address */
 
   .text ALIGN(0x10) : {
-    *(.text)
+    KEEP(boot.o(.text))  /* _start must be the first instruction */
+    *(.text .text.*)
+  }
+
+  .rodata ALIGN(0x10) : {
+    *(.rodata .rodata.*)
   }
 
   .data ALIGN(0x10) : {
