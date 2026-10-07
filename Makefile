@@ -41,7 +41,7 @@ OBJCOPYFLAGS = -O binary
 ifeq ($(UNAME_S)$(UNAME_M),Darwinarm64)
   LLVM_BIN = /opt/homebrew/opt/llvm@14/bin
   CXX = clang++
-  CXXFLAGS += --target=aarch64-none-elf
+  CXXFLAGS := $(filter-out -nostartfiles,$(CXXFLAGS)) --target=aarch64-none-elf
   LD = $(LLVM_BIN)/ld.lld
   OBJCOPY = $(LLVM_BIN)/llvm-objcopy
 endif
