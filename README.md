@@ -65,20 +65,27 @@ int sys_munmap(void __user *addr, size_t len);  // unfinished
 ## Build valkyrie
 ### Build requirements
 * GNU make
-* aarch64 (cross) compiler toolchain
 * qemu-system-aarch64
+* One of the following toolchains:
+  * Clang/LLVM (`clang++`, `ld.lld`, `llvm-objcopy`) on macOS (arm64) and Android
+  * aarch64 GCC cross toolchain on Linux (x86_64) and macOS (x86_64)
 
-### Installing ARMv8 (cross) compiler toolchain and QEMU
+### Installing the toolchain and QEMU
 ```sh
-# Arch Linux (x86_64)
+# Arch Linux (x86_64): GCC cross toolchain
 sudo pacman -S aarch64-linux-gnu-gcc aarch64-linux-gnu-gdb qemu-arch-extra
 
-# macOS (x86_64)
+# macOS (x86_64): GCC cross toolchain
 brew tap messense/macos-cross-toolchains
 brew install aarch64-unknown-linux-gnu qemu
 
-# macOS (Apple Silicon)
-brew install aarch64-elf-gcc aarch64-elf-binutils qemu
+# macOS (arm64): Clang/LLVM
+# Xcode's clang++ compiles, while Homebrew's llvm@14 provides ld.lld and llvm-objcopy.
+xcode-select --install
+brew install llvm@14 qemu
+
+# Android (aarch64, Termux): Clang/LLVM
+pkg install clang lld binutils make qemu-system-aarch64-headless
 ```
 
 ### Building valkyrie
