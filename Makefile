@@ -10,6 +10,8 @@ ifeq ($(UNAME_S)$(UNAME_M),Darwinarm64)
 	TOOLCHAIN_PREFIX =
 else ifeq ($(UNAME_S)$(UNAME_M),Darwinx86_64)
 	TOOLCHAIN_PREFIX = aarch64-unknown-linux-gnu-
+else ifeq ($(UNAME_S)$(UNAME_M),Linuxaarch64)
+	TOOLCHAIN_PREFIX =
 else ifeq ($(UNAME_S)$(UNAME_M),Linuxx86_64)
 	TOOLCHAIN_PREFIX = aarch64-linux-gnu-
 endif
