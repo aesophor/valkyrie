@@ -103,6 +103,10 @@ class SlobAllocator {
   ChunkHeader *split_from_top_chunk(size_t requested_size);
   ChunkHeader *split_from_chunk(ChunkHeader *chunk, const size_t requested_size);
 
+  // Updates the prev_chunk_size of the chunk physically after `chunk`
+  // (or of the top chunk), unless `chunk` is the last one in its page frame.
+  void set_next_chunk_prev_chunk_size(const ChunkHeader *chunk);
+
   bool request_new_page_frame();
 
   void bin_del_head(ChunkHeader *chunk);

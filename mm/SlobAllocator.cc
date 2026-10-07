@@ -62,6 +62,7 @@ void *SlobAllocator::allocate(size_t requested_size) {
     ChunkHeader *chunk = split_from_top_chunk(get_top_chunk_size());
 
     if (is_chunk_size_usable(chunk->get_size())) {
+      chunk->set_allocated(false);
       bin_add_head(chunk);
     } else {
       discard(chunk);
@@ -90,45 +91,49 @@ void SlobAllocator::deallocate(void *p) {
     return;
   }
 
-  ChunkHeader *mid_chunk = ChunkHeader::from_addr(p) - 1;  // -1 is for the header
-  ChunkHeader *prev_chunk = mid_chunk->get_prev_chunk();
-  ChunkHeader *next_chunk = mid_chunk->get_next_chunk();
-
   // The final chunk pointer and size (after being merged)
-  ChunkHeader *chunk = mid_chunk;
-  size_t chunk_size = mid_chunk->get_size();
+  ChunkHeader *chunk = ChunkHeader::from_addr(p) - 1;  // -1 is for the header
+  size_t chunk_size = chunk->get_size();
 
   // Mark current chunk as unallocated.
-  mid_chunk->set_allocated(false);
+  chunk->set_allocated(false);
 
   // Maybe merge this chunk with its previous one.
-  if (!prev_chunk->is_allocated() && !Page::is_aligned(mid_chunk->addr())) {
-    bin_del_entry(prev_chunk);
-    chunk_size += prev_chunk->get_size();
-    prev_chunk->next = next_chunk;
-    prev_chunk->index = get_bin_index(chunk_size);
-    next_chunk->set_prev_chunk_size(chunk_size);
-    chunk = prev_chunk;
+  // The first chunk of a page frame has no previous chunk.
+  if (!Page::is_aligned(chunk->addr())) {
+    ChunkHeader *prev_chunk = chunk->get_prev_chunk();
+
+    if (!prev_chunk->is_allocated()) {
+      bin_del_entry(prev_chunk);
+      chunk_size += prev_chunk->get_size();
+      chunk = prev_chunk;
+    }
   }
 
   // Maybe merge this chunk with its next one.
-  if (Page::is_aligned(next_chunk->addr())) {
-    // The next chunk belongs to another page frame, dont' merge!
-  } else if (next_chunk == _top_chunk) {
+  const size_t next_chunk_addr = chunk->addr() + chunk_size;
+
+  if (next_chunk_addr == reinterpret_cast<size_t>(_top_chunk)) {
     // The next one is the top chunk, merge `chunk` into the top chunk.
     _top_chunk = chunk;
     _top_chunk_prev_chunk_size = chunk->get_prev_chunk_size();
-  } else if (!next_chunk->is_allocated()) {
-    // The next one is a regular freed chunk.
-    bin_del_entry(next_chunk);
-    chunk_size += next_chunk->get_size();
-    chunk->next = ChunkHeader::from_addr(next_chunk->addr() + next_chunk->get_size());
-    chunk->index = get_bin_index(chunk_size);
-    chunk->next->set_prev_chunk_size(chunk_size);
-
-    // Put the merged chunk to the bin.
-    bin_add_head(chunk);
+    return;
   }
+
+  if (!Page::is_aligned(next_chunk_addr)) {
+    ChunkHeader *next_chunk = ChunkHeader::from_addr(next_chunk_addr);
+
+    if (!next_chunk->is_allocated()) {
+      bin_del_entry(next_chunk);
+      chunk_size += next_chunk->get_size();
+    }
+  }
+
+  // Put the (maybe merged) chunk to the bin.
+  chunk->next = nullptr;
+  chunk->index = get_bin_index(chunk_size);
+  set_next_chunk_prev_chunk_size(chunk);
+  bin_add_head(chunk);
 }
 
 String SlobAllocator::to_string() const {
@@ -219,35 +224,50 @@ SlobAllocator::ChunkHeader *SlobAllocator::split_from_chunk(SlobAllocator::Chunk
         requested_size, chunk->get_size());
   }
 
-  size_t remainder_size = chunk->get_size() - requested_size;
-  bool is_remainder_usable = is_chunk_size_usable(remainder_size);
+  const size_t remainder_size = chunk->get_size() - requested_size;
+
+  bin_del_entry(chunk);
+  chunk->next = nullptr;
+  chunk->index = get_bin_index(requested_size);
+  chunk->set_allocated(true);
+
+  // Exact fit: there's no remainder, and the next chunk's prev_chunk_size
+  // is still correct.
+  if (!remainder_size) {
+    return chunk;
+  }
 
   ChunkHeader *remainder = ChunkHeader::from_addr(chunk->addr() + requested_size);
   remainder->next = nullptr;
   remainder->index = get_bin_index(remainder_size);
   remainder->prev_chunk_size = requested_size;
+  set_next_chunk_prev_chunk_size(remainder);
 
-  bin_del_head(chunk);
-
-  if (is_remainder_usable) [[likely]] {
+  if (is_chunk_size_usable(remainder_size)) [[likely]] {
     remainder->set_allocated(false);
     bin_add_head(remainder);
   } else {
     discard(remainder);
   }
 
-  // If the chunk after `chunk` isn't the top chunk, then we need to
-  // update that chunk's prev_size.
-  ChunkHeader *next_chunk = chunk->get_next_chunk();
+  return chunk;
+}
 
-  if (next_chunk != _top_chunk) {
-    next_chunk->set_prev_chunk_size(remainder_size);
+void SlobAllocator::set_next_chunk_prev_chunk_size(const ChunkHeader *chunk) {
+  const size_t next_chunk_addr = chunk->addr() + chunk->get_size();
+
+  // The next chunk belongs to another page frame, don't touch it!
+  if (Page::is_aligned(next_chunk_addr)) {
+    return;
   }
 
-  chunk->next = nullptr;
-  chunk->index = get_bin_index(requested_size);
-  chunk->set_allocated(true);
-  return chunk;
+  // The top chunk has no header, its prev_chunk_size is kept separately.
+  if (next_chunk_addr == reinterpret_cast<size_t>(_top_chunk)) {
+    _top_chunk_prev_chunk_size = chunk->get_size();
+    return;
+  }
+
+  ChunkHeader::from_addr(next_chunk_addr)->set_prev_chunk_size(chunk->get_size());
 }
 
 bool SlobAllocator::request_new_page_frame() {
@@ -260,6 +280,7 @@ bool SlobAllocator::request_new_page_frame() {
   _page_frame_allocatable_begin = page_frame;
   _top_chunk = _page_frame_allocatable_begin;
   _page_frame_allocatable_end = reinterpret_cast<char *>(_top_chunk) + PAGE_SIZE;
+  _top_chunk_prev_chunk_size = 0;
   return true;
 }
 
