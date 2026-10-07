@@ -33,6 +33,11 @@ void *BuddyAllocator::allocate_one_page_frame() {
 }
 
 void *BuddyAllocator::allocate(size_t requested_size) {
+  // Check this before normalize_size(), which rounds 0 up to 1.
+  if (!requested_size) [[unlikely]] {
+    return nullptr;
+  }
+
   // For each allocation request x, raise that value to
   // a power of 2 s.t. x >= the original requested_size.
   requested_size = normalize_size(requested_size);
@@ -40,10 +45,6 @@ void *BuddyAllocator::allocate(size_t requested_size) {
   int order = size_to_order(requested_size);
   void *ret = nullptr;
   BlockHeader *victim = nullptr;
-
-  if (!requested_size) [[unlikely]] {
-    goto failed;
-  }
 
   if (order >= MAX_ORDER) [[unlikely]] {
     printk("unable to allocate physical memory of %d bytes\n", requested_size);
